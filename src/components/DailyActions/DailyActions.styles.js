@@ -1,0 +1,171 @@
+import { StyleSheet } from 'react-native';
+import theme from '../../theme/theme';
+
+export default StyleSheet.create({
+  container: {
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: theme.spacing.sm,
+  },
+  trackerSubheading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    marginVertical: 12,
+    letterSpacing: -0.3,
+  },
+  effortScoresCard: {
+    backgroundColor: theme.colors.bgCard,
+    borderWidth: 1,
+    borderColor: theme.colors.borderColor,
+    borderRadius: 24,
+    padding: theme.spacing.md,
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  effortGaugeWrapper: {
+    position: 'relative',
+    width: 120,
+    height: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  effortGaugeSvg: {
+    width: 120,
+    height: 120,
+  },
+  gaugeCenterText: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gaugePercent: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    lineHeight: 24,
+  },
+  gaugeLabel: {
+    fontSize: 9,
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  cardDivider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginVertical: 12,
+  },
+  effortSplitStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    alignItems: 'center',
+  },
+  splitStatBox: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  splitValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+  },
+  splitLabel: {
+    fontSize: 9,
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  verticalDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  actionButtonsStack: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  actionBtnContainer: {
+    borderRadius: 14,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  btnIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  btnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  inlineWeightCard: {
+    backgroundColor: '#121625',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 20,
+    padding: theme.spacing.md,
+    marginBottom: 16,
+    position: 'relative',
+  },
+  closeInlineBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    padding: 4,
+  },
+  weightModalForm: {
+    width: '100%',
+    marginTop: 8,
+  },
+  modalPromptText: {
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  weightInputWrapper: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    height: 48,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    marginBottom: 16,
+  },
+  weightInput: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  saveBtnContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  saveBtn: {
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+});

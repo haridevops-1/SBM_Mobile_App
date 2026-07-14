@@ -1,0 +1,291 @@
+import { StyleSheet } from 'react-native';
+import theme from '../../theme/theme';
+
+export default StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0A0D18',
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  effortsHeader: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.sm,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  headerProfileAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+  },
+  headerActionBtn: {
+    padding: 4,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontWeight: '500',
+  },
+  overallProgressCard: {
+    backgroundColor: theme.colors.bgCard,
+    borderWidth: 1,
+    borderColor: theme.colors.borderColor,
+    borderRadius: 20,
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: theme.spacing.sm,
+    padding: theme.spacing.md,
+  },
+  progressCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  progressTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+  },
+  timeframeSelector: {
+    flexDirection: 'row',
+    backgroundColor: '#0F121E',
+    borderRadius: 8,
+    padding: 2,
+  },
+  timeframeBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  activeTimeframeBtn: {
+    backgroundColor: 'rgba(123, 31, 162, 0.4)',
+  },
+  timeframeBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.textSecondary,
+  },
+  activeTimeframeBtnText: {
+    color: '#FFFFFF',
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  metricBox: {
+    width: '23%',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  metricValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+  },
+  metricLabel: {
+    fontSize: 8,
+    color: theme.colors.textMuted,
+    marginTop: 2,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  chartWrapper: {
+    flexDirection: 'row',
+    height: 140,
+  },
+  yAxis: {
+    justifyContent: 'space-between',
+    height: '100%',
+    paddingRight: 8,
+    paddingBottom: 20,
+  },
+  yAxisText: {
+    fontSize: 8,
+    color: theme.colors.textMuted,
+    fontWeight: '600',
+    textAlign: 'right',
+  },
+  chartAreaContainer: {
+    flex: 1,
+    position: 'relative',
+    height: '100%',
+  },
+  gridLines: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'space-between',
+    paddingBottom: 20,
+  },
+  gridLine: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    width: '100%',
+  },
+  barsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: '100%',
+    paddingBottom: 20,
+    zIndex: 2,
+  },
+  barColumn: {
+    alignItems: 'center',
+    width: '15%',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  barTrack: {
+    width: 8,
+    height: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: 4,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  barFill: {
+    width: '100%',
+    borderRadius: 4,
+  },
+  standardFill: {
+    backgroundColor: '#7B1FA2',
+  },
+  highlightFill: {
+    backgroundColor: '#29B6F6',
+  },
+  categoryAccentFill: {
+    backgroundColor: '#4CAF50',
+  },
+  barLabel: {
+    fontSize: 8,
+    color: theme.colors.textSecondary,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  dailyQuestionsSection: {
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: theme.spacing.sm,
+  },
+  questionsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  questionsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+  },
+  viewAllBtn: {
+    fontSize: 12,
+    color: '#B085F5',
+    fontWeight: '600',
+  },
+  categoriesRow: {
+    paddingVertical: 4,
+  },
+  categoryToggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.bgCard,
+    borderWidth: 1,
+    borderColor: theme.colors.borderColor,
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginRight: 10,
+  },
+  selectedCard: {
+    borderColor: '#B085F5',
+    backgroundColor: 'rgba(123, 31, 162, 0.1)',
+  },
+  categoryIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  categoryMeta: {
+    justifyContent: 'center',
+  },
+  categoryName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+  },
+  categoryScore: {
+    fontSize: 9,
+    color: theme.colors.textSecondary,
+    marginTop: 1,
+  },
+  categoryDetailsCard: {
+    backgroundColor: theme.colors.bgCard,
+    borderWidth: 1,
+    borderColor: theme.colors.borderColor,
+    borderRadius: 20,
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: theme.spacing.sm,
+    padding: theme.spacing.md,
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  detailsTitleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailsIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  detailsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+  },
+  viewDetailsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewDetailsLinkText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#B085F5',
+    marginRight: 2,
+  },
+});

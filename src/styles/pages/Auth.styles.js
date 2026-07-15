@@ -12,6 +12,7 @@ export default StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: theme.spacing.lg,
+    paddingBottom: 50,
   },
   glowPurple: {
     position: 'absolute',
@@ -48,7 +49,7 @@ export default StyleSheet.create({
   },
   brandHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   brandLogoRing: {
     width: 52,
@@ -86,14 +87,14 @@ export default StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     lineHeight: 16,
   },
   formStack: {
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   inputLabel: {
     fontSize: 11,
@@ -125,7 +126,7 @@ export default StyleSheet.create({
   signupGridFields: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 0,
   },
   gridHalf: {
     width: '48%',
@@ -142,7 +143,7 @@ export default StyleSheet.create({
     backgroundColor: '#090B13',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 3,
     height: 46,
     alignItems: 'center',
@@ -167,7 +168,7 @@ export default StyleSheet.create({
   },
   submitBtnContainer: {
     borderRadius: 12,
-    marginTop: 8,
+    marginTop: 16,
     overflow: 'hidden',
     shadowColor: '#7B1FA2',
     shadowOffset: { width: 0, height: 4 },
@@ -196,6 +197,66 @@ export default StyleSheet.create({
   },
   toggleBtnText: {
     fontSize: 12,
+    color: '#B085F5',
+    fontWeight: '700',
+  },
+  // Validations & Custom Dropdowns
+  errorText: {
+    color: '#FF5252',
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  pickerModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'flex-end',
+  },
+  pickerModalContent: {
+    backgroundColor: '#0F121E',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    maxHeight: '60%',
+    paddingBottom: 30,
+  },
+  pickerModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  pickerModalTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  pickerModalList: {
+    padding: 16,
+  },
+  pickerModalOption: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  pickerModalOptionActive: {
+    backgroundColor: 'rgba(123, 31, 162, 0.15)',
+    borderColor: 'rgba(176, 133, 245, 0.25)',
+  },
+  pickerModalOptionText: {
+    color: '#ECEFF1',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  pickerModalOptionTextActive: {
     color: '#B085F5',
     fontWeight: '700',
   },

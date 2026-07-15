@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Modal, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
-import { X, LogOut, Home, Flame, BarChart2, BookOpen, MessageSquare, Mail, Scale } from 'lucide-react-native';
+import { X, LogOut, Home, Flame, BarChart2, BookOpen, MessageSquare, Mail, Scale, User, Globe, Activity } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
@@ -19,6 +19,11 @@ export const ProfileDrawer = () => {
     userEmail,
     loggedWeight,
     userGoal,
+    gender,
+    age,
+    height,
+    mealPreference,
+    timezone,
     logoutUser
   } = useUser();
 
@@ -59,7 +64,6 @@ export const ProfileDrawer = () => {
   ];
 
   const handleNavClick = (route) => {
-    // Close the drawer first
     Animated.timing(slideAnim, {
       toValue: -DRAWER_WIDTH,
       duration: 150,
@@ -161,18 +165,48 @@ export const ProfileDrawer = () => {
             <View style={styles.drawerDetailsSection}>
               <Text style={styles.drawerSectionLabel}>Account Details</Text>
               <View style={styles.drawerDetailsCard}>
+                {/* Email row */}
                 <View style={styles.drawerMetaRow}>
                   <Mail size={14} color={theme.colors.textMuted} style={styles.metaIcon} />
                   <View style={styles.metaTexts}>
                     <Text style={styles.metaLabel}>Email</Text>
-                    <Text style={styles.metaValue}>{userEmail}</Text>
+                    <Text style={styles.metaValue} numberOfLines={1}>{userEmail}</Text>
                   </View>
                 </View>
+
+                {/* Weight / Goal row */}
                 <View style={styles.drawerMetaRow}>
                   <Scale size={14} color={theme.colors.textMuted} style={styles.metaIcon} />
                   <View style={styles.metaTexts}>
                     <Text style={styles.metaLabel}>Weight / Goal</Text>
                     <Text style={styles.metaValue}>{loggedWeight} kg ({userGoal})</Text>
+                  </View>
+                </View>
+
+                {/* Gender / Age / Height / Meal preference row */}
+                <View style={styles.drawerMetaRow}>
+                  <User size={14} color={theme.colors.textMuted} style={styles.metaIcon} />
+                  <View style={styles.metaTexts}>
+                    <Text style={styles.metaLabel}>Gender / Age / Height</Text>
+                    <Text style={styles.metaValue}>{gender} / {age} yrs / {height} cm</Text>
+                  </View>
+                </View>
+
+                {/* Meal Preference / Timezone row */}
+                <View style={styles.drawerMetaRow}>
+                  <Activity size={14} color={theme.colors.textMuted} style={styles.metaIcon} />
+                  <View style={styles.metaTexts}>
+                    <Text style={styles.metaLabel}>Dietary Preference</Text>
+                    <Text style={styles.metaValue}>{mealPreference}</Text>
+                  </View>
+                </View>
+
+                {/* Timezone row */}
+                <View style={styles.drawerMetaRow}>
+                  <Globe size={14} color={theme.colors.textMuted} style={styles.metaIcon} />
+                  <View style={styles.metaTexts}>
+                    <Text style={styles.metaLabel}>Time Zone</Text>
+                    <Text style={styles.metaValue} numberOfLines={1}>{timezone}</Text>
                   </View>
                 </View>
               </View>

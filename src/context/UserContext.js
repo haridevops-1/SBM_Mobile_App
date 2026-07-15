@@ -32,6 +32,13 @@ export const UserProvider = ({ children }) => {
   const [userGoal, setUserGoal] = useState('Fat Loss');
   const [userId, setUserId] = useState('SBM-49021-HR');
 
+  // Custom Signup Fields
+  const [gender, setGender] = useState('Male');
+  const [age, setAge] = useState(25);
+  const [height, setHeight] = useState(175);
+  const [mealPreference, setMealPreference] = useState('Veg');
+  const [timezone, setTimezone] = useState('Asia/Kolkata (IST)');
+
   // Actions to mutate states dynamically
   const toggleTodayEffort = () => {
     if (!todayEffortLogged) {
@@ -67,10 +74,10 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const loginUser = (name, currentWeightVal) => {
+  const loginUser = (name, currentWeightVal, details = {}) => {
     if (name && name.trim() !== '') {
       setUsername(name);
-      setUserEmail(`${name.toLowerCase().replace(/\s+/g, '')}@example.com`);
+      setUserEmail(details.email || `${name.toLowerCase().replace(/\s+/g, '')}@example.com`);
       const initials = name.substring(0, 2).toUpperCase();
       setUserId(`SBM-${Math.floor(10000 + Math.random() * 90000)}-${initials}`);
     } else {
@@ -83,6 +90,14 @@ export const UserProvider = ({ children }) => {
       setLoggedWeight(numericWeight);
       setStartWeight(parseFloat((numericWeight + 3.0).toFixed(1))); // offset start weight
     }
+
+    if (details.gender) setGender(details.gender);
+    if (details.age) setAge(parseInt(details.age, 10));
+    if (details.height) setHeight(parseFloat(details.height));
+    if (details.mealPreference) setMealPreference(details.mealPreference);
+    if (details.timezone) setTimezone(details.timezone);
+    if (details.userGoal) setUserGoal(details.userGoal);
+
     setIsLoggedIn(true);
   };
 
@@ -114,6 +129,11 @@ export const UserProvider = ({ children }) => {
       userEmail,
       userGoal,
       userId,
+      gender,
+      age,
+      height,
+      mealPreference,
+      timezone,
       setUserGoal,
       toggleTodayEffort,
       logWeight,
@@ -125,5 +145,5 @@ export const UserProvider = ({ children }) => {
   );
 };
 
-export const useUser = () => useContext(UserContext);
 export default UserContext;
+export const useUser = () => useContext(UserContext);

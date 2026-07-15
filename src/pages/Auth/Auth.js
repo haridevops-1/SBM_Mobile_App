@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Modal, SafeAreaView } from 'react-native';
-import { Mail, Lock, User as UserIcon, Scale, Sparkles, Calendar, Globe, Utensils, Ruler, ChevronDown, X, Users } from 'lucide-react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import { Mail, Lock, User as UserIcon, Scale, Sparkles, Calendar, Globe, Utensils, Ruler, ChevronDown, X, Users, Activity } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
@@ -8,6 +8,7 @@ import styles from '../../styles/pages/Auth.styles';
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
 const MEAL_OPTIONS = ['Veg', 'Non-Veg'];
+const GOAL_OPTIONS = ['Weight Loss', 'Weight Gain', 'Maintenance', 'Habit Building'];
 const TIMEZONE_OPTIONS = [
   'India (IST - UTC+5:30)',
   'United States (EST - UTC-5)',
@@ -80,21 +81,48 @@ export const Auth = () => {
   const [name, setName] = useState('');
   
   // Custom Registration states
-  const [gender, setGender] = useState('Male');
-  const [age, setAge] = useState('25');
-  const [height, setHeight] = useState('175');
-  const [weight, setWeight] = useState('77.8');
-  const [mealPreference, setMealPreference] = useState('Veg');
-  const [timezone, setTimezone] = useState('India (IST - UTC+5:30)');
-  const [goal, setGoal] = useState('Fat Loss');
+  const [gender, setGender] = useState('Select Gender');
+  const [age, setAge] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [mealPreference, setMealPreference] = useState('Select Diet');
+  const [timezone, setTimezone] = useState('Select Time Zone');
+  const [goal, setGoal] = useState('Select Goal');
 
   // Modal Open states
   const [genderOpen, setGenderOpen] = useState(false);
   const [mealOpen, setMealOpen] = useState(false);
   const [timezoneOpen, setTimezoneOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
 
   // Field Validation errors
   const [errors, setErrors] = useState({});
+
+  // Input Sanitization helpers
+  const handleAgeChange = (text) => {
+    const sanitized = text.replace(/[^0-9]/g, '');
+    setAge(sanitized);
+  };
+
+  const handleHeightChange = (text) => {
+    const sanitized = text.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      setHeight(parts[0] + '.' + parts.slice(1).join(''));
+    } else {
+      setHeight(sanitized);
+    }
+  };
+
+  const handleWeightChange = (text) => {
+    const sanitized = text.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      setWeight(parts[0] + '.' + parts.slice(1).join(''));
+    } else {
+      setWeight(sanitized);
+    }
+  };
 
   const validateForm = () => {
     let tempErrors = {};
@@ -129,12 +157,17 @@ export const Auth = () => {
         tempErrors.password = "Password must be at least 6 characters";
       }
 
+      // Gender Selection
+      if (gender === 'Select Gender') {
+        tempErrors.gender = "Please select gender";
+      }
+
       // Age validations
       const ageNum = parseInt(age, 10);
       if (!age) {
         tempErrors.age = "Age is required";
       } else if (isNaN(ageNum) || ageNum < 12 || ageNum > 100) {
-        tempErrors.age = "Must be 12 to 100";
+        tempErrors.age = "Age must be 12 to 100";
       }
 
       // Height validations
@@ -142,7 +175,7 @@ export const Auth = () => {
       if (!height) {
         tempErrors.height = "Height is required";
       } else if (isNaN(heightNum) || heightNum < 100 || heightNum > 250) {
-        tempErrors.height = "Must be 100 to 250 cm";
+        tempErrors.height = "Height must be 100 to 250 cm";
       }
 
       // Weight validations
@@ -150,7 +183,22 @@ export const Auth = () => {
       if (!weight) {
         tempErrors.weight = "Weight is required";
       } else if (isNaN(weightNum) || weightNum < 30 || weightNum > 300) {
-        tempErrors.weight = "Must be 30 to 300 kg";
+        tempErrors.weight = "Weight must be 30 to 300 kg";
+      }
+
+      // Meal preference selection
+      if (mealPreference === 'Select Diet') {
+        tempErrors.mealPreference = "Please select preference";
+      }
+
+      // Weight Goal Selection
+      if (goal === 'Select Goal') {
+        tempErrors.goal = "Please select goal";
+      }
+
+      // Timezone Selection
+      if (timezone === 'Select Time Zone') {
+        tempErrors.timezone = "Please select timezone";
       }
     }
 
@@ -161,7 +209,9 @@ export const Auth = () => {
   const handleSubmit = () => {
     if (validateForm()) {
       if (isLogin) {
-        loginUser('Harish', '77.8');
+        const computedName = email.split('@')[0];
+        const formattedName = computedName.charAt(0).toUpperCase() + computedName.slice(1);
+        loginUser(formattedName, '75.0', { email });
       } else {
         loginUser(name, weight, {
           email,
@@ -179,6 +229,18 @@ export const Auth = () => {
   const handleToggleMode = () => {
     setIsLogin(!isLogin);
     setErrors({});
+    
+    // Clear inputs
+    setName('');
+    setEmail('');
+    setPassword('');
+    setGender('Select Gender');
+    setAge('');
+    setHeight('');
+    setWeight('');
+    setMealPreference('Select Diet');
+    setTimezone('Select Time Zone');
+    setGoal('Select Goal');
   };
 
   return (
@@ -219,7 +281,7 @@ export const Auth = () => {
                   <UserIcon size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                   <TextInput
                     style={styles.authInput}
-                    placeholder="Harish"
+                    placeholder="Enter your name"
                     placeholderTextColor="#546E7A"
                     value={name}
                     onChangeText={setName}
@@ -236,7 +298,7 @@ export const Auth = () => {
                 <Mail size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.authInput}
-                  placeholder="name@example.com"
+                  placeholder="Enter your email"
                   placeholderTextColor="#546E7A"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -254,7 +316,7 @@ export const Auth = () => {
                 <Lock size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.authInput}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   placeholderTextColor="#546E7A"
                   secureTextEntry
                   value={password}
@@ -274,13 +336,21 @@ export const Auth = () => {
                     <Text style={styles.inputLabel}>Gender</Text>
                     <TouchableOpacity 
                       activeOpacity={0.8}
-                      style={styles.inputFieldWrapper}
+                      style={[styles.inputFieldWrapper, errors.gender && { borderColor: '#FF5252' }]}
                       onPress={() => setGenderOpen(true)}
                     >
                       <Users size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
-                      <Text style={[styles.authInput, { paddingTop: 12 }]}>{gender}</Text>
+                      <Text 
+                        style={[
+                          styles.authInput, 
+                          { paddingTop: 12, color: gender === 'Select Gender' ? '#546E7A' : '#ECEFF1' }
+                        ]}
+                      >
+                        {gender}
+                      </Text>
                       <ChevronDown size={14} color={theme.colors.textSecondary} />
                     </TouchableOpacity>
+                    {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
                   </View>
 
                   {/* Age Inputs (Number) */}
@@ -290,11 +360,11 @@ export const Auth = () => {
                       <Calendar size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                       <TextInput
                         style={styles.authInput}
-                        placeholder="25"
+                        placeholder="Enter age"
                         placeholderTextColor="#546E7A"
                         keyboardType="number-pad"
                         value={age}
-                        onChangeText={setAge}
+                        onChangeText={handleAgeChange}
                       />
                     </View>
                     {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
@@ -310,11 +380,11 @@ export const Auth = () => {
                       <Ruler size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                       <TextInput
                         style={styles.authInput}
-                        placeholder="175"
+                        placeholder="Enter height"
                         placeholderTextColor="#546E7A"
                         keyboardType="numeric"
                         value={height}
-                        onChangeText={setHeight}
+                        onChangeText={handleHeightChange}
                       />
                       <Text style={styles.unitLabel}>cm</Text>
                     </View>
@@ -328,11 +398,11 @@ export const Auth = () => {
                       <Scale size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                       <TextInput
                         style={styles.authInput}
-                        placeholder="77.8"
+                        placeholder="Enter weight"
                         placeholderTextColor="#546E7A"
                         keyboardType="numeric"
                         value={weight}
-                        onChangeText={setWeight}
+                        onChangeText={handleWeightChange}
                       />
                       <Text style={styles.unitLabel}>kg</Text>
                     </View>
@@ -347,35 +417,43 @@ export const Auth = () => {
                     <Text style={styles.inputLabel}>Meal Preference</Text>
                     <TouchableOpacity 
                       activeOpacity={0.8}
-                      style={styles.inputFieldWrapper}
+                      style={[styles.inputFieldWrapper, errors.mealPreference && { borderColor: '#FF5252' }]}
                       onPress={() => setMealOpen(true)}
                     >
                       <Utensils size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
-                      <Text style={[styles.authInput, { paddingTop: 12 }]}>{mealPreference}</Text>
+                      <Text 
+                        style={[
+                          styles.authInput, 
+                          { paddingTop: 12, color: mealPreference === 'Select Diet' ? '#546E7A' : '#ECEFF1' }
+                        ]}
+                      >
+                        {mealPreference}
+                      </Text>
                       <ChevronDown size={14} color={theme.colors.textSecondary} />
                     </TouchableOpacity>
+                    {errors.mealPreference && <Text style={styles.errorText}>{errors.mealPreference}</Text>}
                   </View>
 
-                  {/* Weight Goal Tab Selector */}
+                  {/* Weight Goal Selector Dropdown */}
                   <View style={[styles.inputGroup, styles.gridHalf]}>
                     <Text style={styles.inputLabel}>Weight Goal</Text>
-                    <View style={styles.goalSelectorContainer}>
-                      {['Fat Loss', 'Strength', 'Habits'].map((item) => {
-                        const isSelected = goal === item;
-                        return (
-                          <TouchableOpacity
-                            key={item}
-                            activeOpacity={0.8}
-                            style={[styles.goalOption, isSelected && styles.activeGoalOption]}
-                            onPress={() => setGoal(item)}
-                          >
-                            <Text style={[styles.goalText, isSelected && styles.activeGoalText]}>
-                              {item === 'Fat Loss' ? 'Loss' : item === 'Strength' ? 'Str' : 'Habit'}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
+                    <TouchableOpacity 
+                      activeOpacity={0.8}
+                      style={[styles.inputFieldWrapper, errors.goal && { borderColor: '#FF5252' }]}
+                      onPress={() => setGoalOpen(true)}
+                    >
+                      <Activity size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
+                      <Text 
+                        style={[
+                          styles.authInput, 
+                          { paddingTop: 12, color: goal === 'Select Goal' ? '#546E7A' : '#ECEFF1' }
+                        ]}
+                      >
+                        {goal}
+                      </Text>
+                      <ChevronDown size={14} color={theme.colors.textSecondary} />
+                    </TouchableOpacity>
+                    {errors.goal && <Text style={styles.errorText}>{errors.goal}</Text>}
                   </View>
                 </View>
 
@@ -384,15 +462,22 @@ export const Auth = () => {
                   <Text style={styles.inputLabel}>Time Zone</Text>
                   <TouchableOpacity 
                     activeOpacity={0.8}
-                    style={styles.inputFieldWrapper}
+                    style={[styles.inputFieldWrapper, errors.timezone && { borderColor: '#FF5252' }]}
                     onPress={() => setTimezoneOpen(true)}
                   >
                     <Globe size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
-                    <Text style={[styles.authInput, { paddingTop: 12 }]} numberOfLines={1}>
+                    <Text 
+                      style={[
+                        styles.authInput, 
+                        { paddingTop: 12, color: timezone === 'Select Time Zone' ? '#546E7A' : '#ECEFF1' }
+                      ]} 
+                      numberOfLines={1}
+                    >
                       {timezone}
                     </Text>
                     <ChevronDown size={14} color={theme.colors.textSecondary} />
                   </TouchableOpacity>
+                  {errors.timezone && <Text style={styles.errorText}>{errors.timezone}</Text>}
                 </View>
               </View>
             )}
@@ -447,6 +532,16 @@ export const Auth = () => {
         selectedValue={mealPreference}
         onSelect={setMealPreference}
         onClose={() => setMealOpen(false)}
+      />
+
+      {/* Weight Goal Picker Bottom Sheet */}
+      <CustomPicker
+        visible={goalOpen}
+        title="Select Weight Goal"
+        options={GOAL_OPTIONS}
+        selectedValue={goal}
+        onSelect={setGoal}
+        onClose={() => setGoalOpen(false)}
       />
 
       {/* Timezone Picker Bottom Sheet */}

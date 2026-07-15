@@ -10,7 +10,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.anonymous.sbmmobileapp"
+      "package": "com.hariharan.sbmMobileApp"
     }
   }
 }

@@ -5,7 +5,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
-import styles from './DailyActions.styles';
+import styles from '../../styles/components/DailyActions.styles';
 
 export const DailyActions = () => {
   const { 

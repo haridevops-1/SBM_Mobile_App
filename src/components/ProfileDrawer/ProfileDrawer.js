@@ -5,7 +5,7 @@ import { X, LogOut, Home, Flame, BarChart2, BookOpen, MessageSquare, Mail, Scale
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
-import styles from './ProfileDrawer.styles';
+import styles from '../../styles/components/ProfileDrawer.styles';
 
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.8;

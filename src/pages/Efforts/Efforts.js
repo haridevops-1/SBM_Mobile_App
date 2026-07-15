@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
 import theme from '../../theme/theme';
-import styles from './Efforts.styles';
+import styles from '../../styles/pages/Efforts.styles';
 
 export const Efforts = () => {
   const [activeTimeframe, setActiveTimeframe] = useState('week');

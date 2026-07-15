@@ -4,7 +4,7 @@ import { Bell } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
-import styles from './Header.styles';
+import styles from '../../styles/components/Header.styles';
 
 export const Header = () => {
   const { username, setIsProfileOpen } = useUser();

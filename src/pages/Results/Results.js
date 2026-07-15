@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
 import theme from '../../theme/theme';
-import styles from './Results.styles';
+import styles from '../../styles/pages/Results.styles';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -85,6 +85,9 @@ export const Results = () => {
         ],
         '30days': [
           { day: '18 Jun', val: 26.5, x: 40, y: 72 },
+          { day: '23 Jun', val: 25.8, x: 95, y: 82 },
+          { day: '28 Jun', val: 25.2, x: 150, y: 92 },
+          { day: '3 Jul', val: 24.8, x: 205, y: 98 },
           { day: '23 Jun', val: 25.8, x: 95, y: 82 },
           { day: '28 Jun', val: 25.2, x: 150, y: 92 },
           { day: '3 Jul', val: 24.8, x: 205, y: 98 },

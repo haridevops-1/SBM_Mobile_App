@@ -4,9 +4,9 @@ import theme from '../../theme/theme';
 export default StyleSheet.create({
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: '#0A0D18',
+    backgroundColor: 'rgba(10, 13, 24, 0.85)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
     height: Platform.OS === 'ios' ? 76 : 64,
     paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingTop: 8,

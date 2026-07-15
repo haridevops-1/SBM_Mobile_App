@@ -7,10 +7,14 @@ export default StyleSheet.create({
     marginVertical: theme.spacing.sm,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
-    backgroundColor: theme.colors.bgCard,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     padding: theme.spacing.md,
     overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -21,7 +25,7 @@ export default StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   viewDetailsBtn: {
     flexDirection: 'row',
@@ -57,7 +61,7 @@ export default StyleSheet.create({
   progressPercentage: {
     fontSize: 22,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     lineHeight: 24,
   },
   progressLabel: {
@@ -106,7 +110,7 @@ export default StyleSheet.create({
   statValue: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     marginTop: 1,
   },
   greenText: {

@@ -6,7 +6,7 @@ const { width } = Dimensions.get('window');
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D18',
+    backgroundColor: '#060813',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -37,7 +37,7 @@ export default StyleSheet.create({
   headerTitleText: {
     fontSize: 20,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   bellBtn: {
     position: 'relative',
@@ -72,12 +72,16 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
-    borderRadius: 20,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 24,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
   },
   cardLeftInfo: {
     flexDirection: 'row',
@@ -99,7 +103,7 @@ export default StyleSheet.create({
   supportCardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   supportCardDesc: {
     fontSize: 10,
@@ -110,15 +114,19 @@ export default StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   supportHoursCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
     marginVertical: theme.spacing.sm,
     padding: theme.spacing.md,
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   hoursCardHeader: {
     flexDirection: 'row',
@@ -131,7 +139,7 @@ export default StyleSheet.create({
   hoursTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   hoursTable: {
     width: '100%',
@@ -152,7 +160,7 @@ export default StyleSheet.create({
   hoursTime: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   statusClosed: {
     color: '#FF5252',
@@ -169,7 +177,7 @@ export default StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   reachUsGrid: {
@@ -179,10 +187,10 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
-    borderRadius: 16,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 20,
     padding: 14,
     marginBottom: 10,
   },
@@ -206,7 +214,7 @@ export default StyleSheet.create({
   reachHeading: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   reachSubtext: {
     fontSize: 10,
@@ -222,8 +230,8 @@ export default StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: 'rgba(123, 31, 162, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(123, 31, 162, 0.2)',
-    borderRadius: 20,
+    borderColor: 'rgba(123, 31, 162, 0.15)',
+    borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
     marginVertical: theme.spacing.sm,
     padding: 16,
@@ -258,17 +266,21 @@ export default StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     justifyContent: 'flex-end',
   },
   chatModalContent: {
     backgroundColor: '#0F121E',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     height: '80%',
     paddingBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
   },
   chatModalHeader: {
     flexDirection: 'row',
@@ -373,6 +385,7 @@ export default StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     marginRight: 10,
+    outlineStyle: 'none',
   },
   chatSendBtn: {
     width: 40,
@@ -384,12 +397,16 @@ export default StyleSheet.create({
   },
   faqModalContent: {
     backgroundColor: '#0F121E',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     height: '75%',
     paddingBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
   },
   faqModalHeader: {
     flexDirection: 'row',

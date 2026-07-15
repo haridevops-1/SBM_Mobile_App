@@ -21,7 +21,7 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   avatarText: {
     color: '#FFFFFF',
@@ -42,6 +42,10 @@ export default StyleSheet.create({
     height: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#FF4081',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   badgeText: {
     color: 'white',
@@ -54,7 +58,7 @@ export default StyleSheet.create({
   greetingTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     letterSpacing: -0.5,
     marginBottom: 4,
   },

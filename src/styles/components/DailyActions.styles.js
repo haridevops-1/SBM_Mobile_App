@@ -9,18 +9,22 @@ export default StyleSheet.create({
   trackerSubheading: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     marginVertical: 12,
     letterSpacing: -0.3,
   },
   effortScoresCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 24,
     padding: theme.spacing.md,
     alignItems: 'center',
     marginBottom: theme.spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   effortGaugeWrapper: {
     position: 'relative',
@@ -42,7 +46,7 @@ export default StyleSheet.create({
   gaugePercent: {
     fontSize: 22,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     lineHeight: 24,
   },
   gaugeLabel: {
@@ -69,7 +73,7 @@ export default StyleSheet.create({
   splitValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   splitLabel: {
     fontSize: 9,
@@ -112,13 +116,17 @@ export default StyleSheet.create({
     fontWeight: '600',
   },
   inlineWeightCard: {
-    backgroundColor: '#121625',
+    backgroundColor: '#111422',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 20,
     padding: theme.spacing.md,
     marginBottom: 16,
     position: 'relative',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
   },
   closeInlineBtn: {
     position: 'absolute',
@@ -139,7 +147,9 @@ export default StyleSheet.create({
     textAlign: 'center',
   },
   weightInputWrapper: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#090B13',
+    borderWidth: 1,
+    borderColor: '#7B1FA2',
     borderRadius: 12,
     height: 48,
     justifyContent: 'center',
@@ -147,12 +157,13 @@ export default StyleSheet.create({
     marginBottom: 16,
   },
   weightInput: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
     width: '100%',
     height: '100%',
+    outlineStyle: 'none',
   },
   saveBtnContainer: {
     borderRadius: 12,

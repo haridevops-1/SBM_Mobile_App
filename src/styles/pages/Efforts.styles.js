@@ -4,7 +4,7 @@ import theme from '../../theme/theme';
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D18',
+    backgroundColor: '#060813',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -35,7 +35,7 @@ export default StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   headerActionBtn: {
     padding: 4,
@@ -46,13 +46,17 @@ export default StyleSheet.create({
     fontWeight: '500',
   },
   overallProgressCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
-    borderRadius: 20,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
     marginVertical: theme.spacing.sm,
     padding: theme.spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   progressCardHeader: {
     flexDirection: 'row',
@@ -63,13 +67,15 @@ export default StyleSheet.create({
   progressTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   timeframeSelector: {
     flexDirection: 'row',
-    backgroundColor: '#0F121E',
+    backgroundColor: '#090B13',
     borderRadius: 8,
     padding: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
   },
   timeframeBtn: {
     paddingVertical: 4,
@@ -104,7 +110,7 @@ export default StyleSheet.create({
   metricValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   metricLabel: {
     fontSize: 8,
@@ -200,7 +206,7 @@ export default StyleSheet.create({
   questionsTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   viewAllBtn: {
     fontSize: 12,
@@ -213,9 +219,9 @@ export default StyleSheet.create({
   categoryToggleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -239,7 +245,7 @@ export default StyleSheet.create({
   categoryName: {
     fontSize: 11,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   categoryScore: {
     fontSize: 9,
@@ -247,13 +253,17 @@ export default StyleSheet.create({
     marginTop: 1,
   },
   categoryDetailsCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
-    borderRadius: 20,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
     marginVertical: theme.spacing.sm,
     padding: theme.spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   detailsHeader: {
     flexDirection: 'row',
@@ -276,7 +286,7 @@ export default StyleSheet.create({
   detailsTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   viewDetailsLink: {
     flexDirection: 'row',

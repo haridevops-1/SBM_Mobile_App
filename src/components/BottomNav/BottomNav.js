@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Home, ClipboardList, BarChart2, BookOpen, MessageSquare } from 'lucide-react-native';
-import styles from './BottomNav.styles';
+import styles from '../../styles/components/BottomNav.styles';
 
 export const BottomNav = ({ state, descriptors, navigation }) => {
   const getIcon = (routeName, color) => {

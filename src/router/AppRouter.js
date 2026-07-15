@@ -1,15 +1,15 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomeScreen from '../screens/Home/Home';
-import EffortsScreen from '../screens/Efforts/Efforts';
-import ResultsScreen from '../screens/Results/Results';
-import ResourcesScreen from '../screens/Resources/Resources';
-import SupportScreen from '../screens/Support/Support';
+import HomeScreen from '../pages/Home/Home';
+import EffortsScreen from '../pages/Efforts/Efforts';
+import ResultsScreen from '../pages/Results/Results';
+import ResourcesScreen from '../pages/Resources/Resources';
+import SupportScreen from '../pages/Support/Support';
 import BottomNav from '../components/BottomNav/BottomNav';
 
 const Tab = createBottomTabNavigator();
 
-export const AppNavigator = () => {
+export const AppRouter = () => {
   return (
     <Tab.Navigator
       tabBar={(props) => <BottomNav {...props} />}
@@ -26,4 +26,4 @@ export const AppNavigator = () => {
   );
 };
 
-export default AppNavigator;
+export default AppRouter;

@@ -3,7 +3,7 @@ import { View, Text } from 'react-native';
 import { Power, Zap, Target, Trophy } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import theme from '../../theme/theme';
-import styles from './SbmCards.styles';
+import styles from '../../styles/components/SbmCards.styles';
 
 export const SbmCards = () => {
   const cardsData = [

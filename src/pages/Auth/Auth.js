@@ -4,7 +4,7 @@ import { Mail, Lock, User as UserIcon, Scale, Sparkles } from 'lucide-react-nati
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
-import styles from './Auth.styles';
+import styles from '../../styles/pages/Auth.styles';
 
 export const Auth = () => {
   const { loginUser } = useUser();

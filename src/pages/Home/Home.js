@@ -8,7 +8,7 @@ import SbmCards from '../../components/SbmCards/SbmCards';
 import DailyActions from '../../components/DailyActions/DailyActions';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
 import theme from '../../theme/theme';
-import styles from './Home.styles';
+import styles from '../../styles/pages/Home.styles';
 
 export const Home = () => {
   const dateString = "Sunday, 13 July 2025";

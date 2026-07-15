@@ -4,7 +4,7 @@ import theme from '../../theme/theme';
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D18',
+    backgroundColor: '#060813',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -35,7 +35,7 @@ export default StyleSheet.create({
   headerTitleText: {
     fontSize: 20,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   bellBtn: {
     position: 'relative',
@@ -67,7 +67,7 @@ export default StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F121E',
+    backgroundColor: '#090B13',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -83,6 +83,7 @@ export default StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     height: '100%',
+    outlineStyle: 'none',
   },
   searchSubmitBtn: {
     backgroundColor: '#7B1FA2',
@@ -101,9 +102,9 @@ export default StyleSheet.create({
     paddingVertical: 10,
   },
   filterTabBtn: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -126,12 +127,16 @@ export default StyleSheet.create({
     marginTop: 10,
   },
   videoResourceCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
-    borderRadius: 20,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 24,
     marginBottom: 20,
     overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   videoThumbnailWrapper: {
     height: 180,
@@ -157,6 +162,10 @@ export default StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+    shadowColor: '#7B1FA2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
   },
   videoCardDetails: {
     padding: 16,
@@ -164,7 +173,7 @@ export default StyleSheet.create({
   videoCardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   videoCardDateRow: {
@@ -212,12 +221,16 @@ export default StyleSheet.create({
   },
   videoPlayerModalContent: {
     width: '100%',
-    backgroundColor: '#0F121E',
+    backgroundColor: '#111422',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 16,
     position: 'relative',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
   },
   videoModalCloseBtn: {
     position: 'absolute',

@@ -4,7 +4,7 @@ import theme from '../../theme/theme';
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D18',
+    backgroundColor: '#060813',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -60,7 +60,7 @@ export default StyleSheet.create({
   greetingTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     letterSpacing: -0.5,
     marginBottom: 2,
   },
@@ -92,13 +92,17 @@ export default StyleSheet.create({
     position: 'absolute',
     top: 36,
     right: 0,
-    backgroundColor: '#161B2B',
+    backgroundColor: '#111422',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     zIndex: 100,
     width: 100,
     padding: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   dropdownMenuItem: {
     paddingVertical: 8,
@@ -107,17 +111,21 @@ export default StyleSheet.create({
   },
   dropdownMenuItemText: {
     fontSize: 11,
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   weightGraphCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
     marginVertical: theme.spacing.sm,
     padding: theme.spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   graphCardHeader: {
     flexDirection: 'row',
@@ -140,7 +148,7 @@ export default StyleSheet.create({
   graphTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   lineChartWrapper: {
     flexDirection: 'row',
@@ -213,7 +221,7 @@ export default StyleSheet.create({
   },
   tooltipValueText: {
     fontSize: 10,
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   xAxisLabels: {
@@ -252,7 +260,7 @@ export default StyleSheet.create({
   summaryValue: {
     fontSize: 11,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   summaryLabel: {
     fontSize: 8,
@@ -261,13 +269,17 @@ export default StyleSheet.create({
     fontWeight: '600',
   },
   progressOverviewCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
     marginVertical: theme.spacing.sm,
     padding: theme.spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   overviewHeader: {
     flexDirection: 'row',
@@ -290,7 +302,7 @@ export default StyleSheet.create({
   overviewTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   progressRowsList: {
     width: '100%',
@@ -330,7 +342,7 @@ export default StyleSheet.create({
   rowTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   rowUnit: {
     fontSize: 8,
@@ -357,7 +369,7 @@ export default StyleSheet.create({
   rowCurrentVal: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   rowChangeVal: {
     fontSize: 9,
@@ -366,13 +378,17 @@ export default StyleSheet.create({
     marginTop: 2,
   },
   foodRelationshipCard: {
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
     marginVertical: theme.spacing.sm,
     padding: theme.spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
   },
   foodHeader: {
     flexDirection: 'row',
@@ -396,7 +412,7 @@ export default StyleSheet.create({
   foodTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   foodSlidersList: {
     width: '100%',
@@ -429,7 +445,7 @@ export default StyleSheet.create({
   sliderTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   sliderSublabel: {
     fontSize: 9,
@@ -443,7 +459,7 @@ export default StyleSheet.create({
   sliderScore: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     marginRight: 8,
   },
   sliderStatus: {

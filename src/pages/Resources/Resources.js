@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
 import theme from '../../theme/theme';
-import styles from './Resources.styles';
+import styles from '../../styles/pages/Resources.styles';
 
 export const Resources = () => {
   const { username, setIsProfileOpen } = useUser();

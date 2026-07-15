@@ -3,7 +3,7 @@ import { View, Text } from 'react-native';
 import { Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import theme from '../../theme/theme';
-import styles from './QuoteBanner.styles';
+import styles from '../../styles/components/QuoteBanner.styles';
 
 export const QuoteBanner = () => {
   return (

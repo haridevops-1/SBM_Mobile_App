@@ -4,7 +4,7 @@ import theme from '../../theme/theme';
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D18',
+    backgroundColor: '#060813',
   },
   scrollContent: {
     paddingBottom: 40,

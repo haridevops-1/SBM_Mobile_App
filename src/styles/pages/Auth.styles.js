@@ -1,12 +1,12 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import theme from '../../theme/theme';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D18',
+    backgroundColor: '#060813',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -35,31 +35,31 @@ export default StyleSheet.create({
   },
   authCard: {
     width: '100%',
-    backgroundColor: 'rgba(22, 27, 43, 0.85)',
-    borderRadius: 24,
+    backgroundColor: 'rgba(18, 22, 38, 0.85)',
+    borderRadius: 28,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     padding: theme.spacing.lg,
-    elevation: 4,
+    elevation: 10,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
   },
   brandHeader: {
     alignItems: 'center',
     marginBottom: 24,
   },
   brandLogoRing: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: '#7B1FA2',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
     shadowColor: '#7B1FA2',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
     shadowRadius: 10,
   },
@@ -104,7 +104,7 @@ export default StyleSheet.create({
   inputFieldWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F121E',
+    backgroundColor: '#090B13',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 12,
@@ -120,6 +120,7 @@ export default StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     height: '100%',
+    outlineStyle: 'none',
   },
   signupGridFields: {
     flexDirection: 'row',
@@ -138,10 +139,10 @@ export default StyleSheet.create({
   goalSelectorContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#0F121E',
+    backgroundColor: '#090B13',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     padding: 3,
     height: 46,
     alignItems: 'center',

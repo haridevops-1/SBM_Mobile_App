@@ -9,7 +9,7 @@ export default StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     marginBottom: 12,
     letterSpacing: -0.3,
   },
@@ -22,10 +22,10 @@ export default StyleSheet.create({
     width: '48%',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.borderColor,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     padding: theme.spacing.md,
     marginBottom: 12,
-    backgroundColor: theme.colors.bgCard,
+    backgroundColor: 'rgba(22, 28, 45, 0.7)',
     overflow: 'hidden',
   },
   cardGradient: {
@@ -43,7 +43,7 @@ export default StyleSheet.create({
   scoreValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
     marginBottom: 2,
   },
   cardTitle: {

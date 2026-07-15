@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Flame, Target, TrendingDown, ChevronRight } from 'lucide-react-native';
 import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 import { useUser } from '../../context/UserContext';
-import styles from './InProgressCard.styles';
+import styles from '../../styles/components/InProgressCard.styles';
 
 export const InProgressCard = () => {
   const { streakDays, todayEffortLogged, startWeight, loggedWeight } = useUser();

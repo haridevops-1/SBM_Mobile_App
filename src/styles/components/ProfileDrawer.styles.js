@@ -1,21 +1,21 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import theme from '../../theme/theme';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.8;
 
 export default StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     flexDirection: 'row',
   },
   drawerContainer: {
     width: DRAWER_WIDTH,
     height: '100%',
-    backgroundColor: '#0A0D18',
+    backgroundColor: '#070913',
     borderRightWidth: 1,
-    borderRightColor: 'rgba(255, 255, 255, 0.08)',
+    borderRightColor: 'rgba(255, 255, 255, 0.05)',
     paddingTop: 50,
     paddingBottom: 30,
     paddingHorizontal: theme.spacing.md,
@@ -31,7 +31,7 @@ export default StyleSheet.create({
   drawerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   drawerCloseBtn: {
     padding: 4,
@@ -60,7 +60,7 @@ export default StyleSheet.create({
   drawerUsername: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.textPrimary,
+    color: '#FFFFFF',
   },
   drawerUseridBadge: {
     fontSize: 10,
@@ -71,7 +71,7 @@ export default StyleSheet.create({
   drawerSectionDivider: {
     width: '100%',
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     marginVertical: 16,
   },
   drawerNavSection: {
@@ -97,7 +97,9 @@ export default StyleSheet.create({
     marginBottom: 6,
   },
   activeNavItem: {
-    backgroundColor: 'rgba(123, 31, 162, 0.12)',
+    backgroundColor: 'rgba(123, 31, 162, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(176, 133, 245, 0.15)',
   },
   navItemIcon: {
     marginRight: 12,

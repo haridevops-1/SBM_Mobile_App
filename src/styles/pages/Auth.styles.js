@@ -263,4 +263,21 @@ export default StyleSheet.create({
     color: '#B085F5',
     fontWeight: '700',
   },
+  successBanner: {
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successBannerText: {
+    color: '#81C784',
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
+  },
 });

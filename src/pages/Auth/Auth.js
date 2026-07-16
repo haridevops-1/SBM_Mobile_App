@@ -98,6 +98,7 @@ export const Auth = () => {
 
   // Field Validation errors
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Input Sanitization helpers
   const handleAgeChange = (text) => {
@@ -224,10 +225,15 @@ export const Auth = () => {
       const data = await response.json();
       if (response.status === 200 && data.status === 'success') {
         // Successful login session. Trigger state context
-        loginUser(data.user.name, '75.0', {
+        loginUser(data.user.name, data.user.weight || '75.0', {
           email: data.user.email,
           userId: data.user.id,
           token: data.token,
+          gender: data.user.gender,
+          age: data.user.age,
+          height: data.user.height,
+          mealPreference: data.user.meal_preference,
+          timezone: data.user.timezone,
           userGoal: 'Fat Loss', // defaults
         });
       } else {
@@ -267,10 +273,13 @@ export const Auth = () => {
 
       const data = await response.json();
       if (response.status === 201 && data.status === 'success') {
-        Alert.alert("Registration Successful", "Account created successfully! Please log in to continue.");
-        setIsLogin(true); // Toggle to login view
-        setPassword(''); // Clear password field
-        setErrors({}); // Reset validations
+        setSuccessMessage("Account created successfully! Redirecting to log in in 3 seconds...");
+        setTimeout(() => {
+          setIsLogin(true); // Toggle to login view
+          setPassword(''); // Clear password field
+          setErrors({}); // Reset validations
+          setSuccessMessage(''); // Re-initialize
+        }, 3000);
       } else {
         Alert.alert("Registration Failed", data.message || "Catalyst database rejected the registration request.");
       }
@@ -328,6 +337,13 @@ export const Auth = () => {
             <Text style={styles.brandTitle}>SLOW BURN METHOD</Text>
             <Text style={styles.brandTagline}>Transform your body. Train your mind.</Text>
           </View>
+
+          {successMessage ? (
+            <View style={styles.successBanner}>
+              <Sparkles size={16} color="#4CAF50" style={{ marginRight: 8 }} />
+              <Text style={styles.successBannerText}>{successMessage}</Text>
+            </View>
+          ) : null}
 
           {/* Section Header */}
           <Text style={styles.authSectionTitle}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>

@@ -1,14 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, Animated, TouchableWithoutFeedback, useWindowDimensions, ScrollView, Platform } from 'react-native';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { X, LogOut, Home, Flame, BarChart2, BookOpen, MessageSquare, Mail, Scale, User, Globe, Activity } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
 import styles from '../../styles/components/ProfileDrawer.styles';
-
-const { width } = Dimensions.get('window');
-const DRAWER_WIDTH = width * 0.8;
 
 export const ProfileDrawer = () => {
   const {
@@ -28,11 +25,17 @@ export const ProfileDrawer = () => {
   } = useUser();
 
   const navigation = useNavigation();
+  const { width } = useWindowDimensions();
+
+  // Responsive Width Settings for Desktop Simulation compatibility
+  const isWebDesktop = Platform.OS === 'web' && width > 768;
+  const DRAWER_WIDTH = isWebDesktop ? 440 * 0.8 : width * 0.8;
 
   // Obtain active route name
   const state = useNavigationState(state => state);
   const activeRoute = state ? state.routes[state.index]?.name : 'Tracker';
 
+  // Animation starting value: fully off-screen left
   const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
 
   useEffect(() => {
@@ -49,7 +52,7 @@ export const ProfileDrawer = () => {
         useNativeDriver: true,
       }).start();
     }
-  }, [isProfileOpen]);
+  }, [isProfileOpen, DRAWER_WIDTH]);
 
   if (!isProfileOpen) return null;
 
@@ -91,28 +94,28 @@ export const ProfileDrawer = () => {
       onRequestClose={handleClose}
       animationType="none"
     >
-      <View style={styles.overlay}>
-        {/* Backdrop Tap Zone */}
-        <TouchableWithoutFeedback onPress={handleClose}>
-          <View style={{ flex: 1 }} />
-        </TouchableWithoutFeedback>
-
-        {/* Sliding Drawer Body Container */}
+      <View style={[styles.overlay, isWebDesktop && styles.webOverlay]}>
+        {/* Sliding Drawer Body Container (Now positioned on the LEFT side) */}
         <Animated.View 
           style={[
             styles.drawerContainer,
-            { transform: [{ translateX: slideAnim }] }
+            { width: DRAWER_WIDTH, transform: [{ translateX: slideAnim }] }
           ]}
         >
-          <View style={{ flex: 1 }}>
-            {/* Header Row */}
-            <View style={styles.drawerHeader}>
-              <Text style={styles.drawerTitle}>Navigation Menu</Text>
-              <TouchableOpacity style={styles.drawerCloseBtn} onPress={handleClose}>
-                <X size={20} color={theme.colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
+          {/* Header Row */}
+          <View style={styles.drawerHeader}>
+            <Text style={styles.drawerTitle}>Navigation Menu</Text>
+            <TouchableOpacity style={styles.drawerCloseBtn} onPress={handleClose}>
+              <X size={20} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
 
+          {/* Scrollable middle container to prevent UI elements overlapping */}
+          <ScrollView 
+            style={{ flex: 1 }} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
             {/* Avatar Section */}
             <View style={styles.drawerAvatarSection}>
               <LinearGradient
@@ -211,9 +214,9 @@ export const ProfileDrawer = () => {
                 </View>
               </View>
             </View>
-          </View>
+          </ScrollView>
 
-          {/* Logout Action Button */}
+          {/* Logout Action Button (Remains fixed at the bottom of the drawer) */}
           <View style={styles.drawerActionContainer}>
             <TouchableOpacity 
               activeOpacity={0.8} 
@@ -225,6 +228,11 @@ export const ProfileDrawer = () => {
             </TouchableOpacity>
           </View>
         </Animated.View>
+
+        {/* Backdrop Tap Zone (Positioned on the RIGHT side to close modal) */}
+        <TouchableWithoutFeedback onPress={handleClose}>
+          <View style={{ flex: 1 }} />
+        </TouchableWithoutFeedback>
       </View>
     </Modal>
   );

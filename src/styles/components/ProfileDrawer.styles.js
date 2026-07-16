@@ -9,9 +9,14 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     flexDirection: 'row',
+    overflow: 'hidden',
+  },
+  webOverlay: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
   },
   drawerContainer: {
-    width: DRAWER_WIDTH,
     height: '100%',
     backgroundColor: '#070913',
     borderRightWidth: 1,
@@ -75,7 +80,7 @@ export default StyleSheet.create({
     marginVertical: 16,
   },
   drawerNavSection: {
-    flex: 1,
+    marginBottom: 10,
   },
   drawerSectionLabel: {
     fontSize: 10,

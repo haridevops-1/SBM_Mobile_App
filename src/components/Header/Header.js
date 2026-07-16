@@ -10,6 +10,14 @@ export const Header = () => {
   const { username, setIsProfileOpen } = useUser();
   const initial = username ? username.charAt(0).toUpperCase() : 'H';
 
+  // Calculate greeting dynamically based on local clock hours
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerTop}>
@@ -34,7 +42,7 @@ export const Header = () => {
       
       <View style={styles.headerGreeting}>
         <Text style={styles.greetingTitle}>
-          Good Morning, {username}! 👋
+          {getGreeting()}, {username}! 👋
         </Text>
         <Text style={styles.greetingSubtitle}>
           Stay consistent, stay unstoppable.

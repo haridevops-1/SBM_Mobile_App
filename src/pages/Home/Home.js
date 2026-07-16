@@ -3,7 +3,6 @@ import { ScrollView, View, Text, SafeAreaView } from 'react-native';
 import { Calendar } from 'lucide-react-native';
 import Header from '../../components/Header/Header';
 import QuoteBanner from '../../components/QuoteBanner/QuoteBanner';
-import InProgressCard from '../../components/InProgressCard/InProgressCard';
 import SbmCards from '../../components/SbmCards/SbmCards';
 import DailyActions from '../../components/DailyActions/DailyActions';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
@@ -11,30 +10,33 @@ import theme from '../../theme/theme';
 import styles from '../../styles/pages/Home.styles';
 
 export const Home = () => {
-  const dateString = "Sunday, 13 July 2025";
+  // Calculate dynamic date matching original date formats (e.g. "Thursday, 16 July 2026")
+  const getDynamicDateString = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const d = new Date();
+    return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Top Header */}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Top welcome greeting header */}
         <Header />
 
-        {/* Quote Banner */}
-        <QuoteBanner />
-
-        {/* Date Row */}
+        {/* Date Row positioned above the daily quote message */}
         <View style={styles.dateRow}>
           <Calendar size={14} color={theme.colors.textSecondary} style={styles.calendarIcon} />
-          <Text style={styles.dateText}>{dateString}</Text>
+          <Text style={styles.dateText}>{getDynamicDateString()}</Text>
         </View>
 
-        {/* Today's Progress Card */}
-        <InProgressCard />
+        {/* Quote message banner */}
+        <QuoteBanner />
 
-        {/* SBM Score Section */}
+        {/* Progress Grid (Consistency, Effort, Weight Change) */}
         <SbmCards />
 
-        {/* Daily Actions Grid */}
+        {/* Daily Actions & Gauge Section */}
         <DailyActions />
       </ScrollView>
 

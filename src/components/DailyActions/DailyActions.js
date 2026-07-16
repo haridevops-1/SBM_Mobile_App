@@ -119,6 +119,52 @@ export const DailyActions = () => {
         </View>
       </View>
 
+      {/* Inline Weight Logger Card (Rendered ABOVE the actions log buttons) */}
+      {showWeightInput && !todayWeightLogged && (
+        <View style={[styles.inlineWeightCard, { marginBottom: 16 }]}>
+          <TouchableOpacity 
+            style={styles.closeInlineBtn} 
+            onPress={() => setShowWeightInput(false)}
+          >
+            <X size={16} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+          
+          <View style={styles.weightModalForm}>
+            <Text style={styles.modalPromptText}>
+              Enter today's weight to keep your log updated.
+            </Text>
+
+            <View style={styles.weightInputWrapper}>
+              <TextInput 
+                style={styles.weightInput}
+                keyboardType="numeric"
+                value={weightInputValue}
+                onChangeText={setWeightInputValue}
+                placeholder="Enter your weight (kg)"
+                placeholderTextColor="#999999"
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.saveBtnContainer}>
+              <LinearGradient
+                colors={theme.colors.gradients.purpleButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <TouchableOpacity 
+                  activeOpacity={0.8} 
+                  style={styles.saveBtn} 
+                  onPress={handleWeightSubmit}
+                >
+                  <Text style={styles.saveBtnText}>Save</Text>
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+          </View>
+        </View>
+      )}
+
       <Text style={styles.trackerSubheading}>Daily Actions</Text>
 
       <View style={styles.actionButtonsStack}>
@@ -173,52 +219,6 @@ export const DailyActions = () => {
           </LinearGradient>
         </View>
       </View>
-
-      {/* Inline Weight Logger Card */}
-      {showWeightInput && !todayWeightLogged && (
-        <View style={styles.inlineWeightCard}>
-          <TouchableOpacity 
-            style={styles.closeInlineBtn} 
-            onPress={() => setShowWeightInput(false)}
-          >
-            <X size={16} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-          
-          <View style={styles.weightModalForm}>
-            <Text style={styles.modalPromptText}>
-              Enter today's weight to keep your log updated.
-            </Text>
-
-            <View style={styles.weightInputWrapper}>
-              <TextInput 
-                style={styles.weightInput}
-                keyboardType="numeric"
-                value={weightInputValue}
-                onChangeText={setWeightInputValue}
-                placeholder="Enter your weight (kg)"
-                placeholderTextColor="#999999"
-                autoFocus
-              />
-            </View>
-
-            <View style={styles.saveBtnContainer}>
-              <LinearGradient
-                colors={theme.colors.gradients.purpleButton}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <TouchableOpacity 
-                  activeOpacity={0.8} 
-                  style={styles.saveBtn} 
-                  onPress={handleWeightSubmit}
-                >
-                  <Text style={styles.saveBtnText}>Save</Text>
-                </TouchableOpacity>
-              </LinearGradient>
-            </View>
-          </View>
-        </View>
-      )}
 
       {/* Daily 10-Questionnaire Modal Overlay */}
       <DailyQuestionsModal 

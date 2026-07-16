@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { AppState } from 'react-native';
 
 const UserContext = createContext();
 
@@ -42,6 +43,29 @@ export const UserProvider = ({ children }) => {
 
   // Token
   const [userToken, setUserToken] = useState('');
+
+  // Security app background state lock tracking
+  const [lastActiveTime, setLastActiveTime] = useState(Date.now());
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'background') {
+        setLastActiveTime(Date.now());
+      } else if (nextAppState === 'active') {
+        const elapsed = Date.now() - lastActiveTime;
+        // Auto-logout if backgrounded for more than 2 minutes for profile protection
+        if (isLoggedIn && elapsed > 120000) {
+          logoutUser();
+          alert("Session expired for security. Please log in again.");
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
+  }, [isLoggedIn, lastActiveTime]);
 
   // Action to fetch live Dashboard Stats from Zoho Catalyst sbm_tracker_function
   const fetchDashboardData = async (uid) => {

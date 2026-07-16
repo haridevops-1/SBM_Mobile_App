@@ -131,76 +131,76 @@ export const Auth = () => {
 
     if (isLogin) {
       if (!email.trim()) {
-        tempErrors.email = "Email is required";
+        tempErrors.email = "Please enter your email address.";
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        tempErrors.email = "Invalid email format";
+        tempErrors.email = "Please enter a valid email format (e.g. user@example.com).";
       }
 
       if (!password) {
-        tempErrors.password = "Password is required";
+        tempErrors.password = "Please enter your password.";
       }
     } else {
       // Signup validations
       if (!name.trim()) {
-        tempErrors.name = "Name is required";
+        tempErrors.name = "Please enter your first name.";
       } else if (name.trim().length < 2) {
-        tempErrors.name = "Name must be at least 2 characters";
+        tempErrors.name = "First name must be at least 2 characters.";
       }
 
       if (!email.trim()) {
-        tempErrors.email = "Email is required";
+        tempErrors.email = "Please enter your email address.";
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        tempErrors.email = "Invalid email format";
+        tempErrors.email = "Please enter a valid email format (e.g. user@example.com).";
       }
 
       if (!password) {
-        tempErrors.password = "Password is required";
+        tempErrors.password = "Please enter a password.";
       } else if (password.length < 6) {
-        tempErrors.password = "Password must be at least 6 characters";
+        tempErrors.password = "Password must be at least 6 characters for security.";
       }
 
       // Gender Selection
       if (gender === 'Select Gender') {
-        tempErrors.gender = "Please select gender";
+        tempErrors.gender = "Please select your gender.";
       }
 
       // Age validations
       const ageNum = parseInt(age, 10);
       if (!age) {
-        tempErrors.age = "Age is required";
+        tempErrors.age = "Please enter your age.";
       } else if (isNaN(ageNum) || ageNum < 12 || ageNum > 100) {
-        tempErrors.age = "Age must be 12 to 100";
+        tempErrors.age = "Age must be between 12 and 100 years.";
       }
 
       // Height validations
       const heightNum = parseFloat(height);
       if (!height) {
-        tempErrors.height = "Height is required";
+        tempErrors.height = "Please enter your height.";
       } else if (isNaN(heightNum) || heightNum < 100 || heightNum > 250) {
-        tempErrors.height = "Height must be 100 to 250 cm";
+        tempErrors.height = "Height must be between 100 and 250 cm.";
       }
 
       // Weight validations
       const weightNum = parseFloat(weight);
       if (!weight) {
-        tempErrors.weight = "Weight is required";
+        tempErrors.weight = "Please enter your weight.";
       } else if (isNaN(weightNum) || weightNum < 30 || weightNum > 300) {
-        tempErrors.weight = "Weight must be 30 to 300 kg";
+        tempErrors.weight = "Weight must be between 30 and 300 kg.";
       }
 
       // Meal preference selection
       if (mealPreference === 'Select Diet') {
-        tempErrors.mealPreference = "Please select preference";
+        tempErrors.mealPreference = "Please select dietary preference.";
       }
 
       // Weight Goal Selection
       if (goal === 'Select Goal') {
-        tempErrors.goal = "Please select goal";
+        tempErrors.goal = "Please select your weight goal.";
       }
 
       // Timezone Selection
       if (timezone === 'Select Time Zone') {
-        tempErrors.timezone = "Please select timezone";
+        tempErrors.timezone = "Please select your timezone.";
       }
     }
 
@@ -224,18 +224,26 @@ export const Auth = () => {
 
       const data = await response.json();
       if (response.status === 200 && data.status === 'success') {
-        // Successful login session. Trigger state context
-        loginUser(data.user.name, data.user.weight || '75.0', {
-          email: data.user.email,
-          userId: data.user.id,
-          token: data.token,
-          gender: data.user.gender,
-          age: data.user.age,
-          height: data.user.height,
-          mealPreference: data.user.meal_preference,
-          timezone: data.user.timezone,
-          userGoal: 'Fat Loss', // defaults
-        });
+        // Show dynmamic welcoming positive banner message inside the auth card
+        setSuccessMessage(`Login successful! Welcome back, ${data.user.name || 'User'}! 🎉`);
+        
+        setTimeout(() => {
+          loginUser(data.user.name, data.user.weight || '75.0', {
+            email: data.user.email,
+            userId: data.user.id,
+            token: data.token,
+            gender: data.user.gender,
+            age: data.user.age,
+            height: data.user.height,
+            mealPreference: data.user.meal_preference,
+            timezone: data.user.timezone,
+            userGoal: 'Fat Loss', // defaults
+          });
+          setSuccessMessage('');
+          setEmail('');
+          setPassword('');
+          setErrors({});
+        }, 1500);
       } else {
         Alert.alert("Login Failed", data.message || "Invalid email or password.");
       }

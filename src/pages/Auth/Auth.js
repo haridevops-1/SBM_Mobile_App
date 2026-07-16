@@ -213,7 +213,7 @@ export const Auth = () => {
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_mobile_app_function/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify({
           email: email.trim(),
@@ -260,25 +260,17 @@ export const Auth = () => {
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_mobile_app_function/signup', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
       if (response.status === 201 && data.status === 'success') {
-        // Trigger login states
-        loginUser(name, weight, {
-          email,
-          gender,
-          age,
-          height,
-          mealPreference,
-          timezone,
-          userGoal: goal,
-          userId: data.user.id,
-          token: data.token
-        });
+        Alert.alert("Registration Successful", "Account created successfully! Please log in to continue.");
+        setIsLogin(true); // Toggle to login view
+        setPassword(''); // Clear password field
+        setErrors({}); // Reset validations
       } else {
         Alert.alert("Registration Failed", data.message || "Catalyst database rejected the registration request.");
       }

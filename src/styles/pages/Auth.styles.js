@@ -212,6 +212,7 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   pickerModalContent: {
     backgroundColor: '#0F121E',
@@ -220,6 +221,8 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     maxHeight: '60%',
+    width: '100%',
+    maxWidth: 440,
     paddingBottom: 30,
   },
   pickerModalHeader: {

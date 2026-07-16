@@ -5,57 +5,58 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   // Shared user states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('Harish');
+  const [username, setUsername] = useState('Guest');
   const [todayEffortLogged, setTodayEffortLogged] = useState(false);
   const [todayWeightLogged, setTodayWeightLogged] = useState(false);
   
   // Weight parameters (Start vs Current)
-  const [startWeight, setStartWeight] = useState(80.8);
-  const [loggedWeight, setLoggedWeight] = useState(77.8);
+  const [startWeight, setStartWeight] = useState(70.0);
+  const [loggedWeight, setLoggedWeight] = useState(70.0);
   
   // Streak
-  const [streakDays, setStreakDays] = useState(12);
+  const [streakDays, setStreakDays] = useState(0);
 
   // Daily questions completion count
-  const [nutritionScore, setNutritionScore] = useState(7);
-  const [movementScore, setMovementScore] = useState(6);
-  const [recoveryScore, setRecoveryScore] = useState(8);
-  const [mindsetScore, setMindsetScore] = useState(5);
-  const [hydrationScore, setHydrationScore] = useState(7);
+  const [nutritionScore, setNutritionScore] = useState(0);
+  const [movementScore, setMovementScore] = useState(0);
+  const [recoveryScore, setRecoveryScore] = useState(0);
+  const [mindsetScore, setMindsetScore] = useState(0);
+  const [hydrationScore, setHydrationScore] = useState(0);
 
   // Weekly efforts progress data (Mon - Fri)
-  const [weeklyEfforts, setWeeklyEfforts] = useState([65, 72, 58, 85, 0]);
+  const [weeklyEfforts, setWeeklyEfforts] = useState([0, 0, 0, 0, 0]);
 
   // Profile details states
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [userEmail, setUserEmail] = useState('harish@example.com');
-  const [userGoal, setUserGoal] = useState('Fat Loss');
-  const [userId, setUserId] = useState('SBM-49021-HR');
+  const [userEmail, setUserEmail] = useState('');
+  const [userGoal, setUserGoal] = useState('Select Goal');
+  const [userId, setUserId] = useState('');
 
   // Custom Signup Fields
-  const [gender, setGender] = useState('Male');
-  const [age, setAge] = useState(25);
-  const [height, setHeight] = useState(175);
-  const [mealPreference, setMealPreference] = useState('Veg');
-  const [timezone, setTimezone] = useState('Asia/Kolkata (IST)');
+  const [gender, setGender] = useState('Select Gender');
+  const [age, setAge] = useState('');
+  const [height, setHeight] = useState('');
+  const [mealPreference, setMealPreference] = useState('Select Diet');
+  const [timezone, setTimezone] = useState('Select Time Zone');
+
+  // Token
+  const [userToken, setUserToken] = useState('');
 
   // Actions to mutate states dynamically
   const toggleTodayEffort = () => {
     if (!todayEffortLogged) {
       setTodayEffortLogged(true);
-      setStreakDays(13); // streak increases
+      setStreakDays(1); // streak increases
       
-      // Update Friday's effort in weekly chart
       const updatedEfforts = [...weeklyEfforts];
       updatedEfforts[4] = 78; // Friday becomes 78%
       setWeeklyEfforts(updatedEfforts);
 
-      // Increment completed questions count
       setNutritionScore(8);
       setMovementScore(7);
     } else {
       setTodayEffortLogged(false);
-      setStreakDays(12); // revert streak
+      setStreakDays(0); // revert streak
       
       const updatedEfforts = [...weeklyEfforts];
       updatedEfforts[4] = 0; // Friday goes back to 0
@@ -77,18 +78,18 @@ export const UserProvider = ({ children }) => {
   const loginUser = (name, currentWeightVal, details = {}) => {
     if (name && name.trim() !== '') {
       setUsername(name);
-      setUserEmail(details.email || `${name.toLowerCase().replace(/\s+/g, '')}@example.com`);
-      const initials = name.substring(0, 2).toUpperCase();
-      setUserId(`SBM-${Math.floor(10000 + Math.random() * 90000)}-${initials}`);
     } else {
-      setUsername('Harish');
-      setUserEmail('harish@example.com');
-      setUserId('SBM-49021-HR');
+      setUsername('Customer');
     }
+    
+    if (details.email) setUserEmail(details.email);
+    if (details.userId) setUserId(details.userId);
+    if (details.token) setUserToken(details.token);
+
     const numericWeight = parseFloat(currentWeightVal);
     if (!isNaN(numericWeight)) {
       setLoggedWeight(numericWeight);
-      setStartWeight(parseFloat((numericWeight + 3.0).toFixed(1))); // offset start weight
+      setStartWeight(numericWeight); // Start matches current
     }
 
     if (details.gender) setGender(details.gender);
@@ -107,6 +108,16 @@ export const UserProvider = ({ children }) => {
     // Reset states
     setTodayEffortLogged(false);
     setTodayWeightLogged(false);
+    setUsername('Guest');
+    setUserEmail('');
+    setUserId('');
+    setUserToken('');
+    setGender('Select Gender');
+    setAge('');
+    setHeight('');
+    setMealPreference('Select Diet');
+    setTimezone('Select Time Zone');
+    setUserGoal('Select Goal');
   };
 
   return (
@@ -134,6 +145,7 @@ export const UserProvider = ({ children }) => {
       height,
       mealPreference,
       timezone,
+      userToken,
       setUserGoal,
       toggleTodayEffort,
       logWeight,

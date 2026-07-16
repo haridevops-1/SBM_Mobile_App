@@ -11,6 +11,11 @@
     },
     "android": {
       "package": "com.hariharan.sbmMobileApp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1a0027ae-b24c-4b8e-8e08-8d6742b4960a"
+      }
     }
   }
 }

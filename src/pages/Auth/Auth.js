@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator } from 'react-native';
 import { Mail, Lock, User as UserIcon, Scale, Sparkles, Calendar, Globe, Utensils, Ruler, ChevronDown, X, Users, Activity } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
@@ -74,6 +74,7 @@ const CustomPicker = ({ visible, title, options, selectedValue, onSelect, onClos
 export const Auth = () => {
   const { loginUser } = useUser();
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Core Form states
   const [email, setEmail] = useState('');
@@ -206,13 +207,67 @@ export const Auth = () => {
     return Object.keys(tempErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      if (isLogin) {
-        const computedName = email.split('@')[0];
-        const formattedName = computedName.charAt(0).toUpperCase() + computedName.slice(1);
-        loginUser(formattedName, '75.0', { email });
+  const handleLoginAPI = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_mobile_app_function/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.status === 200 && data.status === 'success') {
+        // Successful login session. Trigger state context
+        loginUser(data.user.name, '75.0', {
+          email: data.user.email,
+          userId: data.user.id,
+          token: data.token,
+          userGoal: 'Fat Loss', // defaults
+        });
       } else {
+        Alert.alert("Login Failed", data.message || "Invalid email or password.");
+      }
+    } catch (err) {
+      Alert.alert("Connection Error", "Unable to reach Catalyst servers. Please check your internet connection.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignupAPI = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        email: email.trim(),
+        password: password,
+        name: name.trim(),
+        gender: gender,
+        age: Number(age),
+        weight: Number(weight),
+        height: Number(height) || 0.0,
+        meal_preference: mealPreference,
+        timezone: timezone,
+        device_platform: Platform.OS
+      };
+
+      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_mobile_app_function/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (response.status === 201 && data.status === 'success') {
+        // Trigger login states
         loginUser(name, weight, {
           email,
           gender,
@@ -220,8 +275,27 @@ export const Auth = () => {
           height,
           mealPreference,
           timezone,
-          userGoal: goal
+          userGoal: goal,
+          userId: data.user.id,
+          token: data.token
         });
+      } else {
+        Alert.alert("Registration Failed", data.message || "Catalyst database rejected the registration request.");
+      }
+    } catch (err) {
+      Alert.alert("Connection Error", "Unable to reach Catalyst servers. Please check your internet connection.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      if (isLogin) {
+        handleLoginAPI();
+      } else {
+        handleSignupAPI();
       }
     }
   };
@@ -285,6 +359,7 @@ export const Auth = () => {
                     placeholderTextColor="#546E7A"
                     value={name}
                     onChangeText={setName}
+                    editable={!loading}
                   />
                 </View>
                 {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
@@ -304,6 +379,7 @@ export const Auth = () => {
                   autoCapitalize="none"
                   value={email}
                   onChangeText={setEmail}
+                  editable={!loading}
                 />
               </View>
               {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
@@ -321,6 +397,7 @@ export const Auth = () => {
                   secureTextEntry
                   value={password}
                   onChangeText={setPassword}
+                  editable={!loading}
                 />
               </View>
               {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
@@ -337,7 +414,8 @@ export const Auth = () => {
                     <TouchableOpacity 
                       activeOpacity={0.8}
                       style={[styles.inputFieldWrapper, errors.gender && { borderColor: '#FF5252' }]}
-                      onPress={() => setGenderOpen(true)}
+                      onPress={() => !loading && setGenderOpen(true)}
+                      disabled={loading}
                     >
                       <Users size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                       <Text 
@@ -365,6 +443,7 @@ export const Auth = () => {
                         keyboardType="number-pad"
                         value={age}
                         onChangeText={handleAgeChange}
+                        editable={!loading}
                       />
                     </View>
                     {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
@@ -385,6 +464,7 @@ export const Auth = () => {
                         keyboardType="numeric"
                         value={height}
                         onChangeText={handleHeightChange}
+                        editable={!loading}
                       />
                       <Text style={styles.unitLabel}>cm</Text>
                     </View>
@@ -403,6 +483,7 @@ export const Auth = () => {
                         keyboardType="numeric"
                         value={weight}
                         onChangeText={handleWeightChange}
+                        editable={!loading}
                       />
                       <Text style={styles.unitLabel}>kg</Text>
                     </View>
@@ -418,7 +499,8 @@ export const Auth = () => {
                     <TouchableOpacity 
                       activeOpacity={0.8}
                       style={[styles.inputFieldWrapper, errors.mealPreference && { borderColor: '#FF5252' }]}
-                      onPress={() => setMealOpen(true)}
+                      onPress={() => !loading && setMealOpen(true)}
+                      disabled={loading}
                     >
                       <Utensils size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                       <Text 
@@ -440,7 +522,8 @@ export const Auth = () => {
                     <TouchableOpacity 
                       activeOpacity={0.8}
                       style={[styles.inputFieldWrapper, errors.goal && { borderColor: '#FF5252' }]}
-                      onPress={() => setGoalOpen(true)}
+                      onPress={() => !loading && setGoalOpen(true)}
+                      disabled={loading}
                     >
                       <Activity size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                       <Text 
@@ -463,7 +546,8 @@ export const Auth = () => {
                   <TouchableOpacity 
                     activeOpacity={0.8}
                     style={[styles.inputFieldWrapper, errors.timezone && { borderColor: '#FF5252' }]}
-                    onPress={() => setTimezoneOpen(true)}
+                    onPress={() => !loading && setTimezoneOpen(true)}
+                    disabled={loading}
                   >
                     <Globe size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
                     <Text 
@@ -493,8 +577,13 @@ export const Auth = () => {
                   activeOpacity={0.8} 
                   style={styles.submitBtn} 
                   onPress={handleSubmit}
+                  disabled={loading}
                 >
-                  <Text style={styles.submitBtnText}>{isLogin ? 'Log In' : 'Sign Up'}</Text>
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.submitBtnText}>{isLogin ? 'Log In' : 'Sign Up'}</Text>
+                  )}
                 </TouchableOpacity>
               </LinearGradient>
             </View>
@@ -505,7 +594,7 @@ export const Auth = () => {
             <Text style={styles.toggleText}>
               {isLogin ? "Don't have an account? " : "Already have an account? "}
             </Text>
-            <TouchableOpacity onPress={handleToggleMode}>
+            <TouchableOpacity onPress={handleToggleMode} disabled={loading}>
               <Text style={styles.toggleBtnText}>
                 {isLogin ? 'Sign Up' : 'Log In'}
               </Text>

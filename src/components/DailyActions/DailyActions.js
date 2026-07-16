@@ -14,6 +14,8 @@ export const DailyActions = () => {
     todayWeightLogged, 
     loggedWeight, 
     todayEffortScore,
+    userId,
+    fetchDashboardData,
     logWeight 
   } = useUser();
 
@@ -37,10 +39,33 @@ export const DailyActions = () => {
     }
   };
 
-  const handleWeightSubmit = () => {
+  const handleWeightSubmit = async () => {
     if (weightInputValue.trim() !== '') {
-      logWeight(weightInputValue);
-      setShowWeightInput(false);
+      try {
+        const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/log-weight', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain', // Bypass preflight CORS checks
+          },
+          body: JSON.stringify({
+            userId: userId,
+            weight: Number(weightInputValue)
+          })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.status === 'success') {
+          // Weight saved inside cloud weight_history. Sync locally
+          logWeight(weightInputValue);
+          setShowWeightInput(false);
+          fetchDashboardData();
+        } else {
+          alert("Error logging weight: " + (data.message || "Catalyst database rejected the transaction."));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Network Error: Could not connect to Catalyst to log weight.");
+      }
     }
   };
 
@@ -132,7 +157,7 @@ export const DailyActions = () => {
               style={styles.actionBtn} 
               onPress={() => {
                 if (!todayWeightLogged) {
-                  setWeightInputValue(loggedWeight.toString());
+                  setWeightInputValue(loggedWeight ? loggedWeight.toString() : '');
                   setShowWeightInput(!showWeightInput);
                 }
               }}

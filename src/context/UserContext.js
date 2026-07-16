@@ -3,7 +3,7 @@ import React, { createContext, useState, useContext } from 'react';
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  // Shared user states
+  // Shared user states (All start at 0 / false to display default tracker states)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('Guest');
   const [todayEffortLogged, setTodayEffortLogged] = useState(false);
@@ -11,13 +11,13 @@ export const UserProvider = ({ children }) => {
   const [todayWeightLogged, setTodayWeightLogged] = useState(false);
   
   // Weight parameters (Start vs Current)
-  const [startWeight, setStartWeight] = useState(70.0);
-  const [loggedWeight, setLoggedWeight] = useState(70.0);
+  const [startWeight, setStartWeight] = useState(0.0);
+  const [loggedWeight, setLoggedWeight] = useState(0.0);
   
   // Streak
   const [streakDays, setStreakDays] = useState(0);
 
-  // Daily questions completion count
+  // Daily questions completion counts (Initialize at 0)
   const [nutritionScore, setNutritionScore] = useState(0);
   const [movementScore, setMovementScore] = useState(0);
   const [recoveryScore, setRecoveryScore] = useState(0);
@@ -43,61 +43,56 @@ export const UserProvider = ({ children }) => {
   // Token
   const [userToken, setUserToken] = useState('');
 
-  // Actions to mutate states dynamically
-  const toggleTodayEffort = () => {
-    if (!todayEffortLogged) {
-      setTodayEffortLogged(true);
-      setStreakDays(1); // streak increases
-      
-      const updatedEfforts = [...weeklyEfforts];
-      updatedEfforts[4] = 78; // Friday becomes 78%
-      setWeeklyEfforts(updatedEfforts);
+  // Action to fetch live Dashboard Stats from Zoho Catalyst sbm_tracker_function
+  const fetchDashboardData = async (uid) => {
+    const targetUserId = uid || userId;
+    if (!targetUserId) return;
+    try {
+      const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${targetUserId}`);
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        const { today_effort_logged, today_effort_score, today_weight_logged, current_weight, start_weight, streak_days } = result.data;
+        
+        setTodayEffortLogged(today_effort_logged);
+        setTodayEffortScore(today_effort_score);
+        setTodayWeightLogged(today_weight_logged);
+        setLoggedWeight(current_weight);
+        setStartWeight(start_weight);
+        setStreakDays(streak_days);
+        
+        // Sync weekly progress efforts
+        const updatedEfforts = [0, 0, 0, 0, today_effort_score];
+        setWeeklyEfforts(updatedEfforts);
 
-      setNutritionScore(8);
-      setMovementScore(7);
-    } else {
-      setTodayEffortLogged(false);
-      setStreakDays(0); // revert streak
-      
-      const updatedEfforts = [...weeklyEfforts];
-      updatedEfforts[4] = 0; // Friday goes back to 0
-      setWeeklyEfforts(updatedEfforts);
-
-      setNutritionScore(7);
-      setMovementScore(6);
-    }
-  };
-
-  const logTodayEffort = (score) => {
-    const num = parseInt(score, 10);
-    if (!isNaN(num)) {
-      setTodayEffortScore(num);
-      setTodayEffortLogged(true);
-      setStreakDays(1);
-      
-      const updatedEfforts = [...weeklyEfforts];
-      updatedEfforts[4] = num;
-      setWeeklyEfforts(updatedEfforts);
-
-      if (num >= 80) {
-        setNutritionScore(9);
-        setMovementScore(8);
-        setRecoveryScore(8);
-        setMindsetScore(8);
-        setHydrationScore(9);
-      } else if (num >= 55) {
-        setNutritionScore(7);
-        setMovementScore(6);
-        setRecoveryScore(7);
-        setMindsetScore(6);
-        setHydrationScore(7);
-      } else {
-        setNutritionScore(4);
-        setMovementScore(3);
-        setRecoveryScore(5);
-        setMindsetScore(4);
-        setHydrationScore(4);
+        // Adjust interactive scores depending on effort value
+        if (today_effort_score >= 80) {
+          setNutritionScore(9);
+          setMovementScore(8);
+          setRecoveryScore(8);
+          setMindsetScore(8);
+          setHydrationScore(9);
+        } else if (today_effort_score >= 50) {
+          setNutritionScore(7);
+          setMovementScore(6);
+          setRecoveryScore(7);
+          setMindsetScore(6);
+          setHydrationScore(7);
+        } else if (today_effort_score > 0) {
+          setNutritionScore(4);
+          setMovementScore(3);
+          setRecoveryScore(5);
+          setMindsetScore(4);
+          setHydrationScore(4);
+        } else {
+          setNutritionScore(0);
+          setMovementScore(0);
+          setRecoveryScore(0);
+          setMindsetScore(0);
+          setHydrationScore(0);
+        }
       }
+    } catch (err) {
+      console.error("Dashboard Fetch Error:", err);
     }
   };
 
@@ -106,6 +101,19 @@ export const UserProvider = ({ children }) => {
     if (!isNaN(numericWeight)) {
       setLoggedWeight(numericWeight);
       setTodayWeightLogged(true);
+    }
+  };
+
+  const logTodayEffort = (score) => {
+    const num = parseInt(score, 10);
+    if (!isNaN(num)) {
+      setTodayEffortScore(num);
+      setTodayEffortLogged(true);
+      setStreakDays(prev => prev + 1);
+      
+      const updatedEfforts = [...weeklyEfforts];
+      updatedEfforts[4] = num;
+      setWeeklyEfforts(updatedEfforts);
     }
   };
 
@@ -123,7 +131,7 @@ export const UserProvider = ({ children }) => {
     const numericWeight = parseFloat(currentWeightVal);
     if (!isNaN(numericWeight)) {
       setLoggedWeight(numericWeight);
-      setStartWeight(numericWeight); // Start matches current
+      setStartWeight(numericWeight);
     }
 
     if (details.gender) setGender(details.gender);
@@ -134,6 +142,11 @@ export const UserProvider = ({ children }) => {
     if (details.userGoal) setUserGoal(details.userGoal);
 
     setIsLoggedIn(true);
+
+    // Dynamic initial loading of user metrics from Catalyst database
+    if (details.userId) {
+      fetchDashboardData(details.userId);
+    }
   };
 
   const logoutUser = () => {
@@ -153,6 +166,9 @@ export const UserProvider = ({ children }) => {
     setMealPreference('Select Diet');
     setTimezone('Select Time Zone');
     setUserGoal('Select Goal');
+    setLoggedWeight(0.0);
+    setStartWeight(0.0);
+    setStreakDays(0);
   };
 
   return (
@@ -183,8 +199,8 @@ export const UserProvider = ({ children }) => {
       userToken,
       todayEffortScore,
       setUserGoal,
-      toggleTodayEffort,
       logTodayEffort,
+      fetchDashboardData,
       logWeight,
       loginUser,
       logoutUser

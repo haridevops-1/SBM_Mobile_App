@@ -8,7 +8,7 @@ import styles from '../../styles/components/DailyQuestionsModal.styles';
 import { DAILY_QUESTIONS } from '../../data/questions';
 
 export const DailyQuestionsModal = ({ visible, onClose }) => {
-  const { logTodayEffort } = useUser();
+  const { logTodayEffort, userId, fetchDashboardData } = useUser();
   const { width } = useWindowDimensions();
 
   // Responsive alignment bounds for Web Desktop
@@ -67,7 +67,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     return score;
   };
 
-  const handleSubmitDailyLog = () => {
+  const handleSubmitDailyLog = async () => {
     // Check if all 10 questions are answered
     const unanswered = DAILY_QUESTIONS.filter(q => !answers[q.id]);
     if (unanswered.length > 0) {
@@ -76,8 +76,36 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     }
 
     const finalPercent = calculateScore();
-    logTodayEffort(finalPercent);
-    setViewMode('completed');
+
+    try {
+      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/log-effort', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain', // Bypass preflight CORS checks
+        },
+        body: JSON.stringify({
+          userId: userId,
+          answers: DAILY_QUESTIONS.map(q => ({
+            questionId: q.id,
+            selectedOption: answers[q.id]
+          })),
+          score: finalPercent
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        // Effort logged successfully inside cloud daily_logs. Sync locally
+        logTodayEffort(finalPercent);
+        setViewMode('completed');
+        fetchDashboardData();
+      } else {
+        alert("Error logging effort: " + (data.message || "Catalyst database rejected the transaction."));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network Error: Could not connect to Catalyst to submit log.");
+    }
   };
 
   const handleCloseAll = () => {

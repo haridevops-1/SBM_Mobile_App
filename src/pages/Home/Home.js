@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScrollView, View, Text, SafeAreaView } from 'react-native';
 import { Calendar } from 'lucide-react-native';
 import Header from '../../components/Header/Header';
@@ -6,10 +6,20 @@ import QuoteBanner from '../../components/QuoteBanner/QuoteBanner';
 import SbmCards from '../../components/SbmCards/SbmCards';
 import DailyActions from '../../components/DailyActions/DailyActions';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
+import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
 import styles from '../../styles/pages/Home.styles';
 
 export const Home = () => {
+  const { isLoggedIn, fetchDashboardData } = useUser();
+
+  // Dynamic dashboard synchronizations upon page render sessions
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchDashboardData();
+    }
+  }, [isLoggedIn]);
+
   // Calculate dynamic date matching original date formats (e.g. "Thursday, 16 July 2026")
   const getDynamicDateString = () => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

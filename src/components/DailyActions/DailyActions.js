@@ -6,30 +6,34 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
 import styles from '../../styles/components/DailyActions.styles';
+import DailyQuestionsModal from './DailyQuestionsModal';
 
 export const DailyActions = () => {
   const { 
     todayEffortLogged, 
     todayWeightLogged, 
     loggedWeight, 
-    toggleTodayEffort, 
+    todayEffortScore,
     logWeight 
   } = useUser();
 
   const [showWeightInput, setShowWeightInput] = useState(false);
   const [weightInputValue, setWeightInputValue] = useState(loggedWeight.toString());
+  const [modalVisible, setModalVisible] = useState(false);
 
   // SVG parameters
   const radius = 45;
   const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
-  const todayEffortPercent = todayEffortLogged ? 100 : 0;
-  const last7DaysEffortPercent = todayEffortLogged ? 14 : 0;
+  
+  // Dynamically calculate gauges from user scores
+  const todayEffortPercent = todayEffortScore;
+  const last7DaysEffortPercent = todayEffortLogged ? Math.min(100, Math.round(todayEffortScore * 0.15)) : 0;
   const strokeDashoffset = circumference - (todayEffortPercent / 100) * circumference;
 
   const handleLogEffortClick = () => {
     if (!todayEffortLogged) {
-      toggleTodayEffort();
+      setModalVisible(true);
     }
   };
 
@@ -190,6 +194,12 @@ export const DailyActions = () => {
           </View>
         </View>
       )}
+
+      {/* Daily 10-Questionnaire Modal Overlay */}
+      <DailyQuestionsModal 
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
     </View>
   );
 };

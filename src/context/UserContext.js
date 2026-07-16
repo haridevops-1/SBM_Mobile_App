@@ -7,6 +7,7 @@ export const UserProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('Guest');
   const [todayEffortLogged, setTodayEffortLogged] = useState(false);
+  const [todayEffortScore, setTodayEffortScore] = useState(0);
   const [todayWeightLogged, setTodayWeightLogged] = useState(false);
   
   // Weight parameters (Start vs Current)
@@ -67,6 +68,39 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const logTodayEffort = (score) => {
+    const num = parseInt(score, 10);
+    if (!isNaN(num)) {
+      setTodayEffortScore(num);
+      setTodayEffortLogged(true);
+      setStreakDays(1);
+      
+      const updatedEfforts = [...weeklyEfforts];
+      updatedEfforts[4] = num;
+      setWeeklyEfforts(updatedEfforts);
+
+      if (num >= 80) {
+        setNutritionScore(9);
+        setMovementScore(8);
+        setRecoveryScore(8);
+        setMindsetScore(8);
+        setHydrationScore(9);
+      } else if (num >= 55) {
+        setNutritionScore(7);
+        setMovementScore(6);
+        setRecoveryScore(7);
+        setMindsetScore(6);
+        setHydrationScore(7);
+      } else {
+        setNutritionScore(4);
+        setMovementScore(3);
+        setRecoveryScore(5);
+        setMindsetScore(4);
+        setHydrationScore(4);
+      }
+    }
+  };
+
   const logWeight = (weightValue) => {
     const numericWeight = parseFloat(weightValue);
     if (!isNaN(numericWeight)) {
@@ -107,6 +141,7 @@ export const UserProvider = ({ children }) => {
     setIsProfileOpen(false);
     // Reset states
     setTodayEffortLogged(false);
+    setTodayEffortScore(0);
     setTodayWeightLogged(false);
     setUsername('Guest');
     setUserEmail('');
@@ -146,8 +181,10 @@ export const UserProvider = ({ children }) => {
       mealPreference,
       timezone,
       userToken,
+      todayEffortScore,
       setUserGoal,
       toggleTodayEffort,
+      logTodayEffort,
       logWeight,
       loginUser,
       logoutUser

@@ -1,10 +1,16 @@
   import React from 'react';
-  import { View, useWindowDimensions, Platform } from 'react-native';
+  import { View, useWindowDimensions, Platform, LogBox } from 'react-native';
   import { NavigationContainer } from '@react-navigation/native';
   import { StatusBar } from 'expo-status-bar';
   import { UserProvider, useUser } from './src/context/UserContext';
   import AuthScreen from './src/pages/Auth/Auth';
   import AppRouter from './src/router/AppRouter';
+
+  // Ignore noisy deprecated package warning logs in development and simulator runs
+  LogBox.ignoreLogs([
+    '[expo-av]',
+    'SafeAreaView has been deprecated',
+  ]);
 
   function MainApp() {
     const { isLoggedIn } = useUser();

@@ -45,7 +45,7 @@ export const QuoteBanner = () => {
       let quotesList = FALLBACK_QUOTES;
 
       try {
-        const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/get-quotes');
+        const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/get-quotes?type=quotes');
         const data = await response.json();
         if (response.ok && data.status === 'success' && Array.isArray(data.quotes) && data.quotes.length > 0) {
           quotesList = data.quotes;

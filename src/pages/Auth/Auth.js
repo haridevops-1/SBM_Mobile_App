@@ -393,6 +393,9 @@ export const Auth = () => {
                   placeholderTextColor="#546E7A"
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  autoComplete="off"
+                  textContentType="none"
+                  importantForAutofill="no"
                   value={email}
                   onChangeText={setEmail}
                   editable={!loading}
@@ -411,6 +414,9 @@ export const Auth = () => {
                   placeholder="Enter your password"
                   placeholderTextColor="#546E7A"
                   secureTextEntry
+                  autoComplete="new-password"
+                  textContentType="none"
+                  importantForAutofill="no"
                   value={password}
                   onChangeText={setPassword}
                   editable={!loading}

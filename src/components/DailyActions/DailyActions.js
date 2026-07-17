@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Check, Scale, X } from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -119,52 +119,6 @@ export const DailyActions = () => {
         </View>
       </View>
 
-      {/* Inline Weight Logger Card (Rendered ABOVE the actions log buttons) */}
-      {showWeightInput && !todayWeightLogged && (
-        <View style={[styles.inlineWeightCard, { marginBottom: 16 }]}>
-          <TouchableOpacity 
-            style={styles.closeInlineBtn} 
-            onPress={() => setShowWeightInput(false)}
-          >
-            <X size={16} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-          
-          <View style={styles.weightModalForm}>
-            <Text style={styles.modalPromptText}>
-              Enter today's weight to keep your log updated.
-            </Text>
-
-            <View style={styles.weightInputWrapper}>
-              <TextInput 
-                style={styles.weightInput}
-                keyboardType="numeric"
-                value={weightInputValue}
-                onChangeText={setWeightInputValue}
-                placeholder="Enter your weight (kg)"
-                placeholderTextColor="#999999"
-                autoFocus
-              />
-            </View>
-
-            <View style={styles.saveBtnContainer}>
-              <LinearGradient
-                colors={theme.colors.gradients.purpleButton}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <TouchableOpacity 
-                  activeOpacity={0.8} 
-                  style={styles.saveBtn} 
-                  onPress={handleWeightSubmit}
-                >
-                  <Text style={styles.saveBtnText}>Save</Text>
-                </TouchableOpacity>
-              </LinearGradient>
-            </View>
-          </View>
-        </View>
-      )}
-
       <Text style={styles.trackerSubheading}>Daily Actions</Text>
 
       <View style={styles.actionButtonsStack}>
@@ -219,6 +173,61 @@ export const DailyActions = () => {
           </LinearGradient>
         </View>
       </View>
+
+      {/* Centered Weight Logger Popup Modal Overlay */}
+      <Modal
+        transparent={true}
+        visible={showWeightInput && !todayWeightLogged}
+        onRequestClose={() => setShowWeightInput(false)}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.centeredWeightCard}>
+            <TouchableOpacity 
+              style={styles.closeModalBtn} 
+              onPress={() => setShowWeightInput(false)}
+            >
+              <X size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            <View style={styles.weightModalForm}>
+              <Text style={styles.modalTitleText}>Log Today's Weight</Text>
+              
+              <Text style={styles.modalPromptText}>
+                Enter your current weight to calculate your progress change.
+              </Text>
+
+              <View style={styles.weightInputWrapper}>
+                <TextInput 
+                  style={styles.weightInput}
+                  keyboardType="numeric"
+                  value={weightInputValue}
+                  onChangeText={setWeightInputValue}
+                  placeholder="Enter weight in kg"
+                  placeholderTextColor="#7F8C8D"
+                  autoFocus
+                />
+              </View>
+
+              <View style={styles.saveBtnContainer}>
+                <LinearGradient
+                  colors={theme.colors.gradients.purpleButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <TouchableOpacity 
+                    activeOpacity={0.8} 
+                    style={styles.saveBtn} 
+                    onPress={handleWeightSubmit}
+                  >
+                    <Text style={styles.saveBtnText}>Save Weight</Text>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Daily 10-Questionnaire Modal Overlay */}
       <DailyQuestionsModal 

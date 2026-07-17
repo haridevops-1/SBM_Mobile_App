@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import theme from '../../theme/theme';
 
 export default StyleSheet.create({
@@ -115,25 +115,41 @@ export default StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  inlineWeightCard: {
-    backgroundColor: '#111422',
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(3, 4, 11, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+  },
+  centeredWeightCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#0F111E',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 20,
-    padding: theme.spacing.md,
-    marginBottom: 16,
+    borderRadius: 24,
+    padding: 24,
     position: 'relative',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    elevation: 10,
   },
-  closeInlineBtn: {
+  closeModalBtn: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 16,
+    right: 16,
     zIndex: 10,
     padding: 4,
+  },
+  modalTitleText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   weightModalForm: {
     width: '100%',
@@ -163,7 +179,11 @@ export default StyleSheet.create({
     textAlign: 'center',
     width: '100%',
     height: '100%',
-    outlineStyle: 'none',
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      },
+    }),
   },
   saveBtnContainer: {
     borderRadius: 12,

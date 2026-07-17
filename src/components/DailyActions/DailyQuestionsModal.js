@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, Platform, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Modal, Platform, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { X, Check, ChevronDown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
 import styles from '../../styles/components/DailyQuestionsModal.styles';
-import { DAILY_QUESTIONS } from '../../data/questions';
 
 export const DailyQuestionsModal = ({ visible, onClose }) => {
   const { logTodayEffort, userId, fetchDashboardData } = useUser();
@@ -15,10 +14,51 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   const isWebDesktop = Platform.OS === 'web' && width > 768;
 
   // Questionnaire States
+  const [questionsList, setQuestionsList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [viewMode, setViewMode] = useState('question'); // 'question' | 'review' | 'completed'
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Fetch phase questions dynamically from Zoho Catalyst sbm_questionnaire_function
+  const fetchQuestions = async () => {
+    if (!userId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_questionnaire_function/questions?userId=${userId}`);
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        const formatted = data.data.questions.map((q, idx) => ({
+          id: q.questionId,
+          index: idx + 1,
+          question: q.questionText,
+          aspect: q.aspect,
+          options: q.options.map(opt => ({
+            id: opt.optionId,
+            text: opt.optionText,
+            points: opt.score
+          }))
+        }));
+        setQuestionsList(formatted);
+      } else {
+        throw new Error(data.message || "Failed to load questions.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load program questions from Zoho Catalyst.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (visible && userId) {
+      fetchQuestions();
+    }
+  }, [visible, userId]);
 
   // Formatted Date matching user screenshots (e.g. "Effort for 13 May")
   const getFormattedDate = () => {
@@ -27,25 +67,25 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     return `${d.getDate()} ${months[d.getMonth()]}`;
   };
 
-  const handleSelectOption = (questionId, optionText) => {
+  const handleSelectOption = (questionId, optionId) => {
     setAnswers({
       ...answers,
-      [questionId]: optionText
+      [questionId]: optionId
     });
   };
 
   const handleNext = () => {
-    const currentQ = DAILY_QUESTIONS[currentIndex];
+    const currentQ = questionsList[currentIndex];
     // Block progression if they haven't answered this question yet
     if (!answers[currentQ.id]) {
       alert("Please select an answer to continue.");
       return;
     }
 
-    if (currentIndex < DAILY_QUESTIONS.length - 1) {
+    if (currentIndex < questionsList.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // If we are on Question 10, shift directly to the review board
+      // Shift directly to the review board
       setViewMode('review');
     }
   };
@@ -57,9 +97,9 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
   const calculateScore = () => {
     let score = 0;
-    DAILY_QUESTIONS.forEach((q) => {
-      const selected = answers[q.id];
-      const option = q.options.find(opt => opt.text === selected);
+    questionsList.forEach((q) => {
+      const selectedOptionId = answers[q.id];
+      const option = q.options.find(opt => opt.id === selectedOptionId);
       if (option) {
         score += option.points;
       }
@@ -68,26 +108,26 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   };
 
   const handleSubmitDailyLog = async () => {
-    // Check if all 10 questions are answered
-    const unanswered = DAILY_QUESTIONS.filter(q => !answers[q.id]);
+    // Check if all questions are answered
+    const unanswered = questionsList.filter(q => !answers[q.id]);
     if (unanswered.length > 0) {
-      alert(`Please answer all questions before submitting. Unanswered: ${unanswered.map(q => q.id).join(', ')}`);
+      alert(`Please answer all questions before submitting. Unanswered: ${unanswered.map((_, idx) => idx + 1).join(', ')}`);
       return;
     }
 
     const finalPercent = calculateScore();
 
     try {
-      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/log-effort', {
+      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_questionnaire_function/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain', // Bypass preflight CORS checks
         },
         body: JSON.stringify({
           userId: userId,
-          answers: DAILY_QUESTIONS.map(q => ({
+          answers: questionsList.map(q => ({
             questionId: q.id,
-            selectedOption: answers[q.id]
+            optionId: answers[q.id]
           })),
           score: finalPercent
         })
@@ -95,16 +135,16 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        // Effort logged successfully inside cloud daily_logs. Sync locally
-        logTodayEffort(finalPercent);
+        // Sync local context and refresh dashboard stats
+        logTodayEffort(data.data.score);
         setViewMode('completed');
         fetchDashboardData();
       } else {
-        alert("Error logging effort: " + (data.message || "Catalyst database rejected the transaction."));
+        alert("Error submitting daily log: " + (data.message || "Catalyst database rejected the transaction."));
       }
     } catch (err) {
       console.error(err);
-      alert("Network Error: Could not connect to Catalyst to submit log.");
+      alert("Network Error: Could not connect to Catalyst to submit daily log.");
     }
   };
 
@@ -121,7 +161,49 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   // CAROUSEL VIEW: QUESTION BY QUESTION
   // -------------------------------------------------------------
   const renderQuestionView = () => {
-    const currentQ = DAILY_QUESTIONS[currentIndex];
+    if (loading) {
+      return (
+        <View style={{ paddingVertical: 80, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={theme.colors.textPrimary} />
+          <Text style={{ color: '#ECEFF1', marginTop: 16, fontSize: 13, fontWeight: '500' }}>Loading questions from Catalyst...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={{ paddingVertical: 60, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: '#FF5252', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 20, paddingHorizontal: 16 }}>{error}</Text>
+          <View style={{ borderRadius: 12, overflow: 'hidden' }}>
+            <LinearGradient
+              colors={theme.colors.gradients.purpleButton}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <TouchableOpacity 
+                style={{ paddingVertical: 12, paddingHorizontal: 24, alignItems: 'center' }} 
+                onPress={fetchQuestions}
+              >
+                <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>Retry</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        </View>
+      );
+    }
+
+    if (questionsList.length === 0) {
+      return (
+        <View style={{ paddingVertical: 60, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: '#ECEFF1', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 20 }}>No questions available for this phase.</Text>
+          <TouchableOpacity style={{ padding: 12 }} onPress={handleCloseAll}>
+            <Text style={{ color: theme.colors.textSecondary, fontWeight: '500' }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    const currentQ = questionsList[currentIndex];
     const selectedAnswer = answers[currentQ.id];
 
     return (
@@ -140,20 +222,20 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
                 style={styles.selectorPill}
                 onPress={() => setPickerOpen(!pickerOpen)}
               >
-                <Text style={styles.selectorPillText}>{currentQ.id}</Text>
+                <Text style={styles.selectorPillText}>{currentIndex + 1}</Text>
                 <ChevronDown size={12} color="#FFFFFF" />
               </TouchableOpacity>
               
               {pickerOpen && (
                 <View style={styles.selectorDropdownList}>
                   <ScrollView nestedScrollEnabled>
-                    {DAILY_QUESTIONS.map((q, idx) => (
+                    {questionsList.map((q, idx) => (
                       <TouchableOpacity 
                         key={q.id}
                         style={styles.selectorOptionItem}
                         onPress={() => handleJumpToQuestion(idx)}
                       >
-                        <Text style={styles.selectorOptionText}>{q.id}</Text>
+                        <Text style={styles.selectorOptionText}>{idx + 1}</Text>
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
@@ -174,16 +256,16 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
           
           <View style={styles.optionsStack}>
             {currentQ.options.map((opt) => {
-              const isSelected = selectedAnswer === opt.text;
+              const isSelected = selectedAnswer === opt.id;
               return (
                 <TouchableOpacity
-                  key={opt.text}
+                  key={opt.id}
                   activeOpacity={0.8}
                   style={[
                     styles.optionCard,
                     isSelected && styles.optionCardSelected
                   ]}
-                  onPress={() => handleSelectOption(currentQ.id, opt.text)}
+                  onPress={() => handleSelectOption(currentQ.id, opt.id)}
                 >
                   <Text style={[
                     styles.optionText,
@@ -199,7 +281,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
         {/* Progress Pagination Dots */}
         <View style={styles.paginationRow}>
-          {DAILY_QUESTIONS.map((_, idx) => (
+          {questionsList.map((_, idx) => (
             <View 
               key={idx}
               style={[
@@ -233,7 +315,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
                 onPress={handleNext}
               >
                 <Text style={styles.btnSubmitText}>
-                  {currentIndex === DAILY_QUESTIONS.length - 1 ? 'Go to Review' : 'Submit'}
+                  {currentIndex === questionsList.length - 1 ? 'Go to Review' : 'Submit'}
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
@@ -259,21 +341,21 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
         {/* Scrollable Questions list */}
         <ScrollView style={styles.reviewScrollContainer} showsVerticalScrollIndicator={false}>
-          {DAILY_QUESTIONS.map((q) => {
+          {questionsList.map((q, idx) => {
             const selectedVal = answers[q.id];
             return (
               <View key={q.id} style={styles.reviewCard}>
-                <Text style={styles.reviewQuestionText}>{q.id}. {q.question}</Text>
+                <Text style={styles.reviewQuestionText}>{idx + 1}. {q.question}</Text>
                 
                 <View style={styles.reviewOptionsStack}>
                   {q.options.map((opt) => {
-                    const isChecked = selectedVal === opt.text;
+                    const isChecked = selectedVal === opt.id;
                     return (
                       <TouchableOpacity
-                        key={opt.text}
+                        key={opt.id}
                         activeOpacity={0.8}
                         style={styles.reviewOptionRow}
-                        onPress={() => handleSelectOption(q.id, opt.text)}
+                        onPress={() => handleSelectOption(q.id, opt.id)}
                       >
                         <View style={[
                           styles.reviewCheckbox,

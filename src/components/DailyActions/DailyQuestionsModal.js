@@ -28,7 +28,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_questionnaire_function/questions?userId=${userId}`);
+      const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/questions?userId=${userId}&type=questions`);
       const data = await response.json();
       if (response.ok && data.status === 'success') {
         const formatted = data.data.questions.map((q, idx) => ({
@@ -118,7 +118,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     const finalPercent = calculateScore();
 
     try {
-      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_questionnaire_function/submit', {
+      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain', // Bypass preflight CORS checks
@@ -164,8 +164,10 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     if (loading) {
       return (
         <View style={{ paddingVertical: 80, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={theme.colors.textPrimary} />
-          <Text style={{ color: '#ECEFF1', marginTop: 16, fontSize: 13, fontWeight: '500' }}>Loading questions from Catalyst...</Text>
+          <ActivityIndicator size="large" color={theme.colors.textPrimary} style={{ marginBottom: 16 }} />
+          <Text style={{ color: '#ECEFF1', fontSize: 14, fontWeight: '600', textAlign: 'center', lineHeight: 20 }}>
+            Wait, your progress is loading... {"\n"}Every effort brings you closer! 💪
+          </Text>
         </View>
       );
     }

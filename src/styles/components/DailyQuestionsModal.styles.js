@@ -36,6 +36,7 @@ export default StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
+    zIndex: 50,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -56,6 +57,7 @@ export default StyleSheet.create({
   indexSelectorWrapper: {
     position: 'relative',
     marginRight: 12,
+    zIndex: 50,
   },
   selectorPill: {
     flexDirection: 'row',
@@ -215,7 +217,7 @@ export default StyleSheet.create({
   // REVIEW VIEW PANEL STYLES
   // ==========================================
   reviewScrollContainer: {
-    maxHeight: '75%',
+    maxHeight: '58%',
     marginBottom: 20,
   },
   reviewCard: {

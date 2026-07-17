@@ -66,7 +66,10 @@ export const UserProvider = ({ children }) => {
       subscription.remove();
     };
   }, [isLoggedIn, lastActiveTime]);
-
+  // Reset session state on clean app mount for absolute security
+  useEffect(() => {
+    logoutUser();
+  }, []);
   // Action to fetch live Dashboard Stats from Zoho Catalyst sbm_tracker_function
   const fetchDashboardData = async (uid) => {
     const targetUserId = uid || userId;

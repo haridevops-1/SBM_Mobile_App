@@ -45,7 +45,7 @@ export const DailyActions = () => {
         const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/log-weight', {
           method: 'POST',
           headers: {
-            'Content-Type': 'text/plain', // Bypass preflight CORS checks
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             userId: userId,

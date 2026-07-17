@@ -100,6 +100,15 @@ export const Auth = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Clear inputs on mount to combat browser autofill caching
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setEmail('');
+      setPassword('');
+    }, 200);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Input Sanitization helpers
   const handleAgeChange = (text) => {
     const sanitized = text.replace(/[^0-9]/g, '');
@@ -214,7 +223,7 @@ export const Auth = () => {
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_mobile_app_function/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify({
           email: email.trim(),
@@ -274,7 +283,7 @@ export const Auth = () => {
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_mobile_app_function/signup', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify(payload),
       });

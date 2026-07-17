@@ -121,7 +121,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/submit', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify({
           userId: userId,

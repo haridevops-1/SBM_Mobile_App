@@ -1,12 +1,33 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Modal, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Modal, SafeAreaView, Platform, Linking, ActivityIndicator, Alert } from 'react-native';
 import { Bell, Search, Play, X, Calendar } from 'lucide-react-native';
-import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
 import theme from '../../theme/theme';
 import styles from '../../styles/pages/Resources.styles';
+
+function getEmbedUrl(url) {
+  if (!url) return "";
+  try {
+    let videoId = "";
+    if (url.includes("youtube.com/watch")) {
+      const parts = url.split("v=");
+      if (parts.length > 1) {
+        videoId = parts[1].split("&")[0];
+      }
+    } else if (url.includes("youtu.be/")) {
+      const parts = url.split("youtu.be/");
+      if (parts.length > 1) {
+        videoId = parts[1].split("?")[0];
+      }
+    }
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+  } catch (e) {}
+  return url;
+}
 
 export const Resources = () => {
   const { username, setIsProfileOpen } = useUser();
@@ -15,6 +36,9 @@ export const Resources = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [activeVideo, setActiveVideo] = useState(null);
+  
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const filters = [
     { key: 'action plan', label: 'Action Plan' },
@@ -23,69 +47,47 @@ export const Resources = () => {
     { key: 'webinar', label: 'Webinar' }
   ];
 
-  const resourcesList = [
-    {
-      id: 1,
-      title: 'Week 16 Day 3 | Strength Workout',
-      date: '10-May-2026',
-      category: 'strength workout',
-      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-      thumbnail: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-      id: 2,
-      title: 'Week 16 Day 2 | Strength Workout',
-      date: '08-May-2026',
-      category: 'strength workout',
-      videoUrl: 'https://www.w3schools.com/html/movie.mp4',
-      thumbnail: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-      id: 3,
-      title: 'Week 16 Day 1 | Strength Workout',
-      date: '06-May-2026',
-      category: 'strength workout',
-      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-      thumbnail: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-      id: 4,
-      title: 'Slow Burn Phase 1 Action Plan',
-      date: '01-May-2026',
-      category: 'action plan',
-      videoUrl: 'https://www.w3schools.com/html/movie.mp4',
-      thumbnail: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-      id: 5,
-      title: 'Full Guide: Caloric Deficit & Nutrition',
-      date: '28-Apr-2026',
-      category: 'guides',
-      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-      thumbnail: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-      id: 6,
-      title: 'Monthly Q&A: Overcoming Weight Plateaus',
-      date: '15-Apr-2026',
-      category: 'webinar',
-      videoUrl: 'https://www.w3schools.com/html/movie.mp4',
-      thumbnail: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?q=80&w=600&auto=format&fit=crop'
-    }
-  ];
+  useEffect(() => {
+    const fetchResources = async () => {
+      setLoading(true);
+      try {
+        const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/resources?type=${encodeURIComponent(activeFilter)}&search=${encodeURIComponent(appliedSearch)}`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'text/plain',
+          }
+        });
+        const json = await response.json();
+        if (response.ok && json.status === 'success') {
+          setResources(json.data || []);
+        } else {
+          setResources([]);
+        }
+      } catch (err) {
+        console.error("Error fetching resources:", err);
+        setResources([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResources();
+  }, [activeFilter, appliedSearch]);
 
   const handleSearchSubmit = () => {
-    setAppliedSearch(searchQuery.trim().toLowerCase());
+    setAppliedSearch(searchQuery.trim());
   };
 
-  const filteredResources = resourcesList.filter((item) => {
-    const matchesFilter = activeFilter === 'all' || item.category === activeFilter;
-    const matchesSearch =
-      appliedSearch === '' ||
-      item.title.toLowerCase().includes(appliedSearch) ||
-      item.category.toLowerCase().includes(appliedSearch);
-    return matchesFilter && matchesSearch;
-  });
+  const handlePlayVideo = (item) => {
+    if (Platform.OS === 'web') {
+      setActiveVideo(item);
+    } else {
+      Linking.openURL(item.videoUrl).catch((err) => {
+        Alert.alert("Error", "Unable to open video link.");
+      });
+    }
+  };
 
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
 
@@ -153,7 +155,11 @@ export const Resources = () => {
                 key={filter.key}
                 activeOpacity={0.8}
                 style={[styles.filterTabBtn, isActive && styles.activeFilterTabBtn]}
-                onPress={() => setActiveFilter(filter.key)}
+                onPress={() => {
+                  setActiveFilter(filter.key);
+                  setSearchQuery('');
+                  setAppliedSearch('');
+                }}
               >
                 <Text style={[styles.filterTabBtnText, isActive && styles.activeFilterTabBtnText]}>
                   {filter.label}
@@ -165,18 +171,23 @@ export const Resources = () => {
 
         {/* Video Cards Grid */}
         <View style={styles.videoCardsGrid}>
-          {filteredResources.length > 0 ? (
-            filteredResources.map((item) => (
+          {loading ? (
+            <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={theme.colors.accentPurple} />
+              <Text style={{ color: theme.colors.textSecondary, marginTop: 12 }}>Loading resources...</Text>
+            </View>
+          ) : resources.length > 0 ? (
+            resources.map((item) => (
               <TouchableOpacity 
                 key={item.id} 
                 activeOpacity={0.9} 
                 style={styles.videoResourceCard} 
-                onPress={() => setActiveVideo(item)}
+                onPress={() => handlePlayVideo(item)}
               >
                 {/* Thumbnail */}
                 <View style={styles.videoThumbnailWrapper}>
                   <Image 
-                    source={{ uri: item.thumbnail }} 
+                    source={{ uri: item.thumbnail || 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop' }} 
                     style={styles.videoThumbnailImg}
                   />
                   <View style={styles.videoPlayOverlay}>
@@ -191,7 +202,7 @@ export const Resources = () => {
                   <Text style={styles.videoCardTitle}>{item.title}</Text>
                   <View style={styles.videoCardDateRow}>
                     <Calendar size={12} color={theme.colors.textSecondary} style={styles.dateIconSvg} />
-                    <Text style={styles.videoCardDate}>{item.date}</Text>
+                    <Text style={styles.videoCardDate}>{item.date || '01-May-2026'}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -211,7 +222,7 @@ export const Resources = () => {
       </ScrollView>
 
       {/* Video Player Modal */}
-      {activeVideo && (
+      {activeVideo && Platform.OS === 'web' && (
         <Modal
           transparent={true}
           visible={!!activeVideo}
@@ -230,20 +241,23 @@ export const Resources = () => {
               <View style={styles.videoViewportWrapper}>
                 <Text style={styles.videoModalTitle}>{activeVideo.title}</Text>
                 
-                <Video 
-                  source={{ uri: activeVideo.videoUrl }}
-                  rate={1.0}
-                  volume={1.0}
-                  isMuted={false}
-                  resizeMode={ResizeMode.CONTAIN}
-                  shouldPlay
-                  useNativeControls
-                  style={styles.modalVideoTag}
+                <iframe
+                  src={getEmbedUrl(activeVideo.videoUrl)}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{
+                    width: '100%',
+                    height: 300,
+                    borderRadius: 12,
+                    border: 'none',
+                    backgroundColor: '#000000'
+                  }}
                 />
                 
                 <View style={styles.videoModalMetaRow}>
                   <Calendar size={12} color={theme.colors.textSecondary} />
-                  <Text style={styles.videoModalMetaText}>Uploaded: {activeVideo.date}</Text>
+                  <Text style={styles.videoModalMetaText}>Uploaded: {activeVideo.date || '01-May-2026'}</Text>
                 </View>
               </View>
             </View>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Modal } from 'react-native';
-import { Check, Scale, X } from 'lucide-react-native';
+import { Check, Scale, X, ChevronsUpDown } from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
@@ -15,12 +15,13 @@ export const DailyActions = () => {
     loggedWeight, 
     todayEffortScore,
     userId,
+    streakDays,
     fetchDashboardData,
     logWeight 
   } = useUser();
 
   const [showWeightInput, setShowWeightInput] = useState(false);
-  const [weightInputValue, setWeightInputValue] = useState(loggedWeight.toString());
+  const [weightInputValue, setWeightInputValue] = useState(loggedWeight ? loggedWeight.toString() : '');
   const [modalVisible, setModalVisible] = useState(false);
 
   // SVG parameters
@@ -57,7 +58,6 @@ export const DailyActions = () => {
         if (response.ok && data.status === 'success') {
           // Weight saved inside cloud weight_history. Sync locally
           logWeight(weightInputValue);
-          setShowWeightInput(false);
           fetchDashboardData();
         } else {
           alert("Error logging weight: " + (data.message || "Catalyst database rejected the transaction."));
@@ -156,12 +156,9 @@ export const DailyActions = () => {
               activeOpacity={0.8} 
               style={styles.actionBtn} 
               onPress={() => {
-                if (!todayWeightLogged) {
-                  setWeightInputValue(loggedWeight ? loggedWeight.toString() : '');
-                  setShowWeightInput(!showWeightInput);
-                }
+                setWeightInputValue(loggedWeight ? loggedWeight.toString() : '');
+                setShowWeightInput(true);
               }}
-              disabled={todayWeightLogged}
             >
               <View style={styles.btnIconBox}>
                 <Scale size={16} color="#FFFFFF" />
@@ -177,54 +174,80 @@ export const DailyActions = () => {
       {/* Centered Weight Logger Popup Modal Overlay */}
       <Modal
         transparent={true}
-        visible={showWeightInput && !todayWeightLogged}
+        visible={showWeightInput}
         onRequestClose={() => setShowWeightInput(false)}
         animationType="fade"
       >
         <View style={styles.modalOverlay}>
           <View style={styles.centeredWeightCard}>
-            <TouchableOpacity 
-              style={styles.closeModalBtn} 
-              onPress={() => setShowWeightInput(false)}
-            >
-              <X size={20} color="#FFFFFF" />
-            </TouchableOpacity>
             
-            <View style={styles.weightModalForm}>
-              <Text style={styles.modalTitleText}>Log Today's Weight</Text>
-              
-              <Text style={styles.modalPromptText}>
-                Enter your current weight to calculate your progress change.
-              </Text>
-
-              <View style={styles.weightInputWrapper}>
-                <TextInput 
-                  style={styles.weightInput}
-                  keyboardType="numeric"
-                  value={weightInputValue}
-                  onChangeText={setWeightInputValue}
-                  placeholder="Enter weight in kg"
-                  placeholderTextColor="#7F8C8D"
-                  autoFocus
-                />
-              </View>
-
-              <View style={styles.saveBtnContainer}>
-                <LinearGradient
-                  colors={theme.colors.gradients.purpleButton}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+            {/* If weight is NOT logged today yet: show input form */}
+            {!todayWeightLogged ? (
+              <>
+                <TouchableOpacity 
+                  style={styles.closeModalBtn} 
+                  onPress={() => setShowWeightInput(false)}
                 >
+                  <X size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+                
+                <View style={styles.weightModalForm}>
+                  <Text style={[styles.modalTitleText, { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 20 }]}>
+                    Enter today's weight to keep your log updated.
+                  </Text>
+                  
+                  <View style={styles.weightInputWrapper}>
+                    <TextInput 
+                      style={styles.weightInput}
+                      keyboardType="decimal-pad"
+                      value={weightInputValue}
+                      onChangeText={setWeightInputValue}
+                      placeholder="77.78"
+                      placeholderTextColor="#7F8C8D"
+                      autoFocus
+                    />
+                    <ChevronsUpDown size={18} color="#7F8C8D" />
+                  </View>
+
                   <TouchableOpacity 
                     activeOpacity={0.8} 
                     style={styles.saveBtn} 
                     onPress={handleWeightSubmit}
                   >
-                    <Text style={styles.saveBtnText}>Save Weight</Text>
+                    <Text style={styles.saveBtnText}>Save</Text>
                   </TouchableOpacity>
-                </LinearGradient>
+                </View>
+              </>
+            ) : (
+              /* If weight IS logged today: show success card */
+              <View style={{ alignItems: 'center', width: '100%' }}>
+                <View style={styles.successCheckIconContainer}>
+                  <Check size={28} color="#FFFFFF" strokeWidth={3} />
+                </View>
+                
+                <Text style={styles.successTitleText}>Weight Logged</Text>
+                
+                <Text style={styles.successPromptText}>
+                  You've logged your weight for{"\n"}
+                  <Text style={{ fontWeight: 'bold', color: '#FFFFFF' }}>Day {streakDays || 1}</Text>{"\n"}
+                  <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#FFFFFF', marginTop: 4, display: 'inline-block' }}>
+                    {loggedWeight} kg
+                  </Text>
+                </Text>
+                
+                <Text style={styles.successSubPromptText}>
+                  Come back tomorrow to log the{"\n"}next entry 💪
+                </Text>
+
+                <TouchableOpacity 
+                  activeOpacity={0.8} 
+                  style={styles.successCloseBtn} 
+                  onPress={() => setShowWeightInput(false)}
+                >
+                  <Text style={styles.successCloseBtnText}>Close</Text>
+                </TouchableOpacity>
               </View>
-            </View>
+            )}
           </View>
         </View>
       </Modal>

@@ -8,10 +8,8 @@ import styles from '../../styles/components/SbmCards.styles';
 export const SbmCards = () => {
   const { todayEffortLogged, todayEffortScore, startWeight, loggedWeight, streakDays } = useUser();
 
-  // Consistency displays 0 / 108 if today's effort log is not completed, and dynamic streak count upon success
-  const consistencyScore = todayEffortLogged 
-    ? (streakDays > 0 ? `${streakDays} / 108` : "1 / 108") 
-    : "0 / 108";
+  // Consistency displays the total number of days the user has logged their effort
+  const consistencyScore = streakDays > 0 ? `${streakDays} / 108` : "0 / 108";
   
   const weightDiff = (loggedWeight - startWeight).toFixed(1);
   const weightChangeScore = parseFloat(weightDiff) >= 0 ? `+${weightDiff} Kg` : `${weightDiff} Kg`;

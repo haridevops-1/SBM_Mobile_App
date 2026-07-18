@@ -7,7 +7,7 @@ import theme from '../../theme/theme';
 import styles from '../../styles/components/DailyQuestionsModal.styles';
 
 export const DailyQuestionsModal = ({ visible, onClose }) => {
-  const { logTodayEffort, userId, fetchDashboardData } = useUser();
+  const { logTodayEffort, userId, username, fetchDashboardData } = useUser();
   const { width } = useWindowDimensions();
 
   // Responsive alignment bounds for Web Desktop
@@ -90,6 +90,11 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     }
   };
 
+  const handleEditQuestion = (idx) => {
+    setCurrentIndex(idx);
+    setViewMode('question');
+  };
+
   const handleJumpToQuestion = (index) => {
     setCurrentIndex(index);
     setPickerOpen(false);
@@ -118,6 +123,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     const finalPercent = calculateScore();
 
     try {
+      // 1. Submit aggregate score to daily_logs table via /tracker/submit
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/submit', {
         method: 'POST',
         headers: {
@@ -135,6 +141,31 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
+        
+        // 2. Submit individual questions & options to user_daily_answers table via /daily-effort
+        const todayStr = new Date().toISOString().split('T')[0];
+        const detailAnswers = questionsList.map(q => ({
+          User_ID: userId,
+          User_name: username || 'Guest',
+          Question_ID: q.id,
+          Option_ID: answers[q.id],
+          Answer_Date: todayStr
+        }));
+
+        try {
+          await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/daily-effort', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'text/plain',
+            },
+            body: JSON.stringify({
+              answers: detailAnswers
+            })
+          });
+        } catch (detailErr) {
+          console.error("Failed to log detailed answers to user_daily_answers table:", detailErr);
+        }
+
         // Sync local context and refresh dashboard stats
         logTodayEffort(data.data.score);
         setViewMode('completed');
@@ -344,38 +375,27 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
         {/* Scrollable Questions list */}
         <ScrollView style={styles.reviewScrollContainer} showsVerticalScrollIndicator={false}>
           {questionsList.map((q, idx) => {
-            const selectedVal = answers[q.id];
+            const selectedOptId = answers[q.id];
+            const selectedOption = q.options.find(opt => opt.id === selectedOptId);
             return (
-              <View key={q.id} style={styles.reviewCard}>
+              <TouchableOpacity 
+                key={q.id} 
+                activeOpacity={0.8} 
+                style={styles.reviewCard}
+                onPress={() => handleEditQuestion(idx)}
+              >
                 <Text style={styles.reviewQuestionText}>{idx + 1}. {q.question}</Text>
                 
-                <View style={styles.reviewOptionsStack}>
-                  {q.options.map((opt) => {
-                    const isChecked = selectedVal === opt.id;
-                    return (
-                      <TouchableOpacity
-                        key={opt.id}
-                        activeOpacity={0.8}
-                        style={styles.reviewOptionRow}
-                        onPress={() => handleSelectOption(q.id, opt.id)}
-                      >
-                        <View style={[
-                          styles.reviewCheckbox,
-                          isChecked && styles.reviewCheckboxChecked
-                        ]}>
-                          {isChecked && <View style={styles.reviewCheckboxInner} />}
-                        </View>
-                        <Text style={[
-                          styles.reviewOptionText,
-                          isChecked && styles.reviewOptionTextChecked
-                        ]}>
-                          {opt.text}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                  <View style={[styles.reviewCheckbox, styles.reviewCheckboxChecked]}>
+                    <View style={styles.reviewCheckboxInner} />
+                  </View>
+                  <Text style={[styles.reviewOptionText, styles.reviewOptionTextChecked, { flex: 1, textAlign: 'left', marginLeft: 8, fontSize: 13, fontWeight: '600' }]}>
+                    {selectedOption ? selectedOption.text : "Not answered yet"}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#B085F5', fontWeight: 'bold', marginLeft: 8 }}>Tap to Edit</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </ScrollView>

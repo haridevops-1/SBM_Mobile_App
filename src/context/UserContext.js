@@ -18,6 +18,11 @@ export const UserProvider = ({ children }) => {
   // Streak
   const [streakDays, setStreakDays] = useState(0);
 
+  // Respective Program Week & Phase values
+  const [currentWeek, setCurrentWeek] = useState(1);
+  const [phaseNumber, setPhaseNumber] = useState(1);
+  const [phaseName, setPhaseName] = useState('Plan Based');
+
   // Daily questions completion counts (Initialize at 0)
   const [nutritionScore, setNutritionScore] = useState(0);
   const [movementScore, setMovementScore] = useState(0);
@@ -78,7 +83,7 @@ export const UserProvider = ({ children }) => {
       const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${targetUserId}`);
       const result = await response.json();
       if (response.ok && result.status === 'success') {
-        const { today_effort_logged, today_effort_score, today_weight_logged, current_weight, start_weight, streak_days } = result.data;
+        const { today_effort_logged, today_effort_score, today_weight_logged, current_weight, start_weight, streak_days, current_week, phase_number, phase_name } = result.data;
         
         setTodayEffortLogged(today_effort_logged);
         setTodayEffortScore(today_effort_score);
@@ -86,6 +91,9 @@ export const UserProvider = ({ children }) => {
         setLoggedWeight(current_weight);
         setStartWeight(start_weight);
         setStreakDays(streak_days);
+        if (current_week !== undefined) setCurrentWeek(current_week);
+        if (phase_number !== undefined) setPhaseNumber(phase_number);
+        if (phase_name !== undefined) setPhaseName(phase_name);
         
         // Sync weekly progress efforts
         const updatedEfforts = [0, 0, 0, 0, today_effort_score];
@@ -213,6 +221,9 @@ export const UserProvider = ({ children }) => {
       mindsetScore,
       hydrationScore,
       weeklyEfforts,
+      currentWeek,
+      phaseNumber,
+      phaseName,
       isProfileOpen,
       setIsProfileOpen,
       userEmail,

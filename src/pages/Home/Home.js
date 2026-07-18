@@ -11,7 +11,7 @@ import theme from '../../theme/theme';
 import styles from '../../styles/pages/Home.styles';
 
 export const Home = () => {
-  const { isLoggedIn, fetchDashboardData } = useUser();
+  const { isLoggedIn, fetchDashboardData, currentWeek, phaseNumber, phaseName } = useUser();
 
   // Dynamic dashboard synchronizations upon page render sessions
   useEffect(() => {
@@ -38,6 +38,18 @@ export const Home = () => {
         <View style={styles.dateRow}>
           <Calendar size={14} color={theme.colors.textSecondary} style={styles.calendarIcon} />
           <Text style={styles.dateText}>{getDynamicDateString()}</Text>
+        </View>
+
+        {/* Week and Phase display row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, marginTop: 4 }}>
+          <Text style={{ fontSize: 16, fontWeight: '800', color: theme.colors.textPrimary }}>
+            Week {currentWeek} of 20
+          </Text>
+          <View style={{ backgroundColor: theme.colors.purple, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#FFFFFF' }}>
+              Phase {phaseNumber}: {phaseName}
+            </Text>
+          </View>
         </View>
 
         {/* Quote message banner */}

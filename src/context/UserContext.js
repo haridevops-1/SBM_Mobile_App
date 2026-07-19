@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserContext = createContext();
 
@@ -73,9 +74,20 @@ export const UserProvider = ({ children }) => {
       subscription.remove();
     };
   }, [isLoggedIn, lastActiveTime]);
-  // Reset session state on clean app mount for absolute security
+  // Restore session state on app mount
   useEffect(() => {
-    logoutUser();
+    const restoreSession = async () => {
+      try {
+        const session = await AsyncStorage.getItem('sbm_user_session');
+        if (session) {
+          const { name, currentWeightVal, details } = JSON.parse(session);
+          loginUser(name, currentWeightVal, details);
+        }
+      } catch (e) {
+        console.error("Failed to restore session:", e);
+      }
+    };
+    restoreSession();
   }, []);
   // Action to fetch live Dashboard Stats from Zoho Catalyst sbm_tracker_function
   const fetchDashboardData = async (uid) => {
@@ -173,6 +185,17 @@ export const UserProvider = ({ children }) => {
 
     setIsLoggedIn(true);
 
+    // Save session to AsyncStorage for persistence
+    try {
+      AsyncStorage.setItem('sbm_user_session', JSON.stringify({
+        name,
+        currentWeightVal,
+        details
+      }));
+    } catch (e) {
+      console.error("Failed to save session:", e);
+    }
+
     // Dynamic initial loading of user metrics from Catalyst database
     if (details.userId) {
       fetchDashboardData(details.userId);
@@ -199,6 +222,13 @@ export const UserProvider = ({ children }) => {
     setLoggedWeight(0.0);
     setStartWeight(0.0);
     setStreakDays(0);
+
+    // Clear session from AsyncStorage
+    try {
+      AsyncStorage.removeItem('sbm_user_session');
+    } catch (e) {
+      console.error("Failed to clear session:", e);
+    }
   };
 
   return (

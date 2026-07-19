@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Calendar, Utensils, Dumbbell, Moon, ArrowUpRight } from 'lucide-react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, FlatStyle } from 'react-native';
+import { Calendar, Utensils, Dumbbell, Moon, X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
@@ -10,6 +10,10 @@ import styles from '../../styles/pages/Efforts.styles';
 export const Efforts = () => {
   const [activeTimeframe, setActiveTimeframe] = useState('week');
   const [activeCategory, setActiveCategory] = useState('nutrition');
+  
+  // Date Picker states
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const { 
     todayEffortLogged,
@@ -22,13 +26,81 @@ export const Efforts = () => {
     username
   } = useUser();
 
-  const timeframes = ['Week', 'Month', 'Year'];
+  const timeframes = ['Day', 'Week', 'Month'];
+
+  // Helper to generate recent 14 dates for picker list
+  const getRecentDates = () => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const iso = d.toISOString().split('T')[0];
+      
+      let label = '';
+      if (i === 0) label = 'Today';
+      else if (i === 1) label = 'Yesterday';
+      else {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        label = `${d.getDate()} ${months[d.getMonth()]}`;
+      }
+      dates.push({ iso, label });
+    }
+    return dates;
+  };
+
+  // Find daily log details for the selectedDate
+  const selectedDayLog = (historyLogs || []).find(log => log.date === selectedDate);
+
+  // Compute metrics dynamically based on Day, Week, Month timeframe
+  let displayEffort = 0;
+  let displayNutrition = 0;
+  let displayMovement = 0;
+  let displayRecovery = 0;
+
+  if (activeTimeframe === 'day') {
+    // Exact selected day log values
+    if (selectedDayLog) {
+      displayEffort = Math.round(selectedDayLog.effort);
+      displayNutrition = selectedDayLog.nutrition;
+      displayMovement = selectedDayLog.movement;
+      displayRecovery = selectedDayLog.recovery;
+    }
+  } else if (activeTimeframe === 'week') {
+    // 7-day average of available logs
+    const logsCount = (historyLogs || []).length;
+    if (logsCount > 0) {
+      const sumEffort = historyLogs.reduce((acc, l) => acc + l.effort, 0);
+      const sumNutrition = historyLogs.reduce((acc, l) => acc + l.nutrition, 0);
+      const sumMovement = historyLogs.reduce((acc, l) => acc + l.movement, 0);
+      const sumRecovery = historyLogs.reduce((acc, l) => acc + l.recovery, 0);
+
+      displayEffort = Math.round(sumEffort / logsCount);
+      displayNutrition = Math.round((sumNutrition / logsCount) * 10) / 10;
+      displayMovement = Math.round((sumMovement / logsCount) * 10) / 10;
+      displayRecovery = Math.round((sumRecovery / logsCount) * 10) / 10;
+    }
+  } else {
+    // Monthly average (approximated here using all historical logs)
+    const logsCount = (historyLogs || []).length;
+    if (logsCount > 0) {
+      const sumEffort = historyLogs.reduce((acc, l) => acc + l.effort, 0);
+      const sumNutrition = historyLogs.reduce((acc, l) => acc + l.nutrition, 0);
+      const sumMovement = historyLogs.reduce((acc, l) => acc + l.movement, 0);
+      const sumRecovery = historyLogs.reduce((acc, l) => acc + l.recovery, 0);
+
+      displayEffort = Math.round(sumEffort / logsCount);
+      displayNutrition = Math.round((sumNutrition / logsCount) * 10) / 10;
+      displayMovement = Math.round((sumMovement / logsCount) * 10) / 10;
+      displayRecovery = Math.round((sumRecovery / logsCount) * 10) / 10;
+    }
+  }
 
   const overallMetrics = [
-    { label: 'Effort Score', value: todayEffortLogged ? `${todayEffortScore}` : '0' },
-    { label: 'Nutrition', value: `${nutritionScore}/9` },
-    { label: 'Movement', value: `${movementScore}/9` },
-    { label: 'Recovery', value: `${recoveryScore}/9` }
+    { label: 'Effort Score', value: `${displayEffort}` },
+    { label: 'Nutrition', value: `${displayNutrition}/9` },
+    { label: 'Movement', value: `${displayMovement}/9` },
+    { label: 'Recovery', value: `${displayRecovery}/9` }
   ];
 
   // Dynamic Overall Progress chart based on the last 7 daily logs from the database
@@ -40,32 +112,35 @@ export const Efforts = () => {
     if (i < totalBarsCount - historyLen) {
       // Pad empty bars at the start for new users
       overallChartData.push({
-        day: `D-${totalBarsCount - i}`,
+        day: `Day ${i + 1}`,
         percentage: 0,
         isToday: false
       });
     } else {
       const logIdx = i - (totalBarsCount - historyLen);
       const log = historyLogs[logIdx];
-      const dateParts = log.date.split('-');
-      const formattedDayLabel = dateParts.length === 3 ? `${parseInt(dateParts[2], 10)}/${parseInt(dateParts[1], 10)}` : log.date;
       
       // Caps raw scores to 0-100 percentage for overall chart
       const percentageVal = Math.min(100, Math.max(0, log.effort));
       overallChartData.push({
-        day: formattedDayLabel,
+        day: `Day ${i + 1}`,
         percentage: percentageVal,
-        isToday: logIdx === historyLen - 1
+        isToday: log.date === selectedDate
       });
     }
   }
 
-  // Define categories (only Nutrition, Movement, Recovery)
+  // Calculate dynamic aspect scores as percentages for Section 2 category cards
+  const nutritionPercent = Math.min(100, Math.max(0, Math.round((nutritionScore / 9) * 100)));
+  const movementPercent = Math.min(100, Math.max(0, Math.round((movementScore / 9) * 100)));
+  const recoveryPercent = Math.min(100, Math.max(0, Math.round((recoveryScore / 9) * 100)));
+
+  // Define categories (only Nutrition, Movement, Recovery) with percentages
   const categories = [
     {
       id: 'nutrition',
       label: 'Nutrition',
-      score: `${nutritionScore}/9`,
+      score: `${nutritionPercent}%`,
       icon: (color) => <Utensils size={18} color={color} />,
       iconBg: 'rgba(76, 175, 80, 0.15)',
       accentColor: '#4CAF50',
@@ -74,7 +149,7 @@ export const Efforts = () => {
     {
       id: 'movement',
       label: 'Movement',
-      score: `${movementScore}/9`,
+      score: `${movementPercent}%`,
       icon: (color) => <Dumbbell size={18} color={color} />,
       iconBg: 'rgba(41, 182, 246, 0.15)',
       accentColor: '#29B6F6',
@@ -83,7 +158,7 @@ export const Efforts = () => {
     {
       id: 'recovery',
       label: 'Recovery',
-      score: `${recoveryScore}/9`,
+      score: `${recoveryPercent}%`,
       icon: (color) => <Moon size={18} color={color} />,
       iconBg: 'rgba(123, 31, 162, 0.15)',
       accentColor: '#B085F5',
@@ -91,29 +166,26 @@ export const Efforts = () => {
     }
   ];
 
-  // Dynamic aspect details chart based on the last 7 daily logs from the database
+  // Dynamic aspect details chart with "Day 1, Day 2..." X-axis labels
   const activeDetailData = [];
   for (let i = 0; i < totalBarsCount; i++) {
     if (i < totalBarsCount - historyLen) {
       activeDetailData.push({
-        day: `D-${totalBarsCount - i}`,
+        day: `Day ${i + 1}`,
         percentage: 0
       });
     } else {
       const logIdx = i - (totalBarsCount - historyLen);
       const log = historyLogs[logIdx];
-      const dateParts = log.date.split('-');
-      const formattedDayLabel = dateParts.length === 3 ? `${parseInt(dateParts[2], 10)}/${parseInt(dateParts[1], 10)}` : log.date;
       
       let aspectScore = 0;
       if (activeCategory === 'nutrition') aspectScore = log.nutrition;
       else if (activeCategory === 'movement') aspectScore = log.movement;
       else if (activeCategory === 'recovery') aspectScore = log.recovery;
       
-      // Convert raw aspect score (0 to 9) to height percentage
       const percentageVal = Math.min(100, Math.max(0, Math.round((aspectScore / 9) * 100)));
       activeDetailData.push({
-        day: formattedDayLabel,
+        day: `Day ${i + 1}`,
         percentage: percentageVal
       });
     }
@@ -142,7 +214,10 @@ export const Efforts = () => {
               </LinearGradient>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Efforts</Text>
-            <TouchableOpacity style={styles.headerActionBtn}>
+            <TouchableOpacity 
+              style={styles.headerActionBtn}
+              onPress={() => setIsDatePickerVisible(true)}
+            >
               <Calendar size={20} color={theme.colors.textPrimary} />
             </TouchableOpacity>
           </View>
@@ -223,9 +298,6 @@ export const Efforts = () => {
         <View style={styles.dailyQuestionsSection}>
           <View style={styles.questionsHeader}>
             <Text style={styles.questionsTitle}>Daily Questions</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllBtn}>View All</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Categories Row */}
@@ -268,10 +340,6 @@ export const Efforts = () => {
                 </View>
                 <Text style={styles.detailsTitle}>{selectedCategoryObj.titleFull}</Text>
               </View>
-              <TouchableOpacity style={styles.viewDetailsLink}>
-                <Text style={styles.viewDetailsLinkText}>View Details</Text>
-                <ArrowUpRight size={12} color="#B085F5" />
-              </TouchableOpacity>
             </View>
 
             {/* 7-Day Chart */}
@@ -314,6 +382,50 @@ export const Efforts = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Date Picker Modal Backdrop Overlay */}
+      <Modal
+        visible={isDatePickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsDatePickerVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose Log Date</Text>
+              <TouchableOpacity 
+                activeOpacity={0.8}
+                onPress={() => setIsDatePickerVisible(false)}
+              >
+                <X size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalList}>
+              {getRecentDates().map(item => {
+                const isSelected = selectedDate === item.iso;
+                return (
+                  <TouchableOpacity
+                    key={item.iso}
+                    activeOpacity={0.8}
+                    style={[styles.modalListItem, isSelected && styles.modalListItemActive]}
+                    onPress={() => {
+                      setSelectedDate(item.iso);
+                      setIsDatePickerVisible(false);
+                    }}
+                  >
+                    <Text style={[styles.modalListItemText, isSelected && styles.modalListItemTextActive]}>
+                      {item.label}
+                    </Text>
+                    {isSelected && <Check size={18} color="#B085F5" />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Profile navigation drawer overlay */}
       <ProfileDrawer />

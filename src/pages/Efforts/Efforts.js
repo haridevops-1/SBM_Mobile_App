@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Calendar, Utensils, Dumbbell, Moon, Brain, Droplet, ArrowUpRight } from 'lucide-react-native';
+import { Calendar, Utensils, Dumbbell, Moon, ArrowUpRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
@@ -13,12 +13,11 @@ export const Efforts = () => {
 
   const { 
     todayEffortLogged,
+    todayEffortScore,
     nutritionScore,
     movementScore,
     recoveryScore,
-    mindsetScore,
-    hydrationScore,
-    weeklyEfforts,
+    historyLogs,
     setIsProfileOpen,
     username
   } = useUser();
@@ -26,20 +25,42 @@ export const Efforts = () => {
   const timeframes = ['Week', 'Month', 'Year'];
 
   const overallMetrics = [
-    { label: 'Effort Score', value: todayEffortLogged ? '78%' : '68%' },
-    { label: 'Completed', value: todayEffortLogged ? '8/9' : '7/9' },
-    { label: 'Consistency', value: todayEffortLogged ? '78%' : '68%' },
-    { label: 'Points', value: todayEffortLogged ? '780' : '680' }
+    { label: 'Effort Score', value: todayEffortLogged ? `${todayEffortScore}` : '0' },
+    { label: 'Nutrition', value: `${nutritionScore}/9` },
+    { label: 'Movement', value: `${movementScore}/9` },
+    { label: 'Recovery', value: `${recoveryScore}/9` }
   ];
 
-  const overallChartData = [
-    { day: 'Mon', percentage: weeklyEfforts[0], isToday: false },
-    { day: 'Tue', percentage: weeklyEfforts[1], isToday: false },
-    { day: 'Wed', percentage: weeklyEfforts[2], isToday: false },
-    { day: 'Thu', percentage: weeklyEfforts[3], isToday: false },
-    { day: 'Fri', percentage: weeklyEfforts[4], isToday: true }
-  ];
+  // Dynamic Overall Progress chart based on the last 7 daily logs from the database
+  const overallChartData = [];
+  const totalBarsCount = 7;
+  const historyLen = historyLogs ? historyLogs.length : 0;
 
+  for (let i = 0; i < totalBarsCount; i++) {
+    if (i < totalBarsCount - historyLen) {
+      // Pad empty bars at the start for new users
+      overallChartData.push({
+        day: `D-${totalBarsCount - i}`,
+        percentage: 0,
+        isToday: false
+      });
+    } else {
+      const logIdx = i - (totalBarsCount - historyLen);
+      const log = historyLogs[logIdx];
+      const dateParts = log.date.split('-');
+      const formattedDayLabel = dateParts.length === 3 ? `${parseInt(dateParts[2], 10)}/${parseInt(dateParts[1], 10)}` : log.date;
+      
+      // Caps raw scores to 0-100 percentage for overall chart
+      const percentageVal = Math.min(100, Math.max(0, log.effort));
+      overallChartData.push({
+        day: formattedDayLabel,
+        percentage: percentageVal,
+        isToday: logIdx === historyLen - 1
+      });
+    }
+  }
+
+  // Define categories (only Nutrition, Movement, Recovery)
   const categories = [
     {
       id: 'nutrition',
@@ -67,77 +88,38 @@ export const Efforts = () => {
       iconBg: 'rgba(123, 31, 162, 0.15)',
       accentColor: '#B085F5',
       titleFull: 'Recovery & Sleep'
-    },
-    {
-      id: 'mindset',
-      label: 'Mindset',
-      score: `${mindsetScore}/9`,
-      icon: (color) => <Brain size={18} color={color} />,
-      iconBg: 'rgba(255, 152, 0, 0.15)',
-      accentColor: '#FF9800',
-      titleFull: 'Mindset & Focus'
-    },
-    {
-      id: 'hydration',
-      label: 'Hydration',
-      score: `${hydrationScore}/9`,
-      icon: (color) => <Droplet size={18} color={color} />,
-      iconBg: 'rgba(33, 150, 243, 0.15)',
-      accentColor: '#2196F3',
-      titleFull: 'Hydration & Water'
     }
   ];
 
-  const categoryDetailsData = {
-    nutrition: [
-      { day: 'Mon', percentage: 75 },
-      { day: 'Tue', percentage: 45 },
-      { day: 'Wed', percentage: 80 },
-      { day: 'Thu', percentage: 45 },
-      { day: 'Fri', percentage: 85 },
-      { day: 'Sat', percentage: 35 },
-      { day: 'Sun', percentage: 78 }
-    ],
-    movement: [
-      { day: 'Mon', percentage: 50 },
-      { day: 'Tue', percentage: 80 },
-      { day: 'Wed', percentage: 60 },
-      { day: 'Thu', percentage: 75 },
-      { day: 'Fri', percentage: 90 },
-      { day: 'Sat', percentage: 40 },
-      { day: 'Sun', percentage: 30 }
-    ],
-    recovery: [
-      { day: 'Mon', percentage: 90 },
-      { day: 'Tue', percentage: 85 },
-      { day: 'Wed', percentage: 70 },
-      { day: 'Thu', percentage: 80 },
-      { day: 'Fri', percentage: 85 },
-      { day: 'Sat', percentage: 95 },
-      { day: 'Sun', percentage: 90 }
-    ],
-    mindset: [
-      { day: 'Mon', percentage: 60 },
-      { day: 'Tue', percentage: 75 },
-      { day: 'Wed', percentage: 80 },
-      { day: 'Thu', percentage: 70 },
-      { day: 'Fri', percentage: 65 },
-      { day: 'Sat', percentage: 50 },
-      { day: 'Sun', percentage: 85 }
-    ],
-    hydration: [
-      { day: 'Mon', percentage: 80 },
-      { day: 'Tue', percentage: 90 },
-      { day: 'Wed', percentage: 75 },
-      { day: 'Thu', percentage: 85 },
-      { day: 'Fri', percentage: 90 },
-      { day: 'Sat', percentage: 60 },
-      { day: 'Sun', percentage: 70 }
-    ]
-  };
+  // Dynamic aspect details chart based on the last 7 daily logs from the database
+  const activeDetailData = [];
+  for (let i = 0; i < totalBarsCount; i++) {
+    if (i < totalBarsCount - historyLen) {
+      activeDetailData.push({
+        day: `D-${totalBarsCount - i}`,
+        percentage: 0
+      });
+    } else {
+      const logIdx = i - (totalBarsCount - historyLen);
+      const log = historyLogs[logIdx];
+      const dateParts = log.date.split('-');
+      const formattedDayLabel = dateParts.length === 3 ? `${parseInt(dateParts[2], 10)}/${parseInt(dateParts[1], 10)}` : log.date;
+      
+      let aspectScore = 0;
+      if (activeCategory === 'nutrition') aspectScore = log.nutrition;
+      else if (activeCategory === 'movement') aspectScore = log.movement;
+      else if (activeCategory === 'recovery') aspectScore = log.recovery;
+      
+      // Convert raw aspect score (0 to 9) to height percentage
+      const percentageVal = Math.min(100, Math.max(0, Math.round((aspectScore / 9) * 100)));
+      activeDetailData.push({
+        day: formattedDayLabel,
+        percentage: percentageVal
+      });
+    }
+  }
 
   const selectedCategoryObj = categories.find(cat => cat.id === activeCategory);
-  const activeDetailData = categoryDetailsData[activeCategory];
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
 
   return (

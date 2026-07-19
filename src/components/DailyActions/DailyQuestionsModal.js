@@ -123,19 +123,16 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     const finalPercent = calculateScore();
 
     try {
-      // 1. Submit aggregate score to daily_logs table via /tracker/submit
-      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/submit', {
+      // 1. Submit Aspect scores to daily_logs table via /aspect-effort
+      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/aspect-effort', {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain',
         },
         body: JSON.stringify({
-          userId: userId,
-          answers: questionsList.map(q => ({
-            questionId: q.id,
-            optionId: answers[q.id]
-          })),
-          score: finalPercent
+          user_id: userId,
+          log_date: new Date().toISOString().split('T')[0],
+          selected_options: questionsList.map(q => answers[q.id])
         })
       });
 
@@ -146,14 +143,14 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
         const todayStr = new Date().toISOString().split('T')[0];
         const detailAnswers = questionsList.map(q => ({
           User_ID: userId,
-          User_name: username || 'Guest',
+          User_name: userId,
           Question_ID: q.id,
           Option_ID: answers[q.id],
           Answer_Date: todayStr
         }));
 
         try {
-          await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/daily-effort', {
+          const detailRes = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/daily-effort', {
             method: 'POST',
             headers: {
               'Content-Type': 'text/plain',
@@ -162,12 +159,14 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
               answers: detailAnswers
             })
           });
+          const detailData = await detailRes.json();
+          console.log("daily-effort detail logging response:", detailData);
         } catch (detailErr) {
           console.error("Failed to log detailed answers to user_daily_answers table:", detailErr);
         }
 
         // Sync local context and refresh dashboard stats
-        logTodayEffort(data.data.score);
+        logTodayEffort(data.data.total_effort);
         setViewMode('completed');
         fetchDashboardData();
       } else {

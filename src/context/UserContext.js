@@ -22,6 +22,7 @@ export const UserProvider = ({ children }) => {
   const [currentWeek, setCurrentWeek] = useState(1);
   const [phaseNumber, setPhaseNumber] = useState(1);
   const [phaseName, setPhaseName] = useState('Plan Based');
+  const [historyLogs, setHistoryLogs] = useState([]);
 
   // Daily questions completion counts (Initialize at 0)
   const [nutritionScore, setNutritionScore] = useState(0);
@@ -83,7 +84,21 @@ export const UserProvider = ({ children }) => {
       const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${targetUserId}`);
       const result = await response.json();
       if (response.ok && result.status === 'success') {
-        const { today_effort_logged, today_effort_score, today_weight_logged, current_weight, start_weight, streak_days, current_week, phase_number, phase_name } = result.data;
+        const { 
+          today_effort_logged, 
+          today_effort_score, 
+          today_weight_logged, 
+          current_weight, 
+          start_weight, 
+          streak_days, 
+          current_week, 
+          phase_number, 
+          phase_name,
+          nutrition_score,
+          movement_score,
+          recovery_score,
+          history_logs
+        } = result.data;
         
         setTodayEffortLogged(today_effort_logged);
         setTodayEffortScore(today_effort_score);
@@ -94,37 +109,14 @@ export const UserProvider = ({ children }) => {
         if (current_week !== undefined) setCurrentWeek(current_week);
         if (phase_number !== undefined) setPhaseNumber(phase_number);
         if (phase_name !== undefined) setPhaseName(phase_name);
+        if (nutrition_score !== undefined) setNutritionScore(nutrition_score);
+        if (movement_score !== undefined) setMovementScore(movement_score);
+        if (recovery_score !== undefined) setRecoveryScore(recovery_score);
+        if (history_logs !== undefined) setHistoryLogs(history_logs || []);
         
         // Sync weekly progress efforts
         const updatedEfforts = [0, 0, 0, 0, today_effort_score];
         setWeeklyEfforts(updatedEfforts);
-
-        // Adjust interactive scores depending on effort value
-        if (today_effort_score >= 80) {
-          setNutritionScore(9);
-          setMovementScore(8);
-          setRecoveryScore(8);
-          setMindsetScore(8);
-          setHydrationScore(9);
-        } else if (today_effort_score >= 50) {
-          setNutritionScore(7);
-          setMovementScore(6);
-          setRecoveryScore(7);
-          setMindsetScore(6);
-          setHydrationScore(7);
-        } else if (today_effort_score > 0) {
-          setNutritionScore(4);
-          setMovementScore(3);
-          setRecoveryScore(5);
-          setMindsetScore(4);
-          setHydrationScore(4);
-        } else {
-          setNutritionScore(0);
-          setMovementScore(0);
-          setRecoveryScore(0);
-          setMindsetScore(0);
-          setHydrationScore(0);
-        }
       }
     } catch (err) {
       console.error("Dashboard Fetch Error:", err);
@@ -224,6 +216,7 @@ export const UserProvider = ({ children }) => {
       currentWeek,
       phaseNumber,
       phaseName,
+      historyLogs,
       isProfileOpen,
       setIsProfileOpen,
       userEmail,

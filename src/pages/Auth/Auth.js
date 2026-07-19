@@ -7,7 +7,7 @@ import theme from '../../theme/theme';
 import styles from '../../styles/pages/Auth.styles';
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
-const MEAL_OPTIONS = ['Veg', 'Non-Veg'];
+const MEAL_OPTIONS = ['Veg', 'Non-Veg', 'Non-Veg + Egg'];
 const GOAL_OPTIONS = ['Weight Loss', 'Weight Gain', 'Maintenance', 'Habit Building'];
 const TIMEZONE_OPTIONS = [
   'India (IST - UTC+5:30)',

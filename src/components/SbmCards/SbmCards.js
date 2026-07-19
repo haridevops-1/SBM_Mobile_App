@@ -6,10 +6,11 @@ import theme from '../../theme/theme';
 import styles from '../../styles/components/SbmCards.styles';
 
 export const SbmCards = () => {
-  const { todayEffortLogged, todayEffortScore, startWeight, loggedWeight, streakDays } = useUser();
+  const { todayEffortLogged, todayEffortScore, startWeight, loggedWeight, streakDays, averageEffortScore } = useUser();
 
-  // Consistency displays the total number of days the user has logged their effort
-  const consistencyScore = streakDays > 0 ? `${streakDays} / 108` : "0 / 108";
+  // Consistency calculated as percentage of participating days
+  const consistencyPercent = Math.round((streakDays / 108) * 100);
+  const consistencyScore = `${consistencyPercent}%`;
   
   const weightDiff = (loggedWeight - startWeight).toFixed(1);
   const weightChangeScore = parseFloat(weightDiff) >= 0 ? `+${weightDiff} Kg` : `${weightDiff} Kg`;
@@ -24,7 +25,7 @@ export const SbmCards = () => {
     },
     {
       id: 2,
-      score: `${todayEffortScore}%`,
+      score: `${averageEffortScore}%`,
       title: "Effort",
       icon: <Zap size={18} color="#29B6F6" />,
       iconBg: 'rgba(41, 182, 246, 0.15)',

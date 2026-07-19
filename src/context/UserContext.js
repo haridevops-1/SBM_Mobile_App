@@ -17,6 +17,7 @@ export const UserProvider = ({ children }) => {
   
   // Streak
   const [streakDays, setStreakDays] = useState(0);
+  const [averageEffortScore, setAverageEffortScore] = useState(0);
 
   // Respective Program Week & Phase values
   const [currentWeek, setCurrentWeek] = useState(1);
@@ -97,7 +98,8 @@ export const UserProvider = ({ children }) => {
           nutrition_score,
           movement_score,
           recovery_score,
-          history_logs
+          history_logs,
+          average_effort_score
         } = result.data;
         
         setTodayEffortLogged(today_effort_logged);
@@ -113,6 +115,7 @@ export const UserProvider = ({ children }) => {
         if (movement_score !== undefined) setMovementScore(movement_score);
         if (recovery_score !== undefined) setRecoveryScore(recovery_score);
         if (history_logs !== undefined) setHistoryLogs(history_logs || []);
+        if (average_effort_score !== undefined) setAverageEffortScore(average_effort_score);
         
         // Sync weekly progress efforts
         const updatedEfforts = [0, 0, 0, 0, today_effort_score];
@@ -217,6 +220,7 @@ export const UserProvider = ({ children }) => {
       phaseNumber,
       phaseName,
       historyLogs,
+      averageEffortScore,
       isProfileOpen,
       setIsProfileOpen,
       userEmail,

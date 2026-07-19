@@ -17,7 +17,8 @@ export const DailyActions = () => {
     userId,
     streakDays,
     fetchDashboardData,
-    logWeight 
+    logWeight,
+    historyLogs
   } = useUser();
 
   const [showWeightInput, setShowWeightInput] = useState(false);
@@ -30,8 +31,14 @@ export const DailyActions = () => {
   const circumference = 2 * Math.PI * radius;
   
   // Dynamically calculate gauges from user scores
-  const todayEffortPercent = todayEffortScore;
-  const last7DaysEffortPercent = todayEffortLogged ? Math.min(100, Math.round(todayEffortScore * 0.15)) : 0;
+  const todayEffortPercent = Math.min(100, Math.max(0, Math.round((todayEffortScore / 9) * 100)));
+  
+  let last7DaysEffortPercent = 0;
+  if (historyLogs && historyLogs.length > 0) {
+    const sumEffort = historyLogs.reduce((acc, l) => acc + l.effort, 0);
+    last7DaysEffortPercent = Math.min(100, Math.max(0, Math.round((sumEffort / historyLogs.length / 9) * 100)));
+  }
+
   const strokeDashoffset = circumference - (todayEffortPercent / 100) * circumference;
 
   const handleLogEffortClick = () => {

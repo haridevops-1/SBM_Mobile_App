@@ -54,30 +54,12 @@ export const QuoteBanner = () => {
         console.log("Using local quotes fallback:", err.message);
       }
 
-      // Check current expiry and active quote index
-      const storedExpiry = storage.getItem('sbm_daily_quote_expiry');
-      const storedQuoteText = storage.getItem('sbm_daily_quote_text');
-      const now = Date.now();
+      // Stateless 24-hour seed based on local calendar date
+      const today = new Date();
+      const dateSeed = today.getFullYear() * 1000 + (today.getMonth() + 1) * 100 + today.getDate();
+      const quoteIndex = dateSeed % quotesList.length;
 
-      if (storedExpiry && storedQuoteText && now < parseInt(storedExpiry, 10)) {
-        setActiveQuote(storedQuoteText);
-      } else {
-        // Expired or not set! Increment quote index
-        const storedIndex = storage.getItem('sbm_daily_quote_index');
-        let nextIndex = 0;
-        if (storedIndex !== null) {
-          nextIndex = (parseInt(storedIndex, 10) + 1) % quotesList.length;
-        }
-
-        const nextQuote = quotesList[nextIndex];
-        const newExpiry = now + 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-        storage.setItem('sbm_daily_quote_index', nextIndex.toString());
-        storage.setItem('sbm_daily_quote_text', nextQuote);
-        storage.setItem('sbm_daily_quote_expiry', newExpiry.toString());
-
-        setActiveQuote(nextQuote);
-      }
+      setActiveQuote(quotesList[quoteIndex]);
     };
 
     loadQuote();

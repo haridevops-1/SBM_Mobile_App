@@ -119,10 +119,21 @@ export const Efforts = () => {
     }
   }
 
-  // Calculate dynamic aspect scores as percentages for Section 2 category cards
-  const nutritionPercent = Math.min(100, Math.max(0, Math.round((nutritionScore / 9) * 100)));
-  const movementPercent = Math.min(100, Math.max(0, Math.round((movementScore / 9) * 100)));
-  const recoveryPercent = Math.min(100, Math.max(0, Math.round((recoveryScore / 9) * 100)));
+  // Helper to parse percentages from fraction displays like '4.5/9'
+  const parsePercentFromDisplay = (displayStr) => {
+    if (!displayStr) return 0;
+    const parts = displayStr.split('/');
+    if (parts.length === 2) {
+      const num = parseFloat(parts[0]) || 0;
+      const den = parseFloat(parts[1]) || 9;
+      return Math.min(100, Math.max(0, Math.round((num / den) * 100)));
+    }
+    return 0;
+  };
+
+  const nutritionPercent = effortData ? parsePercentFromDisplay(effortData.summary.nutrition_display) : 0;
+  const movementPercent = effortData ? parsePercentFromDisplay(effortData.summary.movement_display) : 0;
+  const recoveryPercent = effortData ? parsePercentFromDisplay(effortData.summary.recovery_display) : 0;
 
   // Define categories (only Nutrition, Movement, Recovery) with percentages
   const categories = [
@@ -161,7 +172,7 @@ export const Efforts = () => {
       if (!userId) return;
       setAspectLoading(true);
       try {
-        const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/efforts/aspect-breakdown?user_id=${userId}&date=${selectedDate}&aspect=${activeCategory}`;
+        const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/efforts/aspect-breakdown?user_id=${userId}&date=${selectedDate}&aspect=${activeCategory}&view_type=${activeTimeframe.toLowerCase()}`;
         const response = await fetch(url);
         const rawResult = await response.json();
         
@@ -181,7 +192,7 @@ export const Efforts = () => {
     };
 
     fetchAspectBreakdown();
-  }, [userId, selectedDate, activeCategory]);
+  }, [userId, selectedDate, activeCategory, activeTimeframe]);
 
   // Dynamic aspect details chart based on fetched aspectData
   const activeDetailData = aspectData && aspectData.length > 0

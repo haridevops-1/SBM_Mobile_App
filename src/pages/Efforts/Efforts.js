@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, FlatStyle } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
 import { Calendar, Utensils, Dumbbell, Moon, X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
@@ -15,6 +15,14 @@ export const Efforts = () => {
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
+  // Overall progress fetched state
+  const [effortData, setEffortData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Aspect breakdown fetched state
+  const [aspectData, setAspectData] = useState([]);
+  const [aspectLoading, setAspectLoading] = useState(false);
+
   const { 
     todayEffortLogged,
     todayEffortScore,
@@ -23,7 +31,8 @@ export const Efforts = () => {
     recoveryScore,
     historyLogs,
     setIsProfileOpen,
-    username
+    username,
+    userId
   } = useUser();
 
   const timeframes = ['Day', 'Week', 'Month'];
@@ -49,83 +58,63 @@ export const Efforts = () => {
     return dates;
   };
 
-  // Find daily log details for the selectedDate
-  const selectedDayLog = (historyLogs || []).find(log => log.date === selectedDate);
+  // Fetch overall progress details dynamically from the Catalyst API Gateway route
+  useEffect(() => {
+    const fetchEffortsProgress = async () => {
+      if (!userId) return;
+      setLoading(true);
+      try {
+        const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/efforts/overall-progress?user_id=${userId}&date=${selectedDate}&view_type=${activeTimeframe.toLowerCase()}`;
+        const response = await fetch(url);
+        const rawResult = await response.json();
+        
+        // Handle Basic I/O wrapping
+        const result = rawResult.output ? JSON.parse(rawResult.output) : rawResult;
+        
+        if (result && result.status === 'success') {
+          setEffortData(result.data);
+        } else {
+          console.warn("Failed to fetch efforts progress:", result);
+        }
+      } catch (err) {
+        console.error("Error fetching efforts progress:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEffortsProgress();
+  }, [userId, selectedDate, activeTimeframe]);
 
   // Compute metrics dynamically based on Day, Week, Month timeframe
-  let displayEffort = 0;
-  let displayNutrition = 0;
-  let displayMovement = 0;
-  let displayRecovery = 0;
-
-  if (activeTimeframe === 'day') {
-    // Exact selected day log values
-    if (selectedDayLog) {
-      displayEffort = Math.round(selectedDayLog.effort);
-      displayNutrition = selectedDayLog.nutrition;
-      displayMovement = selectedDayLog.movement;
-      displayRecovery = selectedDayLog.recovery;
-    }
-  } else if (activeTimeframe === 'week') {
-    // 7-day average of available logs
-    const logsCount = (historyLogs || []).length;
-    if (logsCount > 0) {
-      const sumEffort = historyLogs.reduce((acc, l) => acc + l.effort, 0);
-      const sumNutrition = historyLogs.reduce((acc, l) => acc + l.nutrition, 0);
-      const sumMovement = historyLogs.reduce((acc, l) => acc + l.movement, 0);
-      const sumRecovery = historyLogs.reduce((acc, l) => acc + l.recovery, 0);
-
-      displayEffort = Math.round(sumEffort / logsCount);
-      displayNutrition = Math.round((sumNutrition / logsCount) * 10) / 10;
-      displayMovement = Math.round((sumMovement / logsCount) * 10) / 10;
-      displayRecovery = Math.round((sumRecovery / logsCount) * 10) / 10;
-    }
-  } else {
-    // Monthly average (approximated here using all historical logs)
-    const logsCount = (historyLogs || []).length;
-    if (logsCount > 0) {
-      const sumEffort = historyLogs.reduce((acc, l) => acc + l.effort, 0);
-      const sumNutrition = historyLogs.reduce((acc, l) => acc + l.nutrition, 0);
-      const sumMovement = historyLogs.reduce((acc, l) => acc + l.movement, 0);
-      const sumRecovery = historyLogs.reduce((acc, l) => acc + l.recovery, 0);
-
-      displayEffort = Math.round(sumEffort / logsCount);
-      displayNutrition = Math.round((sumNutrition / logsCount) * 10) / 10;
-      displayMovement = Math.round((sumMovement / logsCount) * 10) / 10;
-      displayRecovery = Math.round((sumRecovery / logsCount) * 10) / 10;
-    }
-  }
+  const displayEffort = effortData ? effortData.summary.effort_percentage : 0;
+  const displayNutrition = effortData ? effortData.summary.nutrition_display : '0/9';
+  const displayMovement = effortData ? effortData.summary.movement_display : '0/9';
+  const displayRecovery = effortData ? effortData.summary.recovery_display : '0/9';
 
   const overallMetrics = [
-    { label: 'Effort Score', value: `${displayEffort}` },
-    { label: 'Nutrition', value: `${displayNutrition}/9` },
-    { label: 'Movement', value: `${displayMovement}/9` },
-    { label: 'Recovery', value: `${displayRecovery}/9` }
+    { label: 'Effort Score', value: `${displayEffort}%` },
+    { label: 'Nutrition', value: displayNutrition },
+    { label: 'Movement', value: displayMovement },
+    { label: 'Recovery', value: displayRecovery }
   ];
 
-  // Dynamic Overall Progress chart based on the last 7 daily logs from the database
+  // Dynamic Overall Progress chart based on the fetched chart_data from API
   const overallChartData = [];
-  const totalBarsCount = 7;
-  const historyLen = historyLogs ? historyLogs.length : 0;
-
-  for (let i = 0; i < totalBarsCount; i++) {
-    if (i < totalBarsCount - historyLen) {
-      // Pad empty bars at the start for new users
+  if (effortData && effortData.chart_data && effortData.chart_data.length > 0) {
+    effortData.chart_data.forEach((item, idx) => {
+      overallChartData.push({
+        day: item.label,
+        percentage: item.effort_score,
+        isToday: item.date === selectedDate
+      });
+    });
+  } else {
+    for (let i = 0; i < 7; i++) {
       overallChartData.push({
         day: `Day ${i + 1}`,
         percentage: 0,
         isToday: false
-      });
-    } else {
-      const logIdx = i - (totalBarsCount - historyLen);
-      const log = historyLogs[logIdx];
-      
-      // Caps raw scores to 0-100 percentage for overall chart
-      const percentageVal = Math.min(100, Math.max(0, log.effort));
-      overallChartData.push({
-        day: `Day ${i + 1}`,
-        percentage: percentageVal,
-        isToday: log.date === selectedDate
       });
     }
   }
@@ -166,30 +155,44 @@ export const Efforts = () => {
     }
   ];
 
-  // Dynamic aspect details chart with "Day 1, Day 2..." X-axis labels
-  const activeDetailData = [];
-  for (let i = 0; i < totalBarsCount; i++) {
-    if (i < totalBarsCount - historyLen) {
-      activeDetailData.push({
+  // Fetch aspect breakdown details dynamically from the Catalyst API Gateway route
+  useEffect(() => {
+    const fetchAspectBreakdown = async () => {
+      if (!userId) return;
+      setAspectLoading(true);
+      try {
+        const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/efforts/aspect-breakdown?user_id=${userId}&date=${selectedDate}&aspect=${activeCategory}`;
+        const response = await fetch(url);
+        const rawResult = await response.json();
+        
+        // Handle Basic I/O wrapping
+        const result = rawResult.output ? JSON.parse(rawResult.output) : rawResult;
+        
+        if (result && result.status === 'success') {
+          setAspectData(result.data || []);
+        } else {
+          console.warn("Failed to fetch aspect breakdown:", result);
+        }
+      } catch (err) {
+        console.error("Error fetching aspect breakdown:", err);
+      } finally {
+        setAspectLoading(false);
+      }
+    };
+
+    fetchAspectBreakdown();
+  }, [userId, selectedDate, activeCategory]);
+
+  // Dynamic aspect details chart based on fetched aspectData
+  const activeDetailData = aspectData && aspectData.length > 0
+    ? aspectData.map((item) => ({
+        day: item.label,
+        percentage: item.percentage
+      }))
+    : Array.from({ length: 7 }, (_, i) => ({
         day: `Day ${i + 1}`,
         percentage: 0
-      });
-    } else {
-      const logIdx = i - (totalBarsCount - historyLen);
-      const log = historyLogs[logIdx];
-      
-      let aspectScore = 0;
-      if (activeCategory === 'nutrition') aspectScore = log.nutrition;
-      else if (activeCategory === 'movement') aspectScore = log.movement;
-      else if (activeCategory === 'recovery') aspectScore = log.recovery;
-      
-      const percentageVal = Math.min(100, Math.max(0, Math.round((aspectScore / 9) * 100)));
-      activeDetailData.push({
-        day: `Day ${i + 1}`,
-        percentage: percentageVal
-      });
-    }
-  }
+      }));
 
   const selectedCategoryObj = categories.find(cat => cat.id === activeCategory);
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';

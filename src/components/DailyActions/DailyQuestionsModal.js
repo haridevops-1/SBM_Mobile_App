@@ -138,33 +138,6 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        
-        // 2. Submit individual questions & options to user_daily_answers table via /daily-effort
-        const todayStr = new Date().toISOString().split('T')[0];
-        const detailAnswers = questionsList.map(q => ({
-          User_ID: userId,
-          User_name: userId,
-          Question_ID: q.id,
-          Option_ID: answers[q.id],
-          Answer_Date: todayStr
-        }));
-
-        try {
-          const detailRes = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/daily-effort', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({
-              answers: detailAnswers
-            })
-          });
-          const detailData = await detailRes.json();
-          console.log("daily-effort detail logging response:", detailData);
-        } catch (detailErr) {
-          console.error("Failed to log detailed answers to user_daily_answers table:", detailErr);
-        }
-
         // Sync local context and refresh dashboard stats
         logTodayEffort(data.data.total_effort);
         setViewMode('completed');

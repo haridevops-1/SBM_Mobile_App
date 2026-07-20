@@ -167,7 +167,7 @@ export default StyleSheet.create({
   scrollableBarsContent: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
     minWidth: '100%',
     height: '100%',
     paddingBottom: 20,

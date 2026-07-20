@@ -70,23 +70,6 @@ export const Efforts = () => {
     fetchEffortsProgress();
   }, [userId, selectedDate, activeTimeframe]);
 
-  // Auto-scroll charts to the far right (Today / latest day) on data load
-  useEffect(() => {
-    if (effortData) {
-      setTimeout(() => {
-        overallScrollRef.current?.scrollToEnd({ animated: false });
-      }, 100);
-    }
-  }, [effortData]);
-
-  useEffect(() => {
-    if (aspectData) {
-      setTimeout(() => {
-        detailScrollRef.current?.scrollToEnd({ animated: false });
-      }, 100);
-    }
-  }, [aspectData]);
-
   // Compute metrics dynamically based on Day, Week, Month timeframe
   const displayEffort = effortData ? effortData.summary.effort_percentage : 0;
   const displayNutrition = effortData ? effortData.summary.nutrition_display : '0/9';
@@ -100,25 +83,13 @@ export const Efforts = () => {
     { label: 'Recovery', value: displayRecovery }
   ];
 
-  // Dynamic Overall Progress chart based on the fetched chart_data from API
-  const overallChartData = [];
-  if (effortData && effortData.chart_data && effortData.chart_data.length > 0) {
-    effortData.chart_data.forEach((item, idx) => {
-      overallChartData.push({
-        day: item.label,
-        percentage: item.effort_score,
-        isToday: item.date === selectedDate
-      });
-    });
-  } else {
-    for (let i = 0; i < 7; i++) {
-      overallChartData.push({
-        day: `Day ${i + 1}`,
-        percentage: 0,
-        isToday: false
-      });
-    }
-  }
+  // Dynamic Overall Progress chart (Newest / Today on the Left)
+  const rawChartData = (effortData && effortData.chart_data) ? effortData.chart_data : [];
+  const overallChartData = [...rawChartData].reverse().map((item) => ({
+    day: item.label,
+    percentage: item.effort_score,
+    isToday: item.date === selectedDate
+  }));
 
   // Helper to parse percentages from fraction displays like '4.5/9'
   const parsePercentFromDisplay = (displayStr) => {
@@ -195,16 +166,11 @@ export const Efforts = () => {
     fetchAspectBreakdown();
   }, [userId, selectedDate, activeCategory, activeTimeframe]);
 
-  // Dynamic aspect details chart based on fetched aspectData
-  const activeDetailData = aspectData && aspectData.length > 0
-    ? aspectData.map((item) => ({
-        day: item.label,
-        percentage: item.percentage
-      }))
-    : Array.from({ length: 7 }, (_, i) => ({
-        day: `Day ${i + 1}`,
-        percentage: 0
-      }));
+  // Dynamic aspect details chart (Newest / Today on the Left)
+  const activeDetailData = [...(aspectData || [])].reverse().map((item) => ({
+    day: item.label,
+    percentage: item.percentage
+  }));
 
   const selectedCategoryObj = categories.find(cat => cat.id === activeCategory);
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
@@ -283,13 +249,11 @@ export const Efforts = () => {
                 ))}
               </View>
 
-              {/* Horizontally Scrollable Bars */}
+              {/* Horizontally Scrollable Bars (Today on the Left) */}
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ref={overallScrollRef}
-                onContentSizeChange={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
-                onLayout={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
                 contentContainerStyle={styles.scrollableBarsContent}
               >
                 {overallChartData.map((data, idx) => (
@@ -375,13 +339,11 @@ export const Efforts = () => {
                   ))}
                 </View>
 
-                {/* Horizontally Scrollable Bars */}
+                {/* Horizontally Scrollable Bars (Today on the Left) */}
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   ref={detailScrollRef}
-                  onContentSizeChange={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
-                  onLayout={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
                   contentContainerStyle={styles.scrollableBarsContent}
                 >
                   {activeDetailData.map((data, idx) => (

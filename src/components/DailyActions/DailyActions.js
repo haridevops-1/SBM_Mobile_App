@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Check, Scale, X, ChevronsUpDown } from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -18,8 +18,15 @@ export const DailyActions = () => {
     streakDays,
     fetchDashboardData,
     logWeight,
-    historyLogs
+    historyLogs,
+    preSbmScore,
+    checkAndMarkMissedDays,
   } = useUser();
+
+  // On mount: detect any missed days since last log and update consistencyTotal
+  useEffect(() => {
+    checkAndMarkMissedDays();
+  }, []);
 
   const [showWeightInput, setShowWeightInput] = useState(false);
   const [weightInputValue, setWeightInputValue] = useState(loggedWeight ? loggedWeight.toString() : '');
@@ -115,7 +122,7 @@ export const DailyActions = () => {
 
         <View style={styles.effortSplitStats}>
           <View style={styles.splitStatBox}>
-            <Text style={styles.splitValue}>69%</Text>
+            <Text style={styles.splitValue}>{preSbmScore}%</Text>
             <Text style={styles.splitLabel}>Pre-SBM effort</Text>
           </View>
           <View style={styles.verticalDivider} />

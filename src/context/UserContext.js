@@ -23,6 +23,14 @@ export const UserProvider = ({ children }) => {
   const [streakDays, setStreakDays] = useState(0);
   const [averageEffortScore, setAverageEffortScore] = useState(0);
 
+  // Consistency tracking: days effort logged vs calendar days elapsed since program start
+  const [consistencyLogged, setConsistencyLogged] = useState(0);
+  const [consistencyTotal, setConsistencyTotal] = useState(0);
+
+  // Pre-SBM score: stores the PREVIOUS day's effort % so it shows after next submission
+  // Starts at 0 for new users, never shows the legacy 69% hardcode
+  const [preSbmScore, setPreSbmScore] = useState(0);
+
   // Respective Program Week & Phase values
   const [currentWeek, setCurrentWeek] = useState(1);
   const [phaseNumber, setPhaseNumber] = useState(1);
@@ -93,6 +101,20 @@ export const UserProvider = ({ children }) => {
         const session = await AsyncStorage.getItem('sbm_user_session');
         if (session) {
           const { name, currentWeightVal, details } = JSON.parse(session);
+
+          // Load persisted consistency and pre-sbm score
+          try {
+            const storedConsistency = await AsyncStorage.getItem('sbm_consistency');
+            if (storedConsistency) {
+              const { logged, total } = JSON.parse(storedConsistency);
+              setConsistencyLogged(logged || 0);
+              setConsistencyTotal(total || 0);
+            }
+            const storedPreSbm = await AsyncStorage.getItem('sbm_pre_sbm_score');
+            if (storedPreSbm !== null) {
+              setPreSbmScore(parseInt(storedPreSbm, 10) || 0);
+            }
+          } catch (_) {}
           
           // Validate session by checking if userId exists and backend responds
           if (details && details.userId) {
@@ -203,17 +225,45 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const logTodayEffort = (score) => {
+  const logTodayEffort = async (score) => {
     const num = parseInt(score, 10);
     if (!isNaN(num)) {
       setTodayEffortScore(num);
       setTodayEffortLogged(true);
       setStreakDays(prev => prev + 1);
-      
+
       const updatedEfforts = [...weeklyEfforts];
       updatedEfforts[4] = num;
       setWeeklyEfforts(updatedEfforts);
+
+      // Calculate today's effort as percentage (max raw score = 9 per question * num questions)
+      // The backend returns total_effort as a raw sum; convert to % for Pre-SBM storage
+      // We store today's % so tomorrow it shows as Pre-SBM score
+      const pct = Math.min(100, Math.max(0, Math.round((num / 9) * 100)));
+
+      // Bump consistency count
+      const newLogged = consistencyLogged + 1;
+      const newTotal  = consistencyTotal + 1;
+      setConsistencyLogged(newLogged);
+      setConsistencyTotal(newTotal);
+
+      // Persist to AsyncStorage
+      try {
+        await AsyncStorage.setItem('sbm_pre_sbm_score', String(pct));
+        await AsyncStorage.setItem('sbm_consistency', JSON.stringify({ logged: newLogged, total: newTotal }));
+        await AsyncStorage.setItem('sbm_last_log_date', new Date().toISOString().split('T')[0]);
+      } catch (_) {}
     }
+  };
+
+  // Called each time the app is opened on a NEW calendar day where the user did NOT log:
+  // increments consistencyTotal without incrementing consistencyLogged
+  const markMissedDay = async () => {
+    const newTotal = consistencyTotal + 1;
+    setConsistencyTotal(newTotal);
+    try {
+      await AsyncStorage.setItem('sbm_consistency', JSON.stringify({ logged: consistencyLogged, total: newTotal }));
+    } catch (_) {}
   };
 
   const loginUser = (name, currentWeightVal, details = {}) => {
@@ -300,11 +350,36 @@ export const UserProvider = ({ children }) => {
       try {
         await AsyncStorage.removeItem('sbm_user_session');
         await AsyncStorage.removeItem('sbm_active_quote');
+        await AsyncStorage.removeItem('sbm_pre_sbm_score');
+        await AsyncStorage.removeItem('sbm_consistency');
       } catch (e) {
         console.error("Failed to clear session:", e);
       }
     };
     clearSession();
+  };
+
+  // ── Missed day detection: run on fetchDashboardData calls ──────────────────
+  // (Minimal version — checks last-log-date in AsyncStorage vs today)
+  const checkAndMarkMissedDays = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('sbm_last_log_date');
+      const today  = new Date().toISOString().split('T')[0];
+      if (stored && stored !== today) {
+        // Count calendar days between last log and today (exclusive of today)
+        const last    = new Date(stored);
+        const todayD  = new Date(today);
+        const diffMs  = todayD - last;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays > 1) {
+          // Missed (diffDays - 1) days
+          const missed   = diffDays - 1;
+          const newTotal = consistencyTotal + missed;
+          setConsistencyTotal(newTotal);
+          await AsyncStorage.setItem('sbm_consistency', JSON.stringify({ logged: consistencyLogged, total: newTotal }));
+        }
+      }
+    } catch (_) {}
   };
 
   return (
@@ -317,6 +392,9 @@ export const UserProvider = ({ children }) => {
       startWeight,
       loggedWeight,
       streakDays,
+      consistencyLogged,
+      consistencyTotal,
+      preSbmScore,
       nutritionScore,
       movementScore,
       recoveryScore,
@@ -347,7 +425,9 @@ export const UserProvider = ({ children }) => {
       fetchQuote,
       logWeight,
       loginUser,
-      logoutUser
+      logoutUser,
+      markMissedDay,
+      checkAndMarkMissedDays,
     }}>
       {children}
     </UserContext.Provider>

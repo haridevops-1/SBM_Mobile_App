@@ -2,42 +2,56 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Flame, Zap, Scale } from 'lucide-react-native';
 import { useUser } from '../../context/UserContext';
-import theme from '../../theme/theme';
 import styles from '../../styles/components/SbmCards.styles';
 
 export const SbmCards = () => {
-  const { todayEffortLogged, todayEffortScore, startWeight, loggedWeight, streakDays } = useUser();
+  const {
+    todayEffortScore,
+    startWeight,
+    loggedWeight,
+    consistencyLogged,
+    consistencyTotal,
+  } = useUser();
 
-  // Consistency displays completed logs out of 140 total program days
-  const consistencyScore = `${streakDays} / 140`;
-  
-  // Effort displays the participation percentage
-  const effortPercent = Math.round((streakDays / 140) * 100);
+  // ── Consistency: days logged / total calendar days elapsed ──────────────────
+  // e.g. Day 1 logged = 1/1, Day 2 missed = 1/2, Day 3 logged = 2/3
+  const consistencyScore = consistencyTotal > 0
+    ? `${consistencyLogged} / ${consistencyTotal}`
+    : '0 / 0';
+
+  // ── Effort: today's raw score → percentage (backend max is 9 per question)
+  // If nothing logged today yet → show 0%
+  const effortPercent = todayEffortScore > 0
+    ? Math.min(100, Math.max(0, Math.round((todayEffortScore / 9) * 100)))
+    : 0;
   const effortScore = `${effortPercent}%`;
-  
-  const weightDiff = (loggedWeight - startWeight).toFixed(1);
-  const weightChangeScore = parseFloat(weightDiff) >= 0 ? `+${weightDiff} Kg` : `${weightDiff} Kg`;
+
+  // ── Weight Change ───────────────────────────────────────────────────────────
+  const weightDiff        = (loggedWeight - startWeight).toFixed(1);
+  const weightChangeScore = parseFloat(weightDiff) >= 0
+    ? `+${weightDiff} Kg`
+    : `${weightDiff} Kg`;
 
   const cardsData = [
     {
       id: 1,
       score: consistencyScore,
-      title: "Consistency",
-      icon: <Flame size={18} color="#B085F5" />,
+      title: 'Consistency',
+      icon:  <Flame size={18} color="#B085F5" />,
       iconBg: 'rgba(123, 31, 162, 0.15)',
     },
     {
       id: 2,
       score: effortScore,
-      title: "Effort",
-      icon: <Zap size={18} color="#29B6F6" />,
+      title: 'Effort',
+      icon:  <Zap size={18} color="#29B6F6" />,
       iconBg: 'rgba(41, 182, 246, 0.15)',
     },
     {
       id: 3,
       score: weightChangeScore,
-      title: "Weight Change",
-      icon: <Scale size={18} color="#4CAF50" />,
+      title: 'Weight Change',
+      icon:  <Scale size={18} color="#4CAF50" />,
       iconBg: 'rgba(76, 175, 80, 0.15)',
     },
   ];

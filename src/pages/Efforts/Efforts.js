@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { Utensils, Dumbbell, Moon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
 import theme from '../../theme/theme';
 import styles from '../../styles/pages/Efforts.styles';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CHART_VIEWPORT_WIDTH = Math.max(220, SCREEN_WIDTH - 100);
 
 export const Efforts = () => {
   const [activeTimeframe, setActiveTimeframe] = useState('week');
@@ -37,7 +40,7 @@ export const Efforts = () => {
     userId
   } = useUser();
 
-  const timeframes = ['Day', 'Week', 'Month'];
+  const timeframes = ['Day', 'Week', 'Phase'];
 
   // Fetch overall progress details dynamically from the Catalyst API Gateway route
   useEffect(() => {
@@ -284,6 +287,8 @@ export const Efforts = () => {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                snapToInterval={CHART_VIEWPORT_WIDTH}
+                decelerationRate="fast"
                 ref={overallScrollRef}
                 onContentSizeChange={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
                 onLayout={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
@@ -376,6 +381,8 @@ export const Efforts = () => {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
+                  snapToInterval={CHART_VIEWPORT_WIDTH}
+                  decelerationRate="fast"
                   ref={detailScrollRef}
                   onContentSizeChange={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
                   onLayout={() => detailScrollRef.current?.scrollToEnd({ animated: false })}

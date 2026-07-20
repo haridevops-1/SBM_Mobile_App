@@ -1,5 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import theme from '../../theme/theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CHART_VIEWPORT_WIDTH = Math.max(220, SCREEN_WIDTH - 100);
 
 export default StyleSheet.create({
   container: {
@@ -164,12 +167,10 @@ export default StyleSheet.create({
   scrollableBarsContent: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    justifyContent: 'flex-end',
     minWidth: '100%',
     height: '100%',
     paddingBottom: 20,
     zIndex: 2,
-    paddingHorizontal: 8,
   },
   barColumn: {
     alignItems: 'center',
@@ -179,16 +180,15 @@ export default StyleSheet.create({
   },
   scrollBarColumn: {
     alignItems: 'center',
-    width: 160,
-    marginHorizontal: 12,
+    width: CHART_VIEWPORT_WIDTH,
     height: '100%',
     justifyContent: 'flex-end',
   },
   barTrack: {
-    width: 8,
+    width: 24,
     height: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: 12,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },

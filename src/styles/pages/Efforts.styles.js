@@ -179,8 +179,8 @@ export default StyleSheet.create({
   },
   scrollBarColumn: {
     alignItems: 'center',
-    width: 44,
-    marginHorizontal: 4,
+    width: 160,
+    marginHorizontal: 12,
     height: '100%',
     justifyContent: 'flex-end',
   },

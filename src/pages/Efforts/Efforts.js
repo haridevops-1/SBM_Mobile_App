@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
-import { Calendar, Utensils, Dumbbell, Moon, X, Check } from 'lucide-react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Utensils, Dumbbell, Moon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
@@ -14,9 +14,8 @@ export const Efforts = () => {
   const overallScrollRef = useRef(null);
   const detailScrollRef = useRef(null);
 
-  // Date Picker states
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  // Always anchored dynamically to Today's ISO date
+  const selectedDate = new Date().toISOString().split('T')[0];
 
   // Overall progress fetched state
   const [effortData, setEffortData] = useState(null);
@@ -39,27 +38,6 @@ export const Efforts = () => {
   } = useUser();
 
   const timeframes = ['Day', 'Week', 'Month'];
-
-  // Helper to generate recent 14 dates for picker list
-  const getRecentDates = () => {
-    const dates = [];
-    const today = new Date();
-    for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const iso = d.toISOString().split('T')[0];
-      
-      let label = '';
-      if (i === 0) label = 'Today';
-      else if (i === 1) label = 'Yesterday';
-      else {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        label = `${d.getDate()} ${months[d.getMonth()]}`;
-      }
-      dates.push({ iso, label });
-    }
-    return dates;
-  };
 
   // Fetch overall progress details dynamically from the Catalyst API Gateway route
   useEffect(() => {
@@ -248,12 +226,7 @@ export const Efforts = () => {
               </LinearGradient>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Efforts</Text>
-            <TouchableOpacity 
-              style={styles.headerActionBtn}
-              onPress={() => setIsDatePickerVisible(true)}
-            >
-              <Calendar size={20} color={theme.colors.textPrimary} />
-            </TouchableOpacity>
+            <View style={{ width: 32 }} />
           </View>
           <Text style={styles.headerSubtitle}>Keep pushing your limits! 💪</Text>
         </View>
@@ -430,50 +403,6 @@ export const Efforts = () => {
           </View>
         )}
       </ScrollView>
-
-      {/* Date Picker Modal Backdrop Overlay */}
-      <Modal
-        visible={isDatePickerVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsDatePickerVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Choose Log Date</Text>
-              <TouchableOpacity 
-                activeOpacity={0.8}
-                onPress={() => setIsDatePickerVisible(false)}
-              >
-                <X size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalList}>
-              {getRecentDates().map(item => {
-                const isSelected = selectedDate === item.iso;
-                return (
-                  <TouchableOpacity
-                    key={item.iso}
-                    activeOpacity={0.8}
-                    style={[styles.modalListItem, isSelected && styles.modalListItemActive]}
-                    onPress={() => {
-                      setSelectedDate(item.iso);
-                      setIsDatePickerVisible(false);
-                    }}
-                  >
-                    <Text style={[styles.modalListItemText, isSelected && styles.modalListItemTextActive]}>
-                      {item.label}
-                    </Text>
-                    {isSelected && <Check size={18} color="#B085F5" />}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
 
       {/* Profile navigation drawer overlay */}
       <ProfileDrawer />

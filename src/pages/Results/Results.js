@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
-import { Bell, ChevronDown, Scale, ArrowDownRight, ArrowUpRight, Activity, Dumbbell, ClipboardList, Utensils, Cookie, Plus } from 'lucide-react-native';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Path, Circle } from 'react-native-svg';
+import { Bell, ChevronDown, Scale, ArrowDownRight, ArrowUpRight, Plus } from 'lucide-react-native';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Path, Circle, Line, Text as SvgText, Polygon as SvgPolygon } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
 import { useUser } from '../../context/UserContext';
@@ -18,10 +18,13 @@ export const Results = ({ navigation }) => {
   const [selectedPointIndex, setSelectedPointIndex] = useState(0);
   const [chartTimeframe, setChartTimeframe] = useState('7days');
   const [headerTimeframe, setHeaderTimeframe] = useState('week');
-  const [foodTimeframe, setFoodTimeframe] = useState('week');
   const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false);
   const [chartDropdownOpen, setChartDropdownOpen] = useState(false);
-  const [foodDropdownOpen, setFoodDropdownOpen] = useState(false);
+  // Spider chart week selectors
+  const [spiderWeek1, setSpiderWeek1] = useState('W16');
+  const [spiderWeek2, setSpiderWeek2] = useState('');
+  const [spider1DropOpen, setSpider1DropOpen] = useState(false);
+  const [spider2DropOpen, setSpider2DropOpen] = useState(false);
   const [overviewData, setOverviewData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -242,28 +245,160 @@ export const Results = ({ navigation }) => {
   const linePath = chartPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
   const areaPath = chartPoints.length > 0 ? `${linePath} L ${chartPoints[chartPoints.length - 1].x} 140 L ${chartPoints[0].x} 140 Z` : '';
 
-  const progressOverviewList = [
-    { id: 'weight', label: 'Body Weight', unit: 'kg', value: `${currentWeightVal} kg`, change: `${netWeightChange > 0 ? '+' : ''}${netWeightChange} kg`, icon: (color) => <Scale size={16} color={color} />, colorClass: 'purple-theme', barHeights: [30, 45, 60, 45, 70, 55], accentColor: '#B085F5', iconBg: 'rgba(123, 31, 162, 0.15)' },
-    { id: 'fat', label: 'Body Fat', unit: '%', value: todayEffortLogged ? '23.4 %' : '23.6 %', change: todayEffortLogged ? '-1.6 %' : '-1.4 %', icon: (color) => <Activity size={16} color={color} />, colorClass: 'pink-theme', barHeights: [40, 50, 45, 75, 50, 60], accentColor: '#FF4081', iconBg: 'rgba(255, 64, 129, 0.15)' },
-    { id: 'muscle', label: 'Muscle Mass', unit: 'kg', value: todayEffortLogged ? '56.1 kg' : '55.9 kg', change: todayEffortLogged ? '+1.2 kg' : '+1.0 kg', icon: (color) => <Dumbbell size={16} color={color} />, colorClass: 'green-theme', barHeights: [25, 65, 55, 45, 50, 65], accentColor: '#4CAF50', iconBg: 'rgba(76, 175, 80, 0.15)' }
-  ];
+  // All 19 weeks available for selection
+  const allWeeks = Array.from({ length: 19 }, (_, i) => `W${i + 1}`);
 
-  const foodData = {
-    week: [
-      { label: 'Mindful Eating', sublabel: 'Rating', score: '7/10', status: 'Good', percentage: 70, icon: <ClipboardList size={16} color="#FF4081" />, colorClass: 'pinkRating', statusClass: 'statusGood' },
-      { label: 'Food Choices', sublabel: 'Rating', score: '6/10', status: 'Average', percentage: 60, icon: <Utensils size={16} color="#FF9800" />, colorClass: 'orangeRating', statusClass: 'statusAverage' },
-      { label: 'Cravings Control', sublabel: 'Rating', score: '6/10', status: 'Average', percentage: 60, icon: <Cookie size={16} color="#FF9800" />, colorClass: 'orangeRating', statusClass: 'statusAverage' }
-    ],
-    month: [
-      { label: 'Mindful Eating', sublabel: 'Rating', score: '8/10', status: 'Excellent', percentage: 80, icon: <ClipboardList size={16} color="#FF4081" />, colorClass: 'pinkRating', statusClass: 'statusGood' },
-      { label: 'Food Choices', sublabel: 'Rating', score: '7/10', status: 'Good', percentage: 70, icon: <Utensils size={16} color="#FF4081" />, colorClass: 'pinkRating', statusClass: 'statusGood' },
-      { label: 'Cravings Control', sublabel: 'Rating', score: '5/10', status: 'Needs Work', percentage: 50, icon: <Cookie size={16} color="#FF9800" />, colorClass: 'orangeRating', statusClass: 'statusAverage' }
-    ]
+  // Placeholder weekly mindset data (5 dimensions, W1-W19, scale 0-3)
+  // Later replaced with real API data
+  const mindsetWeeklyData = {
+    W1:  { learning: 1, food: 0, selfKindness: 0, control: 1, enjoying: 0 },
+    W2:  { learning: 2, food: 1, selfKindness: 1, control: 2, enjoying: 1 },
+    W3:  { learning: 1, food: 1, selfKindness: 2, control: 1, enjoying: 2 },
+    W4:  { learning: 3, food: 2, selfKindness: 1, control: 2, enjoying: 1 },
+    W5:  { learning: 2, food: 1, selfKindness: 2, control: 3, enjoying: 2 },
+    W6:  { learning: 1, food: 0, selfKindness: 1, control: 1, enjoying: 1 },
+    W7:  { learning: 2, food: 3, selfKindness: 2, control: 2, enjoying: 3 },
+    W8:  { learning: 3, food: 2, selfKindness: 3, control: 3, enjoying: 2 },
+    W9:  { learning: 2, food: 1, selfKindness: 2, control: 2, enjoying: 1 },
+    W10: { learning: 1, food: 2, selfKindness: 1, control: 1, enjoying: 2 },
+    W11: { learning: 2, food: 2, selfKindness: 2, control: 3, enjoying: 2 },
+    W12: { learning: 3, food: 3, selfKindness: 2, control: 2, enjoying: 3 },
+    W13: { learning: 1, food: 1, selfKindness: 1, control: 1, enjoying: 1 },
+    W14: { learning: 2, food: 2, selfKindness: 3, control: 2, enjoying: 2 },
+    W15: { learning: 3, food: 2, selfKindness: 2, control: 3, enjoying: 3 },
+    W16: { learning: 2, food: 3, selfKindness: 1, control: 2, enjoying: 2 },
+    W17: { learning: 1, food: 1, selfKindness: 2, control: 1, enjoying: 1 },
+    W18: { learning: 3, food: 2, selfKindness: 3, control: 3, enjoying: 2 },
+    W19: { learning: 2, food: 1, selfKindness: 2, control: 2, enjoying: 3 },
   };
 
-  const activeFoodItems = foodData[foodTimeframe];
+  // The 5 mindset dimensions
+  const mindsetDimensions = [
+    { key: 'learning',     label: 'Learning',               color: '#29B6F6' },
+    { key: 'food',         label: 'Relationship with food',  color: '#FF4081' },
+    { key: 'selfKindness', label: 'Self-kindness',           color: '#FFD600' },
+    { key: 'control',      label: 'Feeling in control',      color: '#4CAF50' },
+    { key: 'enjoying',     label: 'Enjoying the process',    color: '#B085F5' },
+  ];
+
+  // Build array of {week, value} for each dimension across W1-W19
+  const buildDimData = (key) =>
+    allWeeks.map(w => ({ week: w, value: mindsetWeeklyData[w]?.[key] ?? 0 }));
+
+  // Spider chart helper — convert radar data to SVG polygon points
+  const buildSpiderPoints = (weekKey, cx, cy, radius) => {
+    const data = mindsetWeeklyData[weekKey];
+    if (!data) return null;
+    const keys = ['learning', 'food', 'selfKindness', 'control', 'enjoying'];
+    const n = keys.length;
+    const angleStep = (2 * Math.PI) / n;
+    const startAngle = -Math.PI / 2;
+    return keys.map((k, i) => {
+      const ratio = (data[k] || 0) / 3;
+      const angle = startAngle + i * angleStep;
+      const x = cx + radius * ratio * Math.cos(angle);
+      const y = cy + radius * ratio * Math.sin(angle);
+      return { x, y };
+    });
+  };
+
   const metricColor = activeSet.color;
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
+
+  // Inline MiniLineChart component for progress overview
+  const MiniLineChart = ({ data, color }) => {
+    const chartW = Math.max(screenWidth - 112, allWeeks.length * 36);
+    const chartH = 60;
+    const n = data.length;
+    if (n < 2) return null;
+    const vals = data.map(d => d.value);
+    const maxVal = Math.max(...vals, 3);
+    const pts = data.map((d, i) => ({
+      x: (i / (n - 1)) * chartW,
+      y: chartH - (d.value / maxVal) * chartH,
+    }));
+    const linePth = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const areaPth = `${linePth} L ${pts[n-1].x.toFixed(1)} ${chartH} L 0 ${chartH} Z`;
+    const gradId = `mg-${color.replace('#', '')}`;
+    return (
+      <Svg width={chartW} height={chartH}>
+        <Defs>
+          <SvgLinearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={color} stopOpacity="0.35" />
+            <Stop offset="100%" stopColor={color} stopOpacity="0.0" />
+          </SvgLinearGradient>
+        </Defs>
+        <Path d={areaPth} fill={`url(#${gradId})`} />
+        <Path d={linePth} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {pts.map((p, i) => (
+          <Circle key={i} cx={p.x} cy={p.y} r={3} fill={color} />
+        ))}
+      </Svg>
+    );
+  };
+
+  // Spider/Radar chart SVG renderer
+  const SpiderChart = ({ weekKey1, weekKey2 }) => {
+    const size = 220;
+    const cx = size / 2;
+    const cy = size / 2;
+    const radius = 76;
+    const n = 5;
+    const angleStep = (2 * Math.PI) / n;
+    const startAngle = -Math.PI / 2;
+    const labels = ['Learning', 'Relationship\nwith food', 'Self-kindness', 'Feeling in\ncontrol', 'Enjoying the\nprocess'];
+    const labelDist = radius + 22;
+    const axisPoints = Array.from({ length: n }, (_, i) => {
+      const a = startAngle + i * angleStep;
+      return { x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) };
+    });
+    const labelPoints = Array.from({ length: n }, (_, i) => {
+      const a = startAngle + i * angleStep;
+      return { x: cx + labelDist * Math.cos(a), y: cy + labelDist * Math.sin(a) };
+    });
+    const gridRings = [1, 2, 3].map(level => {
+      const r = (level / 3) * radius;
+      return Array.from({ length: n }, (_, i) => {
+        const a = startAngle + i * angleStep;
+        return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+      });
+    });
+    const pts1 = buildSpiderPoints(weekKey1, cx, cy, radius);
+    const pts2 = weekKey2 ? buildSpiderPoints(weekKey2, cx, cy, radius) : null;
+    const polyStr = (pts) => pts ? pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') : '';
+    return (
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {gridRings.map((ring, ri) => (
+          <Path key={`r-${ri}`}
+            d={ring.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ') + ' Z'}
+            fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
+        ))}
+        {axisPoints.map((ap, i) => (
+          <Line key={`ax-${i}`} x1={cx} y1={cy} x2={ap.x} y2={ap.y}
+            stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+        ))}
+        {pts1 && (
+          <>
+            <SvgPolygon points={polyStr(pts1)} fill="rgba(176,133,245,0.20)" stroke="#B085F5" strokeWidth="2" />
+            {pts1.map((p, i) => <Circle key={`p1-${i}`} cx={p.x} cy={p.y} r={4} fill="#B085F5" />)}
+          </>
+        )}
+        {pts2 && (
+          <>
+            <SvgPolygon points={polyStr(pts2)} fill="rgba(41,182,246,0.20)" stroke="#29B6F6" strokeWidth="2" />
+            {pts2.map((p, i) => <Circle key={`p2-${i}`} cx={p.x} cy={p.y} r={4} fill="#29B6F6" />)}
+          </>
+        )}
+        {labelPoints.map((lp, i) => (
+          <SvgText key={`lbl-${i}`} x={lp.x} y={lp.y}
+            fill="rgba(255,255,255,0.55)" fontSize="7" textAnchor="middle" fontWeight="600">
+            {labels[i]}
+          </SvgText>
+        ))}
+      </Svg>
+    );
+  };
+
 
   // Wait for fonts before rendering UI
   if (!fontsLoaded) {
@@ -473,96 +608,150 @@ export const Results = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Section 2: Progress Overview List */}
-        <View style={styles.progressOverviewCard}>
-          <View style={styles.overviewHeader}>
-            <View style={styles.overviewIconContainer}>
-              <Activity size={18} color="#B085F5" />
-            </View>
-            <Text style={styles.overviewTitle}>Your Progress Overview</Text>
-          </View>
-          <View style={styles.progressRowsList}>
-            {progressOverviewList.map((row) => {
-              const isSelected = activeMetric === row.id;
-              const iconColor = isSelected ? '#FFFFFF' : row.accentColor;
-              const iconBg = isSelected ? row.accentColor : row.iconBg;
-              return (
-                <TouchableOpacity key={row.id} activeOpacity={0.8} style={[styles.progressRowItem, isSelected && styles.selectedRowItem]} onPress={() => { setActiveMetric(row.id); setSelectedPointIndex(Math.max(0, datasets[row.id].points.length - 1)); }}>
-                  <View style={styles.rowInfo}>
-                    <View style={[styles.rowIconWrapper, { backgroundColor: iconBg }]}>{row.icon(iconColor)}</View>
-                    <View style={styles.rowText}>
-                      <Text style={styles.rowTitle}>{row.label}</Text>
-                      <Text style={styles.rowUnit}>{row.unit}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.miniBarsGraph}>
-                    {row.barHeights.map((h, i) => (
-                      <View key={i} style={[styles.miniBarFill, { backgroundColor: isSelected ? '#FFFFFF' : row.accentColor, height: `${h}%` }]} />
+        {/* ─── Section 2: Your Progress Overview ─── */}
+        <View style={styles.overviewSection}>
+          <Text style={styles.overviewSectionTitle}>Your Progress Overview</Text>
+
+          {mindsetDimensions.map((dim) => {
+            const dimData = buildDimData(dim.key);
+            return (
+              <View key={dim.key} style={styles.miniChartCard}>
+                <Text style={styles.miniChartLabel}>{dim.label}</Text>
+
+                {/* Y-axis + chart area */}
+                <View style={styles.miniChartRow}>
+                  {/* Y-axis labels 3,2,1,0 */}
+                  <View style={styles.miniYAxis}>
+                    {[3, 2, 1, 0].map(v => (
+                      <Text key={v} style={styles.miniYLabel}>{v}</Text>
                     ))}
                   </View>
-                  <View style={styles.rowValues}>
-                    <Text style={styles.rowCurrentVal}>{row.value}</Text>
-                    <Text style={styles.rowChangeVal}>{row.change}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+
+                  {/* Scrollable line chart */}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ paddingRight: 8 }}
+                  >
+                    <View style={{ width: Math.max(screenWidth - 112, allWeeks.length * 36) }}>
+                      <MiniLineChart
+                        data={dimData}
+                        color={dim.color}
+                      />
+                      {/* X-axis week labels */}
+                      <View style={styles.miniXAxis}>
+                        {allWeeks.map((w, i) => (
+                          <Text
+                            key={w}
+                            style={[
+                              styles.miniXLabel,
+                              { left: (i / (allWeeks.length - 1)) * Math.max(screenWidth - 112, allWeeks.length * 36) - 10 }
+                            ]}
+                          >{w}</Text>
+                        ))}
+                      </View>
+                    </View>
+                  </ScrollView>
+                </View>
+              </View>
+            );
+          })}
         </View>
 
-        {/* Section 3: Food Relationship */}
-        <View style={styles.foodRelationshipCard}>
-          <View style={styles.foodHeader}>
-            <View style={styles.foodTitleWrapper}>
-              <View style={styles.foodIconContainer}>
-                <Utensils size={18} color="#FF4081" />
-              </View>
-              <Text style={styles.foodTitle}>Relationship with Food</Text>
+        {/* ─── Section 3: A Snapshot of Your Mindset (Spider Chart) ─── */}
+        <View style={styles.spiderSection}>
+          <Text style={styles.spiderSectionTitle}>A Snapshot of Your Mindset</Text>
+
+          {/* Spider chart canvas */}
+          <View style={styles.spiderChartContainer}>
+            <SpiderChart weekKey1={spiderWeek1} weekKey2={spiderWeek2} />
+          </View>
+
+          {/* Legend */}
+          <View style={styles.spiderLegend}>
+            <View style={styles.spiderLegendItem}>
+              <View style={[styles.spiderLegendDot, { backgroundColor: '#B085F5' }]} />
+              <Text style={styles.spiderLegendText}>{spiderWeek1 || 'Week 1'}</Text>
             </View>
-            <View style={styles.dropdownWrapper}>
-              <TouchableOpacity activeOpacity={0.8} style={styles.dropdownFilterBtn} onPress={() => setFoodDropdownOpen(!foodDropdownOpen)}>
-                <Text style={styles.dropdownFilterText}>{foodTimeframe === 'week' ? 'This Week' : 'This Month'}</Text>
-                <ChevronDown size={12} color={theme.colors.textSecondary} />
+            {spiderWeek2 ? (
+              <View style={styles.spiderLegendItem}>
+                <View style={[styles.spiderLegendDot, { backgroundColor: '#29B6F6' }]} />
+                <Text style={styles.spiderLegendText}>{spiderWeek2}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Week pickers row */}
+          <View style={styles.spiderPickerRow}>
+            {/* Week 1 picker */}
+            <View style={styles.spiderPickerWrapper}>
+              <TouchableOpacity
+                style={styles.spiderPickerBtn}
+                activeOpacity={0.8}
+                onPress={() => { setSpider1DropOpen(!spider1DropOpen); setSpider2DropOpen(false); }}
+              >
+                <Text style={styles.spiderPickerText}>{spiderWeek1 || 'W1'}</Text>
+                <ChevronDown size={12} color="#FFFFFF" />
               </TouchableOpacity>
-              {foodDropdownOpen && (
-                <View style={[styles.dropdownMenu, { top: 36 }]}>
-                  <TouchableOpacity style={styles.dropdownMenuItem} onPress={() => { setFoodTimeframe('week'); setFoodDropdownOpen(false); }}>
-                    <Text style={styles.dropdownMenuItemText}>This Week</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.dropdownMenuItem} onPress={() => { setFoodTimeframe('month'); setFoodDropdownOpen(false); }}>
-                    <Text style={styles.dropdownMenuItemText}>This Month</Text>
-                  </TouchableOpacity>
+              {spider1DropOpen && (
+                <View style={styles.spiderDropMenu}>
+                  <ScrollView style={{ maxHeight: 180 }} showsVerticalScrollIndicator={false}>
+                    {allWeeks.map(w => (
+                      <TouchableOpacity
+                        key={w}
+                        style={[styles.spiderDropItem, spiderWeek1 === w && styles.spiderDropItemActive]}
+                        onPress={() => { setSpiderWeek1(w); setSpider1DropOpen(false); }}
+                      >
+                        <Text style={[styles.spiderDropItemText, spiderWeek1 === w && { color: '#B085F5' }]}>{w}</Text>
+                        {spiderWeek1 === w && <Text style={{ color: '#B085F5', fontSize: 10 }}>✓</Text>}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                 </View>
               )}
             </View>
-          </View>
-          <View style={styles.foodSlidersList}>
-            {activeFoodItems.map((item, idx) => {
-              const sliderTrackFillColor = item.colorClass === 'pinkRating' ? '#FF4081' : '#FF9800';
-              const statusStyle = item.statusClass === 'statusGood' ? styles.statusGood : styles.statusAverage;
-              return (
-                <View key={idx} style={styles.foodSliderItem}>
-                  <View style={styles.sliderInfo}>
-                    <View style={styles.sliderLeft}>
-                      <View style={styles.sliderIconBox}>{item.icon}</View>
-                      <View style={styles.sliderText}>
-                        <Text style={styles.sliderTitle}>{item.label}</Text>
-                        <Text style={styles.sliderSublabel}>{item.sublabel}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.sliderRight}>
-                      <Text style={styles.sliderScore}>{item.score}</Text>
-                      <Text style={[styles.sliderStatus, statusStyle]}>{item.status}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.sliderTrackContainer}>
-                    <View style={styles.sliderTrackBg}>
-                      <View style={[styles.sliderTrackFill, { backgroundColor: sliderTrackFillColor, width: `${item.percentage}%` }]} />
-                    </View>
-                  </View>
+
+            <Text style={styles.spiderVsText}>VS</Text>
+
+            {/* Week 2 picker */}
+            <View style={styles.spiderPickerWrapper}>
+              <TouchableOpacity
+                style={[styles.spiderPickerBtn, { backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)' }]}
+                activeOpacity={0.8}
+                onPress={() => { setSpider2DropOpen(!spider2DropOpen); setSpider1DropOpen(false); }}
+              >
+                <Text style={[styles.spiderPickerText, { color: spiderWeek2 ? '#FFFFFF' : 'rgba(255,255,255,0.3)' }]}>
+                  {spiderWeek2 || 'Select'}
+                </Text>
+                <ChevronDown size={12} color={spiderWeek2 ? '#FFFFFF' : 'rgba(255,255,255,0.3)'} />
+              </TouchableOpacity>
+              {spider2DropOpen && (
+                <View style={[styles.spiderDropMenu, { right: 0, left: 'auto' }]}>
+                  <ScrollView style={{ maxHeight: 180 }} showsVerticalScrollIndicator={false}>
+                    {allWeeks.map(w => (
+                      <TouchableOpacity
+                        key={w}
+                        style={[styles.spiderDropItem, spiderWeek2 === w && styles.spiderDropItemActive]}
+                        onPress={() => { setSpiderWeek2(w); setSpider2DropOpen(false); }}
+                      >
+                        <Text style={[styles.spiderDropItemText, spiderWeek2 === w && { color: '#29B6F6' }]}>{w}</Text>
+                        {spiderWeek2 === w && <Text style={{ color: '#29B6F6', fontSize: 10 }}>✓</Text>}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                 </View>
-              );
-            })}
+              )}
+            </View>
+
+            {/* Compare button */}
+            <TouchableOpacity
+              style={styles.compareBtn}
+              activeOpacity={0.8}
+              onPress={() => { setSpider1DropOpen(false); setSpider2DropOpen(false); }}
+            >
+              <Text style={styles.compareBtnText}>Compare</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

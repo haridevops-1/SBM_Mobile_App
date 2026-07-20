@@ -89,6 +89,23 @@ export const Efforts = () => {
     fetchEffortsProgress();
   }, [userId, selectedDate, activeTimeframe]);
 
+  // Auto-scroll charts to the far right (Today / latest day) on data load
+  useEffect(() => {
+    if (effortData) {
+      setTimeout(() => {
+        overallScrollRef.current?.scrollToEnd({ animated: false });
+      }, 100);
+    }
+  }, [effortData]);
+
+  useEffect(() => {
+    if (aspectData) {
+      setTimeout(() => {
+        detailScrollRef.current?.scrollToEnd({ animated: false });
+      }, 100);
+    }
+  }, [aspectData]);
+
   // Compute metrics dynamically based on Day, Week, Month timeframe
   const displayEffort = effortData ? effortData.summary.effort_percentage : 0;
   const displayNutrition = effortData ? effortData.summary.nutrition_display : '0/9';

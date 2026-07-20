@@ -163,10 +163,12 @@ export default StyleSheet.create({
   scrollableBarsContent: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    minWidth: '100%',
     height: '100%',
     paddingBottom: 20,
     zIndex: 2,
-    paddingHorizontal: 4,
+    paddingHorizontal: 8,
   },
   barColumn: {
     alignItems: 'center',

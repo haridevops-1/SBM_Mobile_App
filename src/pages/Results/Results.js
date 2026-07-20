@@ -22,8 +22,6 @@ export const Results = ({ navigation }) => {
   const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false);
   const [chartDropdownOpen, setChartDropdownOpen] = useState(false);
   // Spider chart week selectors
-  const [spiderWeek1, setSpiderWeek1] = useState('W16');
-  const [spiderWeek2, setSpiderWeek2] = useState('');
   const [spider1DropOpen, setSpider1DropOpen] = useState(false);
   const [spider2DropOpen, setSpider2DropOpen] = useState(false);
   const [overviewData, setOverviewData] = useState(null);

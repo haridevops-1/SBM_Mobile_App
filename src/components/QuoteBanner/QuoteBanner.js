@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
 import styles from '../../styles/components/QuoteBanner.styles';
 
@@ -17,27 +18,8 @@ const FALLBACK_QUOTES = [
   "Consistency beats motivation."
 ];
 
-const storage = {
-  getItem: (key) => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        return window.localStorage.getItem(key);
-      }
-    } catch (e) {}
-    return global[key] || null;
-  },
-  setItem: (key, val) => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(key, val);
-        return;
-      }
-    } catch (e) {}
-    global[key] = val;
-  }
-};
-
 export const QuoteBanner = () => {
+  const { userId } = useUser();
   const [activeQuote, setActiveQuote] = useState("Every small effort today brings you closer to a stronger tomorrow.");
 
   useEffect(() => {
@@ -45,16 +27,27 @@ export const QuoteBanner = () => {
       let quotesList = FALLBACK_QUOTES;
 
       try {
-        const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/get-quotes?type=quotes');
+        let fetchUrl = 'https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/get-quotes?type=quotes';
+        if (userId) {
+          fetchUrl += `&userId=${userId}`;
+        }
+
+        const response = await fetch(fetchUrl);
         const data = await response.json();
-        if (response.ok && data.status === 'success' && Array.isArray(data.quotes) && data.quotes.length > 0) {
-          quotesList = data.quotes;
+        if (response.ok && data.status === 'success') {
+          if (data.quote) {
+            setActiveQuote(data.quote);
+            return;
+          }
+          if (Array.isArray(data.quotes) && data.quotes.length > 0) {
+            quotesList = data.quotes;
+          }
         }
       } catch (err) {
         console.log("Using local quotes fallback:", err.message);
       }
 
-      // Stateless 24-hour seed based on local calendar date
+      // Stateless fallback seed if offline
       const today = new Date();
       const dateSeed = today.getFullYear() * 1000 + (today.getMonth() + 1) * 100 + today.getDate();
       const quoteIndex = dateSeed % quotesList.length;
@@ -63,7 +56,7 @@ export const QuoteBanner = () => {
     };
 
     loadQuote();
-  }, []);
+  }, [userId]);
 
   return (
     <View style={styles.container}>

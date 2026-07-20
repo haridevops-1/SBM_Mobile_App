@@ -139,17 +139,28 @@ export const Results = ({ navigation }) => {
   const pctWeightChange = overviewData ? overviewData.changePercentage : parseFloat(((netWeightChange / (startWeightVal || 1)) * 100).toFixed(1));
 
   // Dynamic chart points processing for Body Weight
-  const rawWeightPoints = (overviewData && overviewData.chartData && overviewData.chartData.length > 0)
-    ? overviewData.chartData
-    : [
-        { day: '11 Jul', val: 71.0 },
-        { day: '12 Jul', val: 70.5 },
-        { day: '13 Jul', val: 71.0 },
-        { day: '14 Jul', val: 72.5 },
-        { day: '15 Jul', val: 81.2 },
-        { day: '16 Jul', val: 80.5 },
-        { day: '17 Jul', val: currentWeightVal }
+  // Real weight points starting strictly from user's first logged weight date
+  let rawWeightPoints = [];
+  if (overviewData && overviewData.chartData && overviewData.chartData.length > 0) {
+    rawWeightPoints = overviewData.chartData;
+  } else if (loggedWeight && loggedWeight > 0) {
+    const todayStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    if (startWeight && startWeight > 0 && startWeight !== loggedWeight) {
+      rawWeightPoints = [
+        { day: 'Start', val: startWeight },
+        { day: todayStr, val: loggedWeight }
       ];
+    } else {
+      rawWeightPoints = [
+        { day: todayStr, val: loggedWeight }
+      ];
+    }
+  } else {
+    const todayStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    rawWeightPoints = [
+      { day: todayStr, val: startWeightVal }
+    ];
+  }
 
   const allVals = rawWeightPoints.map(p => p.val !== undefined ? p.val : (p.value !== undefined ? p.value : currentWeightVal)).concat([startWeightVal, currentWeightVal]);
   const minVal = Math.floor(Math.min(...allVals) - 2);
@@ -257,6 +268,7 @@ export const Results = ({ navigation }) => {
   };
 
   const [mindsetWeeklyData, setMindsetWeeklyData] = useState(createEmptyMindset);
+  const [loggedWeeksSet, setLoggedWeeksSet] = useState(new Set());
 
   // Default spider chart week selectors: W0 vs W1
   const [spiderWeek1, setSpiderWeek1] = useState('W0');
@@ -281,21 +293,28 @@ export const Results = ({ navigation }) => {
           }
         }
 
+        const newLoggedSet = new Set();
         setMindsetWeeklyData(prev => {
           const updated = { ...prev };
           Object.keys(localScores).forEach(wKey => {
             if (updated[wKey]) {
+              const entry = localScores[wKey];
+              const hasVal = entry && (entry.learning > 0 || entry.food > 0 || entry.selfKindness > 0 || entry.self_kindness > 0 || entry.control > 0 || entry.confidence > 0 || entry.enjoying > 0);
+              if (hasVal) {
+                newLoggedSet.add(wKey);
+              }
               updated[wKey] = {
-                learning: localScores[wKey].learning ?? 0,
-                food: localScores[wKey].food ?? 0,
-                selfKindness: localScores[wKey].selfKindness ?? localScores[wKey].self_kindness ?? 0,
-                control: localScores[wKey].control ?? 0,
-                confidence: localScores[wKey].confidence ?? localScores[wKey].enjoying ?? 0,
+                learning: entry.learning ?? 0,
+                food: entry.food ?? 0,
+                selfKindness: entry.selfKindness ?? entry.self_kindness ?? 0,
+                control: entry.control ?? 0,
+                confidence: entry.confidence ?? entry.enjoying ?? 0,
               };
             }
           });
           return updated;
         });
+        setLoggedWeeksSet(newLoggedSet);
       } catch (err) {
         console.error('Error loading Sunday mindset data:', err);
       }
@@ -313,9 +332,13 @@ export const Results = ({ navigation }) => {
     { key: 'confidence',   label: 'Confidence',              color: '#B085F5' },
   ];
 
-  // Build array of {week, value} for each dimension across W0-W19
+  // Build array of {week, value, isLogged} for each dimension across W0-W19
   const buildDimData = (key) =>
-    allWeeks.map(w => ({ week: w, value: mindsetWeeklyData[w]?.[key] ?? 0 }));
+    allWeeks.map(w => ({
+      week: w,
+      value: mindsetWeeklyData[w]?.[key] ?? 0,
+      isLogged: loggedWeeksSet.has(w)
+    }));
 
   // Spider chart helper — convert radar data to SVG polygon points
   const buildSpiderPoints = (weekKey, cx, cy, radius) => {
@@ -337,7 +360,7 @@ export const Results = ({ navigation }) => {
   const metricColor = activeSet.color;
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
 
-  // Inline MiniLineChart with Vertical Line View
+  // Inline MiniLineChart with Vertical Line View (Blank at first, shows line only for logged weeks)
   const MiniLineChart = ({ data, color, chartW }) => {
     const chartH = 75;
     const padX = 14;
@@ -348,11 +371,17 @@ export const Results = ({ navigation }) => {
     const pts = data.map((d, i) => {
       const x = padX + (i / (n - 1)) * (chartW - 2 * padX);
       const y = padY + (chartH - 2 * padY) - (d.value / 3) * (chartH - 2 * padY);
-      return { x, y, value: d.value };
+      return { x, y, value: d.value, week: d.week, isLogged: d.isLogged };
     });
 
-    const linePth = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-    const areaPth = `${linePth} L ${pts[n-1].x.toFixed(1)} ${chartH - padY} L ${pts[0].x.toFixed(1)} ${chartH - padY} Z`;
+    const activePts = pts.filter(p => p.isLogged);
+
+    const linePth = activePts.length >= 2
+      ? activePts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
+      : '';
+    const areaPth = activePts.length >= 2
+      ? `${linePth} L ${activePts[activePts.length - 1].x.toFixed(1)} ${chartH - padY} L ${activePts[0].x.toFixed(1)} ${chartH - padY} Z`
+      : '';
     const gradId = `mg-${color.replace('#', '')}`;
 
     return (
@@ -364,7 +393,7 @@ export const Results = ({ navigation }) => {
           </SvgLinearGradient>
         </Defs>
 
-        {/* Vertical Grid Lines View */}
+        {/* Vertical Grid Lines View across all week columns */}
         {pts.map((p, i) => (
           <Line
             key={`vgrid-${i}`}
@@ -378,14 +407,22 @@ export const Results = ({ navigation }) => {
           />
         ))}
 
-        <Path d={areaPth} fill={`url(#${gradId})`} />
-        <Path d={linePth} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        {pts.map((p, i) => (
+        {/* Only render line path and gradient area if 2+ logged weeks exist */}
+        {activePts.length >= 2 && (
+          <>
+            <Path d={areaPth} fill={`url(#${gradId})`} />
+            <Path d={linePth} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </>
+        )}
+
+        {/* Only render circle node dots for logged weeks */}
+        {activePts.map((p, i) => (
           <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill={color} />
         ))}
       </Svg>
     );
   };
+
 
   // Spider/Radar chart SVG renderer
   const SpiderChart = ({ weekKey1, weekKey2 }) => {

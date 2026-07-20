@@ -11,7 +11,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_VIEWPORT_WIDTH = Math.max(220, SCREEN_WIDTH - 100);
 
 export const Efforts = () => {
-  const [activeTimeframe, setActiveTimeframe] = useState('week');
+  const [activeTimeframe, setActiveTimeframe] = useState('day');
   const [activeCategory, setActiveCategory] = useState('nutrition');
   
   const overallScrollRef = useRef(null);
@@ -287,8 +287,6 @@ export const Efforts = () => {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                snapToInterval={CHART_VIEWPORT_WIDTH}
-                decelerationRate="fast"
                 ref={overallScrollRef}
                 onContentSizeChange={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
                 onLayout={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
@@ -381,8 +379,6 @@ export const Efforts = () => {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  snapToInterval={CHART_VIEWPORT_WIDTH}
-                  decelerationRate="fast"
                   ref={detailScrollRef}
                   onContentSizeChange={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
                   onLayout={() => detailScrollRef.current?.scrollToEnd({ animated: false })}

@@ -167,10 +167,12 @@ export default StyleSheet.create({
   scrollableBarsContent: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    justifyContent: 'flex-end',
     minWidth: '100%',
     height: '100%',
     paddingBottom: 20,
     zIndex: 2,
+    paddingHorizontal: 8,
   },
   barColumn: {
     alignItems: 'center',
@@ -180,15 +182,16 @@ export default StyleSheet.create({
   },
   scrollBarColumn: {
     alignItems: 'center',
-    width: CHART_VIEWPORT_WIDTH,
+    width: 60,
+    marginHorizontal: 4,
     height: '100%',
     justifyContent: 'flex-end',
   },
   barTrack: {
-    width: 24,
+    width: 16,
     height: 100,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderRadius: 12,
+    borderRadius: 8,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },

@@ -139,6 +139,7 @@ export default StyleSheet.create({
     flex: 1,
     position: 'relative',
     height: '100%',
+    overflow: 'hidden',
   },
   gridLines: {
     position: 'absolute',

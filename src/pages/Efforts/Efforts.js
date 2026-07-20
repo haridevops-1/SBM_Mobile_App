@@ -312,7 +312,8 @@ export const Efforts = () => {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ref={overallScrollRef}
-                onContentSizeChange={() => overallScrollRef.current?.scrollToEnd({ animated: true })}
+                onContentSizeChange={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
+                onLayout={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
                 contentContainerStyle={styles.scrollableBarsContent}
               >
                 {overallChartData.map((data, idx) => (
@@ -403,7 +404,8 @@ export const Efforts = () => {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   ref={detailScrollRef}
-                  onContentSizeChange={() => detailScrollRef.current?.scrollToEnd({ animated: true })}
+                  onContentSizeChange={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
+                  onLayout={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
                   contentContainerStyle={styles.scrollableBarsContent}
                 >
                   {activeDetailData.map((data, idx) => (

@@ -23,36 +23,19 @@ export const QuoteBanner = () => {
   const [activeQuote, setActiveQuote] = useState("Every small effort today brings you closer to a stronger tomorrow.");
 
   useEffect(() => {
+    if (!userId) return;
+
     const loadQuote = async () => {
-      let quotesList = FALLBACK_QUOTES;
-
       try {
-        let fetchUrl = 'https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/get-quotes?type=quotes';
-        if (userId) {
-          fetchUrl += `&userId=${userId}`;
-        }
-
+        const fetchUrl = `https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/get-quotes?type=quotes&userId=${userId}`;
         const response = await fetch(fetchUrl);
         const data = await response.json();
-        if (response.ok && data.status === 'success') {
-          if (data.quote) {
-            setActiveQuote(data.quote);
-            return;
-          }
-          if (Array.isArray(data.quotes) && data.quotes.length > 0) {
-            quotesList = data.quotes;
-          }
+        if (response.ok && data.status === 'success' && data.quote) {
+          setActiveQuote(data.quote);
         }
       } catch (err) {
-        console.log("Using local quotes fallback:", err.message);
+        console.log("Error loading per-user quote:", err.message);
       }
-
-      // Stateless fallback seed if offline
-      const today = new Date();
-      const dateSeed = today.getFullYear() * 1000 + (today.getMonth() + 1) * 100 + today.getDate();
-      const quoteIndex = dateSeed % quotesList.length;
-
-      setActiveQuote(quotesList[quoteIndex]);
     };
 
     loadQuote();

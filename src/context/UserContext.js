@@ -222,6 +222,14 @@ export const UserProvider = ({ children }) => {
     setLoggedWeight(0.0);
     setStartWeight(0.0);
     setStreakDays(0);
+    setAverageEffortScore(0);
+    setNutritionScore(0);
+    setMovementScore(0);
+    setRecoveryScore(0);
+    setMindsetScore(0);
+    setHydrationScore(0);
+    setWeeklyEfforts([0, 0, 0, 0, 0]);
+    setHistoryLogs([]);
 
     // Clear session from AsyncStorage
     try {

@@ -96,8 +96,9 @@ export const ProfileDrawer = () => {
     username, userId, userEmail,
     loggedWeight, userGoal, gender,
     age, height, mealPreference, timezone,
-    logoutUser, setUserGoal,
+    logoutUser, setUserGoal, updateUserProfile,
   } = useUser();
+
 
   const navigation   = useNavigation();
   const { width }    = useWindowDimensions();
@@ -218,42 +219,69 @@ export const ProfileDrawer = () => {
     );
   };
 
-  // ── Save changes ──────────────────────────────────────────────────────────────
+  // ── Save changes & sync to Catalyst backend (user_profile_update table) ──────
   const handleSave = async () => {
     if (!editName.trim()) { Alert.alert('Validation', 'Name cannot be empty.'); return; }
     if (editAge && isNaN(parseInt(editAge, 10))) { Alert.alert('Validation', 'Age must be a number.'); return; }
     if (editHeight && isNaN(parseFloat(editHeight))) { Alert.alert('Validation', 'Height must be a number.'); return; }
 
     setSaving(true);
-    try {
-      if (editGoal !== userGoal) setUserGoal(editGoal);
+    const profilePayload = {
+      userId: userId,
+      user_id: userId,
+      username: editName.trim(),
+      name: editName.trim(),
+      userEmail: userEmail,
+      email: userEmail,
+      userGoal: editGoal,
+      user_goal: editGoal,
+      gender: editGender,
+      age: editAge,
+      height: editHeight,
+      mealPreference: editMeal,
+      meal_preference: editMeal,
+      timezone: editTz,
+      timezoneChangesThisMonth: tzCount,
+      timezone_changes: tzCount,
+      updatedAt: new Date().toISOString()
+    };
 
-      const session = await AsyncStorage.getItem('sbm_user_session');
-      if (session) {
-        const parsed = JSON.parse(session);
-        await AsyncStorage.setItem('sbm_user_session', JSON.stringify({
-          ...parsed,
-          name: editName,
-          details: {
-            ...parsed.details,
-            userGoal:       editGoal,
-            gender:         editGender,
-            age:            editAge,
-            height:         editHeight,
-            mealPreference: editMeal,
-            timezone:       editTz,
+    try {
+      // 1. Send profile updates to Catalyst serverless endpoint for user_profile_update table tracking
+      try {
+        await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user-profile/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        }));
+          body: JSON.stringify(profilePayload)
+        });
+      } catch (backendErr) {
+        console.warn('Backend profile update log notice (saving locally):', backendErr);
       }
-      Alert.alert('✅ Profile Updated', 'Your details have been saved.', [
+
+      // 2. Update context state and local AsyncStorage session
+      await updateUserProfile({
+        username: editName.trim(),
+        userGoal: editGoal,
+        gender: editGender,
+        age: editAge,
+        height: editHeight,
+        mealPreference: editMeal,
+        timezone: editTz
+      });
+
+      Alert.alert('✅ Profile Updated', 'Your profile details have been saved successfully.', [
         { text: 'OK', onPress: () => setIsEditOpen(false) }
       ]);
-    } catch {
-      Alert.alert('Error', 'Could not save changes. Please try again.');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Could not save profile changes. Please try again.');
     } finally {
       setSaving(false);
     }
   };
+
 
   const tzRemaining = MAX_TZ_CHANGES - tzCount;
 

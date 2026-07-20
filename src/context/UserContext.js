@@ -266,7 +266,42 @@ export const UserProvider = ({ children }) => {
     } catch (_) {}
   };
 
+  const updateUserProfile = async (updatedFields) => {
+    if (updatedFields.username !== undefined) setUsername(updatedFields.username);
+    if (updatedFields.userGoal !== undefined) setUserGoal(updatedFields.userGoal);
+    if (updatedFields.gender !== undefined) setGender(updatedFields.gender);
+    if (updatedFields.age !== undefined) setAge(updatedFields.age);
+    if (updatedFields.height !== undefined) setHeight(updatedFields.height);
+    if (updatedFields.mealPreference !== undefined) setMealPreference(updatedFields.mealPreference);
+    if (updatedFields.timezone !== undefined) setTimezone(updatedFields.timezone);
+
+    // Persist to AsyncStorage session
+    try {
+      const session = await AsyncStorage.getItem('sbm_user_session');
+      if (session) {
+        const parsed = JSON.parse(session);
+        const newSession = {
+          ...parsed,
+          name: updatedFields.username !== undefined ? updatedFields.username : parsed.name,
+          details: {
+            ...parsed.details,
+            userGoal:       updatedFields.userGoal !== undefined ? updatedFields.userGoal : parsed.details?.userGoal,
+            gender:         updatedFields.gender !== undefined ? updatedFields.gender : parsed.details?.gender,
+            age:            updatedFields.age !== undefined ? updatedFields.age : parsed.details?.age,
+            height:         updatedFields.height !== undefined ? updatedFields.height : parsed.details?.height,
+            mealPreference: updatedFields.mealPreference !== undefined ? updatedFields.mealPreference : parsed.details?.mealPreference,
+            timezone:       updatedFields.timezone !== undefined ? updatedFields.timezone : parsed.details?.timezone,
+          }
+        };
+        await AsyncStorage.setItem('sbm_user_session', JSON.stringify(newSession));
+      }
+    } catch (e) {
+      console.error("Failed to update user session storage:", e);
+    }
+  };
+
   const loginUser = (name, currentWeightVal, details = {}) => {
+
     if (name && name.trim() !== '') {
       setUsername(name);
     } else {
@@ -426,9 +461,11 @@ export const UserProvider = ({ children }) => {
       logWeight,
       loginUser,
       logoutUser,
+      updateUserProfile,
       markMissedDay,
       checkAndMarkMissedDays,
     }}>
+
       {children}
     </UserContext.Provider>
   );

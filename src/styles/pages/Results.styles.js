@@ -615,18 +615,18 @@ export default StyleSheet.create({
     letterSpacing: -0.3,
   },
   miniChartCard: {
-    backgroundColor: 'rgba(16, 20, 38, 0.85)',
+    backgroundColor: '#0E1325',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
   },
   miniChartLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   miniChartRow: {
     flexDirection: 'row',
@@ -634,29 +634,29 @@ export default StyleSheet.create({
   },
   miniYAxis: {
     justifyContent: 'space-between',
-    height: 60,
-    width: 20,
-    paddingRight: 4,
-    marginRight: 4,
+    height: 75,
+    width: 22,
+    paddingRight: 6,
   },
   miniYLabel: {
-    fontSize: 8,
-    color: 'rgba(255,255,255,0.35)',
+    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.4)',
     fontWeight: '600',
     textAlign: 'right',
   },
   miniXAxis: {
-    height: 18,
+    height: 20,
     position: 'relative',
-    marginTop: 4,
+    marginTop: 6,
   },
   miniXLabel: {
     position: 'absolute',
-    fontSize: 8,
-    color: 'rgba(255,255,255,0.35)',
+    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.4)',
     fontWeight: '600',
     top: 0,
   },
+
 
   // ─── Spider / Radar Chart Section ──────────────────────────────────
   spiderSection: {

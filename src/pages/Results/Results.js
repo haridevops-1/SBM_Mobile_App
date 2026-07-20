@@ -305,37 +305,41 @@ export const Results = ({ navigation }) => {
   const metricColor = activeSet.color;
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
 
-  // Inline MiniLineChart component for progress overview
-  const MiniLineChart = ({ data, color }) => {
-    const chartW = Math.max(screenWidth - 112, allWeeks.length * 36);
-    const chartH = 60;
+  // Inline MiniLineChart component for progress overview matching user screenshot design
+  const MiniLineChart = ({ data, color, chartW }) => {
+    const chartH = 75;
+    const padX = 14;
+    const padY = 10;
     const n = data.length;
     if (n < 2) return null;
-    const vals = data.map(d => d.value);
-    const maxVal = Math.max(...vals, 3);
-    const pts = data.map((d, i) => ({
-      x: (i / (n - 1)) * chartW,
-      y: chartH - (d.value / maxVal) * chartH,
-    }));
+
+    const pts = data.map((d, i) => {
+      const x = padX + (i / (n - 1)) * (chartW - 2 * padX);
+      const y = padY + (chartH - 2 * padY) - (d.value / 3) * (chartH - 2 * padY);
+      return { x, y, value: d.value };
+    });
+
     const linePth = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-    const areaPth = `${linePth} L ${pts[n-1].x.toFixed(1)} ${chartH} L 0 ${chartH} Z`;
+    const areaPth = `${linePth} L ${pts[n-1].x.toFixed(1)} ${chartH - padY} L ${pts[0].x.toFixed(1)} ${chartH - padY} Z`;
     const gradId = `mg-${color.replace('#', '')}`;
+
     return (
       <Svg width={chartW} height={chartH}>
         <Defs>
           <SvgLinearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={color} stopOpacity="0.35" />
-            <Stop offset="100%" stopColor={color} stopOpacity="0.0" />
+            <Stop offset="0%" stopColor={color} stopOpacity="0.45" />
+            <Stop offset="100%" stopColor={color} stopOpacity="0.02" />
           </SvgLinearGradient>
         </Defs>
         <Path d={areaPth} fill={`url(#${gradId})`} />
-        <Path d={linePth} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <Path d={linePth} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {pts.map((p, i) => (
-          <Circle key={i} cx={p.x} cy={p.y} r={3} fill={color} />
+          <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill={color} />
         ))}
       </Svg>
     );
   };
+
 
   // Spider/Radar chart SVG renderer
   const SpiderChart = ({ weekKey1, weekKey2 }) => {
@@ -614,6 +618,9 @@ export const Results = ({ navigation }) => {
 
           {mindsetDimensions.map((dim) => {
             const dimData = buildDimData(dim.key);
+            const chartW = Math.max(screenWidth - 100, allWeeks.length * 42);
+            const padX = 14;
+
             return (
               <View key={dim.key} style={styles.miniChartCard}>
                 <Text style={styles.miniChartLabel}>{dim.label}</Text>
@@ -632,24 +639,29 @@ export const Results = ({ navigation }) => {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingRight: 8 }}
+                    contentContainerStyle={{ paddingRight: 12 }}
                   >
-                    <View style={{ width: Math.max(screenWidth - 112, allWeeks.length * 36) }}>
+                    <View style={{ width: chartW }}>
                       <MiniLineChart
                         data={dimData}
                         color={dim.color}
+                        chartW={chartW}
                       />
                       {/* X-axis week labels */}
                       <View style={styles.miniXAxis}>
-                        {allWeeks.map((w, i) => (
-                          <Text
-                            key={w}
-                            style={[
-                              styles.miniXLabel,
-                              { left: (i / (allWeeks.length - 1)) * Math.max(screenWidth - 112, allWeeks.length * 36) - 10 }
-                            ]}
-                          >{w}</Text>
-                        ))}
+                        {allWeeks.map((w, i) => {
+                          const xPos = padX + (i / (allWeeks.length - 1)) * (chartW - 2 * padX);
+                          const labelText = w === 'W1' ? '1' : w;
+                          return (
+                            <Text
+                              key={w}
+                              style={[
+                                styles.miniXLabel,
+                                { left: xPos - 12, width: 24, textAlign: 'center' }
+                              ]}
+                            >{labelText}</Text>
+                          );
+                        })}
                       </View>
                     </View>
                   </ScrollView>
@@ -658,6 +670,7 @@ export const Results = ({ navigation }) => {
             );
           })}
         </View>
+
 
         {/* ─── Section 3: A Snapshot of Your Mindset (Spider Chart) ─── */}
         <View style={styles.spiderSection}>

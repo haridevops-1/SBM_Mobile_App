@@ -1,13 +1,72 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, Platform, useWindowDimensions, ActivityIndicator } from 'react-native';
-import { X, Check, ChevronDown } from 'lucide-react-native';
+import { X, Check, ChevronDown, Sparkles, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '../../context/UserContext';
 import theme from '../../theme/theme';
 import styles from '../../styles/components/DailyQuestionsModal.styles';
 
+const SUNDAY_QUESTIONS = [
+  {
+    key: 'learning',
+    title: 'Learning',
+    question: 'How well did you engage in learning new habits this week?',
+    options: [
+      { pts: 0, text: 'Needs Work' },
+      { pts: 1, text: 'Fair' },
+      { pts: 2, text: 'Good' },
+      { pts: 3, text: 'Excellent' }
+    ]
+  },
+  {
+    key: 'food',
+    title: 'Relationship with food',
+    question: 'How would you rate your relationship with food this week?',
+    options: [
+      { pts: 0, text: 'Struggling' },
+      { pts: 1, text: 'Average' },
+      { pts: 2, text: 'Good' },
+      { pts: 3, text: 'Great' }
+    ]
+  },
+  {
+    key: 'selfKindness',
+    title: 'Self-kindness',
+    question: 'How kind were you to yourself when facing challenges?',
+    options: [
+      { pts: 0, text: 'Hard on myself' },
+      { pts: 1, text: 'Moderate' },
+      { pts: 2, text: 'Kind' },
+      { pts: 3, text: 'Very Kind' }
+    ]
+  },
+  {
+    key: 'control',
+    title: 'Feeling in control',
+    question: 'How in control did you feel over your daily routine & choices?',
+    options: [
+      { pts: 0, text: 'Out of control' },
+      { pts: 1, text: 'Somewhat' },
+      { pts: 2, text: 'Mostly' },
+      { pts: 3, text: 'Fully' }
+    ]
+  },
+  {
+    key: 'confidence',
+    title: 'Confidence',
+    question: 'How confident do you feel about continuing your progress?',
+    options: [
+      { pts: 0, text: 'Low' },
+      { pts: 1, text: 'Moderate' },
+      { pts: 2, text: 'High' },
+      { pts: 3, text: 'Very High' }
+    ]
+  }
+];
+
 export const DailyQuestionsModal = ({ visible, onClose }) => {
-  const { logTodayEffort, userId, username, fetchDashboardData } = useUser();
+  const { logTodayEffort, userId, username, currentWeek, fetchDashboardData } = useUser();
   const { width } = useWindowDimensions();
 
   // Responsive alignment bounds for Web Desktop
@@ -19,8 +78,13 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [viewMode, setViewMode] = useState('question'); // 'question' | 'review' | 'completed'
+  const [viewMode, setViewMode] = useState('question'); // 'question' | 'review' | 'sunday_intro' | 'sunday_question' | 'completed'
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Sunday Mindset Questionnaire States
+  const [sundayIndex, setSundayIndex] = useState(0);
+  const [sundayAnswers, setSundayAnswers] = useState({});
+  const [isSunday, setIsSunday] = useState(new Date().getDay() === 0);
 
   // Fetch phase questions dynamically from Zoho Catalyst sbm_questionnaire_function
   const fetchQuestions = async () => {
@@ -56,11 +120,12 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
   useEffect(() => {
     if (visible && userId) {
+      setIsSunday(new Date().getDay() === 0);
       fetchQuestions();
     }
   }, [visible, userId]);
 
-  // Formatted Date matching user screenshots (e.g. "Effort for 13 May")
+  // Formatted Date
   const getFormattedDate = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const d = new Date();
@@ -74,9 +139,15 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     });
   };
 
+  const handleSelectSundayOption = (key, pts) => {
+    setSundayAnswers({
+      ...sundayAnswers,
+      [key]: pts
+    });
+  };
+
   const handleNext = () => {
     const currentQ = questionsList[currentIndex];
-    // Block progression if they haven't answered this question yet
     if (!answers[currentQ.id]) {
       alert("Please select an answer to continue.");
       return;
@@ -85,8 +156,21 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     if (currentIndex < questionsList.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // Shift directly to the review board
       setViewMode('review');
+    }
+  };
+
+  const handleSundayNext = () => {
+    const currentSQ = SUNDAY_QUESTIONS[sundayIndex];
+    if (sundayAnswers[currentSQ.key] === undefined) {
+      alert("Please select an option for this mindset question.");
+      return;
+    }
+
+    if (sundayIndex < SUNDAY_QUESTIONS.length - 1) {
+      setSundayIndex(sundayIndex + 1);
+    } else {
+      handleSubmitSundayLog();
     }
   };
 
@@ -113,17 +197,13 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   };
 
   const handleSubmitDailyLog = async () => {
-    // Check if all questions are answered
     const unanswered = questionsList.filter(q => !answers[q.id]);
     if (unanswered.length > 0) {
       alert(`Please answer all questions before submitting. Unanswered: ${unanswered.map((_, idx) => idx + 1).join(', ')}`);
       return;
     }
 
-    const finalPercent = calculateScore();
-
     try {
-      // 1. Submit Aspect scores to daily_logs table via /aspect-effort
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/aspect-effort', {
         method: 'POST',
         headers: {
@@ -138,10 +218,15 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        // Sync local context and refresh dashboard stats
         logTodayEffort(data.data.total_effort);
-        setViewMode('completed');
         fetchDashboardData();
+
+        // If today is Sunday, transition to Sunday 5 Mindset Questions!
+        if (new Date().getDay() === 0 || isSunday) {
+          setViewMode('sunday_intro');
+        } else {
+          setViewMode('completed');
+        }
       } else {
         alert("Error submitting daily log: " + (data.message || "Catalyst database rejected the transaction."));
       }
@@ -151,10 +236,61 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     }
   };
 
+  const handleSubmitSundayLog = async () => {
+    const weekKey = `W${currentWeek || 1}`;
+    const payload = {
+      userId: userId,
+      user_id: userId,
+      date: new Date().toISOString(),
+      week_number: currentWeek || 1,
+      week: weekKey,
+      learning: sundayAnswers.learning ?? 0,
+      food: sundayAnswers.food ?? 0,
+      self_kindness: sundayAnswers.selfKindness ?? 0,
+      control: sundayAnswers.control ?? 0,
+      confidence: sundayAnswers.confidence ?? 0
+    };
+
+    try {
+      // 1. Post to sunday_tracker Catalyst function / DB
+      try {
+        await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/api/sunday_tracker/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        console.warn('Sunday tracker submit offline notice (saving locally):', e);
+      }
+
+      // 2. Persist locally to AsyncStorage for instant Results page display
+      try {
+        const stored = await AsyncStorage.getItem('sbm_sunday_scores');
+        const parsed = stored ? JSON.parse(stored) : {};
+        parsed[weekKey] = {
+          learning: sundayAnswers.learning ?? 0,
+          food: sundayAnswers.food ?? 0,
+          selfKindness: sundayAnswers.selfKindness ?? 0,
+          control: sundayAnswers.control ?? 0,
+          confidence: sundayAnswers.confidence ?? 0
+        };
+        await AsyncStorage.setItem('sbm_sunday_scores', JSON.stringify(parsed));
+      } catch (e) {
+        console.error("Failed to save sunday scores locally", e);
+      }
+
+      setViewMode('completed');
+    } catch (err) {
+      console.error(err);
+      setViewMode('completed');
+    }
+  };
+
   const handleCloseAll = () => {
-    // Reset internal state
     setCurrentIndex(0);
     setAnswers({});
+    setSundayIndex(0);
+    setSundayAnswers({});
     setViewMode('question');
     setPickerOpen(false);
     onClose();
@@ -220,7 +356,6 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
           </View>
           
           <View style={styles.headerRightActions}>
-            {/* Custom Index Picker Dropdown */}
             <View style={styles.indexSelectorWrapper}>
               <TouchableOpacity 
                 activeOpacity={0.8}
@@ -248,7 +383,6 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
               )}
             </View>
 
-            {/* Close Button */}
             <TouchableOpacity style={styles.closeBtn} onPress={handleCloseAll}>
               <X size={20} color="#FFFFFF" />
             </TouchableOpacity>
@@ -284,7 +418,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
           </View>
         </View>
 
-        {/* Progress Pagination Dots */}
+        {/* Pagination Dots */}
         <View style={styles.paginationRow}>
           {questionsList.map((_, idx) => (
             <View 
@@ -331,12 +465,11 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   };
 
   // -------------------------------------------------------------
-  // REVIEW VIEW: LIST ALL ANSWERS
+  // REVIEW VIEW
   // -------------------------------------------------------------
   const renderReviewView = () => {
     return (
       <View>
-        {/* Header Row */}
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Review Today's Effort</Text>
           <TouchableOpacity style={styles.closeBtn} onPress={handleCloseAll}>
@@ -344,7 +477,6 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Scrollable Questions list */}
         <ScrollView style={styles.reviewScrollContainer} showsVerticalScrollIndicator={false}>
           {questionsList.map((q, idx) => {
             const selectedOptId = answers[q.id];
@@ -357,7 +489,6 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
                 onPress={() => handleEditQuestion(idx)}
               >
                 <Text style={styles.reviewQuestionText}>{idx + 1}. {q.question}</Text>
-                
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                   <View style={[styles.reviewCheckbox, styles.reviewCheckboxChecked]}>
                     <View style={styles.reviewCheckboxInner} />
@@ -372,7 +503,6 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
           })}
         </ScrollView>
 
-        {/* Action Panel */}
         <View style={styles.controlsRow}>
           <TouchableOpacity 
             activeOpacity={0.8}
@@ -404,12 +534,138 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   };
 
   // -------------------------------------------------------------
-  // COMPLETED VIEW: CONGRATULATIONS SPLASH
+  // SUNDAY INTRO TRANSITION SCREEN
+  // -------------------------------------------------------------
+  const renderSundayIntroView = () => {
+    return (
+      <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+        <View style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(176,133,245,0.18)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <Sparkles size={28} color="#B085F5" />
+        </View>
+
+        <Text style={{ fontSize: 19, fontWeight: '800', color: '#FFFFFF', textAlign: 'center', marginBottom: 8 }}>
+          Sunday Mindset Check-in 🌟
+        </Text>
+
+        <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 10 }}>
+          Great job logging your daily effort! Since today is <Text style={{ color: '#B085F5', fontWeight: '700' }}>Sunday</Text>, take 1 minute to answer 5 quick questions about your weekly mindset.
+        </Text>
+
+        <View style={{ width: '100%', borderRadius: 14, overflow: 'hidden' }}>
+          <LinearGradient
+            colors={theme.colors.gradients.purpleButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ width: '100%' }}
+          >
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={{ flexDirection: 'row', height: 50, alignItems: 'center', justifyContent: 'center' }}
+              onPress={() => {
+                setSundayIndex(0);
+                setViewMode('sunday_question');
+              }}
+            >
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#FFFFFF', marginRight: 8 }}>
+                Continue to Sunday Questions
+              </Text>
+              <ArrowRight size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </View>
+    );
+  };
+
+  // -------------------------------------------------------------
+  // SUNDAY QUESTIONNAIRE (5 QUESTIONS)
+  // -------------------------------------------------------------
+  const renderSundayQuestionView = () => {
+    const sq = SUNDAY_QUESTIONS[sundayIndex];
+    const selectedPts = sundayAnswers[sq.key];
+
+    return (
+      <View>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>Sunday Mindset ({sundayIndex + 1}/5)</Text>
+          <TouchableOpacity style={styles.closeBtn} onPress={handleCloseAll}>
+            <X size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.questionContainer}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: '#B085F5', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>
+            {sq.title}
+          </Text>
+          <Text style={styles.questionText}>{sq.question}</Text>
+
+          <View style={styles.optionsStack}>
+            {sq.options.map((opt) => {
+              const isSelected = selectedPts === opt.pts;
+              return (
+                <TouchableOpacity
+                  key={opt.pts}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.optionCard,
+                    isSelected && styles.optionCardSelected
+                  ]}
+                  onPress={() => handleSelectSundayOption(sq.key, opt.pts)}
+                >
+                  <Text style={[
+                    styles.optionText,
+                    isSelected && styles.optionTextSelected
+                  ]}>
+                    {opt.text}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Pagination Dots for 5 Sunday questions */}
+        <View style={styles.paginationRow}>
+          {SUNDAY_QUESTIONS.map((_, idx) => (
+            <View 
+              key={idx}
+              style={[
+                styles.paginationDot,
+                sundayIndex === idx && styles.paginationDotActive
+              ]}
+            />
+          ))}
+        </View>
+
+        {/* Action Button */}
+        <View style={{ marginTop: 16 }}>
+          <LinearGradient
+            colors={theme.colors.gradients.purpleButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ borderRadius: 14 }}
+          >
+            <TouchableOpacity 
+              activeOpacity={0.85}
+              style={{ height: 48, alignItems: 'center', justifyContent: 'center' }}
+              onPress={handleSundayNext}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                {sundayIndex === SUNDAY_QUESTIONS.length - 1 ? 'Complete & Save Sunday Check-in' : 'Next Mindset Question →'}
+              </Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </View>
+    );
+  };
+
+  // -------------------------------------------------------------
+  // COMPLETED VIEW
   // -------------------------------------------------------------
   const renderCompletedView = () => {
     return (
       <View style={styles.completedCard}>
-        {/* Success Checkmark Ring */}
         <View style={styles.checkmarkCircle}>
           <Check size={36} color="#FFFFFF" />
         </View>
@@ -448,6 +704,8 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
         <View style={styles.modalCard}>
           {viewMode === 'question' && renderQuestionView()}
           {viewMode === 'review' && renderReviewView()}
+          {viewMode === 'sunday_intro' && renderSundayIntroView()}
+          {viewMode === 'sunday_question' && renderSundayQuestionView()}
           {viewMode === 'completed' && renderCompletedView()}
         </View>
       </View>

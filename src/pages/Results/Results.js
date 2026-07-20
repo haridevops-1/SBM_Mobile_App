@@ -4,6 +4,7 @@ import { Bell, ChevronDown, Scale, ArrowDownRight, ArrowUpRight, Plus } from 'lu
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Path, Circle, Line, Text as SvgText, Polygon as SvgPolygon } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '../../context/UserContext';
 import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
 import theme from '../../theme/theme';
@@ -245,43 +246,76 @@ export const Results = ({ navigation }) => {
   const linePath = chartPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
   const areaPath = chartPoints.length > 0 ? `${linePath} L ${chartPoints[chartPoints.length - 1].x} 140 L ${chartPoints[0].x} 140 Z` : '';
 
-  // All 19 weeks available for selection
-  const allWeeks = Array.from({ length: 19 }, (_, i) => `W${i + 1}`);
+  // All 20 weeks available for selection (W0 to W19)
+  const allWeeks = Array.from({ length: 20 }, (_, i) => `W${i}`);
 
-  // Placeholder weekly mindset data (5 dimensions, W1-W19, scale 0-3)
-  // Later replaced with real API data
-  const mindsetWeeklyData = {
-    W1:  { learning: 1, food: 0, selfKindness: 0, control: 1, enjoying: 0 },
-    W2:  { learning: 2, food: 1, selfKindness: 1, control: 2, enjoying: 1 },
-    W3:  { learning: 1, food: 1, selfKindness: 2, control: 1, enjoying: 2 },
-    W4:  { learning: 3, food: 2, selfKindness: 1, control: 2, enjoying: 1 },
-    W5:  { learning: 2, food: 1, selfKindness: 2, control: 3, enjoying: 2 },
-    W6:  { learning: 1, food: 0, selfKindness: 1, control: 1, enjoying: 1 },
-    W7:  { learning: 2, food: 3, selfKindness: 2, control: 2, enjoying: 3 },
-    W8:  { learning: 3, food: 2, selfKindness: 3, control: 3, enjoying: 2 },
-    W9:  { learning: 2, food: 1, selfKindness: 2, control: 2, enjoying: 1 },
-    W10: { learning: 1, food: 2, selfKindness: 1, control: 1, enjoying: 2 },
-    W11: { learning: 2, food: 2, selfKindness: 2, control: 3, enjoying: 2 },
-    W12: { learning: 3, food: 3, selfKindness: 2, control: 2, enjoying: 3 },
-    W13: { learning: 1, food: 1, selfKindness: 1, control: 1, enjoying: 1 },
-    W14: { learning: 2, food: 2, selfKindness: 3, control: 2, enjoying: 2 },
-    W15: { learning: 3, food: 2, selfKindness: 2, control: 3, enjoying: 3 },
-    W16: { learning: 2, food: 3, selfKindness: 1, control: 2, enjoying: 2 },
-    W17: { learning: 1, food: 1, selfKindness: 2, control: 1, enjoying: 1 },
-    W18: { learning: 3, food: 2, selfKindness: 3, control: 3, enjoying: 2 },
-    W19: { learning: 2, food: 1, selfKindness: 2, control: 2, enjoying: 3 },
+  // Create empty mindset data initialized to 0 for all weeks
+  const createEmptyMindset = () => {
+    const initial = {};
+    for (let i = 0; i <= 19; i++) {
+      initial[`W${i}`] = { learning: 0, food: 0, selfKindness: 0, control: 0, confidence: 0 };
+    }
+    return initial;
   };
+
+  const [mindsetWeeklyData, setMindsetWeeklyData] = useState(createEmptyMindset);
+
+  // Default spider chart week selectors: W0 vs W1
+  const [spiderWeek1, setSpiderWeek1] = useState('W0');
+  const [spiderWeek2, setSpiderWeek2] = useState('W1');
+
+  // Fetch real Sunday tracker mindset scores from Catalyst backend & local storage
+  useEffect(() => {
+    const fetchSundayData = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('sbm_sunday_scores');
+        let localScores = stored ? JSON.parse(stored) : {};
+
+        if (userId) {
+          try {
+            const res = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/api/sunday_tracker?userId=${userId}`);
+            const data = await res.json();
+            if (res.ok && data.status === 'success' && data.data) {
+              localScores = { ...localScores, ...data.data };
+            }
+          } catch (e) {
+            console.warn('Sunday tracker API fetch notice:', e);
+          }
+        }
+
+        setMindsetWeeklyData(prev => {
+          const updated = { ...prev };
+          Object.keys(localScores).forEach(wKey => {
+            if (updated[wKey]) {
+              updated[wKey] = {
+                learning: localScores[wKey].learning ?? 0,
+                food: localScores[wKey].food ?? 0,
+                selfKindness: localScores[wKey].selfKindness ?? localScores[wKey].self_kindness ?? 0,
+                control: localScores[wKey].control ?? 0,
+                confidence: localScores[wKey].confidence ?? localScores[wKey].enjoying ?? 0,
+              };
+            }
+          });
+          return updated;
+        });
+      } catch (err) {
+        console.error('Error loading Sunday mindset data:', err);
+      }
+    };
+
+    fetchSundayData();
+  }, [userId]);
 
   // The 5 mindset dimensions
   const mindsetDimensions = [
     { key: 'learning',     label: 'Learning',               color: '#29B6F6' },
     { key: 'food',         label: 'Relationship with food',  color: '#FF4081' },
     { key: 'selfKindness', label: 'Self-kindness',           color: '#FFD600' },
-    { key: 'control',      label: 'Feeling in control',      color: '#4CAF50' },
-    { key: 'enjoying',     label: 'Enjoying the process',    color: '#B085F5' },
+    { key: 'control',      label: 'Feeling in control',      color: '#00E676' },
+    { key: 'confidence',   label: 'Confidence',              color: '#B085F5' },
   ];
 
-  // Build array of {week, value} for each dimension across W1-W19
+  // Build array of {week, value} for each dimension across W0-W19
   const buildDimData = (key) =>
     allWeeks.map(w => ({ week: w, value: mindsetWeeklyData[w]?.[key] ?? 0 }));
 
@@ -289,7 +323,7 @@ export const Results = ({ navigation }) => {
   const buildSpiderPoints = (weekKey, cx, cy, radius) => {
     const data = mindsetWeeklyData[weekKey];
     if (!data) return null;
-    const keys = ['learning', 'food', 'selfKindness', 'control', 'enjoying'];
+    const keys = ['learning', 'food', 'selfKindness', 'control', 'confidence'];
     const n = keys.length;
     const angleStep = (2 * Math.PI) / n;
     const startAngle = -Math.PI / 2;
@@ -305,7 +339,7 @@ export const Results = ({ navigation }) => {
   const metricColor = activeSet.color;
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
 
-  // Inline MiniLineChart component for progress overview matching user screenshot design
+  // Inline MiniLineChart with Vertical Line View
   const MiniLineChart = ({ data, color, chartW }) => {
     const chartH = 75;
     const padX = 14;
@@ -331,6 +365,21 @@ export const Results = ({ navigation }) => {
             <Stop offset="100%" stopColor={color} stopOpacity="0.02" />
           </SvgLinearGradient>
         </Defs>
+
+        {/* Vertical Grid Lines View */}
+        {pts.map((p, i) => (
+          <Line
+            key={`vgrid-${i}`}
+            x1={p.x}
+            y1={padY}
+            x2={p.x}
+            y2={chartH - padY}
+            stroke="rgba(255, 255, 255, 0.07)"
+            strokeWidth="1"
+            strokeDasharray="2 2"
+          />
+        ))}
+
         <Path d={areaPth} fill={`url(#${gradId})`} />
         <Path d={linePth} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {pts.map((p, i) => (
@@ -339,7 +388,6 @@ export const Results = ({ navigation }) => {
       </Svg>
     );
   };
-
 
   // Spider/Radar chart SVG renderer
   const SpiderChart = ({ weekKey1, weekKey2 }) => {
@@ -350,7 +398,7 @@ export const Results = ({ navigation }) => {
     const n = 5;
     const angleStep = (2 * Math.PI) / n;
     const startAngle = -Math.PI / 2;
-    const labels = ['Learning', 'Relationship\nwith food', 'Self-kindness', 'Feeling in\ncontrol', 'Enjoying the\nprocess'];
+    const labels = ['Learning', 'Relationship\nwith food', 'Self-kindness', 'Feeling in\ncontrol', 'Confidence'];
     const labelDist = radius + 22;
     const axisPoints = Array.from({ length: n }, (_, i) => {
       const a = startAngle + i * angleStep;
@@ -402,6 +450,7 @@ export const Results = ({ navigation }) => {
       </Svg>
     );
   };
+
 
 
   // Wait for fonts before rendering UI

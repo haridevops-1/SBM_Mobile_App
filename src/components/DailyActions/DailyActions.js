@@ -31,6 +31,7 @@ export const DailyActions = () => {
   const [showWeightInput, setShowWeightInput] = useState(false);
   const [weightInputValue, setWeightInputValue] = useState(loggedWeight ? loggedWeight.toString() : '');
   const [modalVisible, setModalVisible] = useState(false);
+  const [showEffortSuccessModal, setShowEffortSuccessModal] = useState(false);
 
   // SVG parameters
   const radius = 45;
@@ -51,6 +52,8 @@ export const DailyActions = () => {
   const handleLogEffortClick = () => {
     if (!todayEffortLogged) {
       setModalVisible(true);
+    } else {
+      setShowEffortSuccessModal(true);
     }
   };
 
@@ -147,7 +150,6 @@ export const DailyActions = () => {
               activeOpacity={0.8} 
               style={styles.actionBtn} 
               onPress={handleLogEffortClick}
-              disabled={todayEffortLogged}
             >
               <View style={styles.btnIconBox}>
                 <Check size={16} color="#FFFFFF" />
@@ -244,7 +246,7 @@ export const DailyActions = () => {
                 <Text style={styles.successPromptText}>
                   You've logged your weight for{"\n"}
                   <Text style={{ fontWeight: 'bold', color: '#FFFFFF' }}>Day {streakDays || 1}</Text>{"\n"}
-                  <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#FFFFFF', marginTop: 4, display: 'inline-block' }}>
+                  <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#FFFFFF', marginTop: 4 }}>
                     {loggedWeight} kg
                   </Text>
                 </Text>
@@ -265,6 +267,47 @@ export const DailyActions = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Centered Effort Logged Success Modal */}
+      <Modal
+        transparent={true}
+        visible={showEffortSuccessModal}
+        onRequestClose={() => setShowEffortSuccessModal(false)}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.centeredWeightCard}>
+            <View style={{ alignItems: 'center', width: '100%' }}>
+              <View style={styles.successCheckIconContainer}>
+                <Check size={28} color="#FFFFFF" strokeWidth={3} />
+              </View>
+              
+              <Text style={styles.successTitleText}>Effort Logged</Text>
+              
+              <Text style={styles.successPromptText}>
+                You've logged your effort for{"\n"}
+                <Text style={{ fontWeight: 'bold', color: '#FFFFFF' }}>Day {streakDays || 1}</Text>{"\n"}
+                <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#FFFFFF', marginTop: 4 }}>
+                  {todayEffortPercent}%
+                </Text>
+              </Text>
+              
+              <Text style={styles.successSubPromptText}>
+                Come back tomorrow to log the{"\n"}next entry 💪
+              </Text>
+
+              <TouchableOpacity 
+                activeOpacity={0.8} 
+                style={styles.successCloseBtn} 
+                onPress={() => setShowEffortSuccessModal(false)}
+              >
+                <Text style={styles.successCloseBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
 
       {/* Daily 10-Questionnaire Modal Overlay */}
       <DailyQuestionsModal 

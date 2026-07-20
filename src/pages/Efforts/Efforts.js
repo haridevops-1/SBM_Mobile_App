@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal } from 'react-native';
 import { Calendar, Utensils, Dumbbell, Moon, X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,9 @@ export const Efforts = () => {
   const [activeTimeframe, setActiveTimeframe] = useState('week');
   const [activeCategory, setActiveCategory] = useState('nutrition');
   
+  const overallScrollRef = useRef(null);
+  const detailScrollRef = useRef(null);
+
   // Date Picker states
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -287,10 +290,16 @@ export const Efforts = () => {
                 ))}
               </View>
 
-              {/* Bars */}
-              <View style={styles.barsContainer}>
+              {/* Horizontally Scrollable Bars */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                ref={overallScrollRef}
+                onContentSizeChange={() => overallScrollRef.current?.scrollToEnd({ animated: true })}
+                contentContainerStyle={styles.scrollableBarsContent}
+              >
                 {overallChartData.map((data, idx) => (
-                  <View key={idx} style={styles.barColumn}>
+                  <View key={idx} style={styles.scrollBarColumn}>
                     <View style={styles.barTrack}>
                       <View 
                         style={[
@@ -303,7 +312,7 @@ export const Efforts = () => {
                     <Text style={styles.barLabel}>{data.day}</Text>
                   </View>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           </View>
         </View>
@@ -372,10 +381,16 @@ export const Efforts = () => {
                   ))}
                 </View>
 
-                {/* Bars */}
-                <View style={styles.barsContainer}>
+                {/* Horizontally Scrollable Bars */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  ref={detailScrollRef}
+                  onContentSizeChange={() => detailScrollRef.current?.scrollToEnd({ animated: true })}
+                  contentContainerStyle={styles.scrollableBarsContent}
+                >
                   {activeDetailData.map((data, idx) => (
-                    <View key={idx} style={styles.barColumn}>
+                    <View key={idx} style={styles.scrollBarColumn}>
                       <View style={styles.barTrack}>
                         <View 
                           style={[
@@ -390,7 +405,7 @@ export const Efforts = () => {
                       <Text style={styles.barLabel}>{data.day}</Text>
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               </View>
             </View>
           </View>

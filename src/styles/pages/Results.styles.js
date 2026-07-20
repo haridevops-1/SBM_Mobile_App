@@ -71,6 +71,7 @@ export default StyleSheet.create({
   },
   dropdownWrapper: {
     position: 'relative',
+    zIndex: 100,
   },
   dropdownFilterBtn: {
     flexDirection: 'row',
@@ -96,7 +97,8 @@ export default StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    zIndex: 100,
+    zIndex: 1000,
+    elevation: 10,
     width: 100,
     padding: 4,
     shadowColor: '#000000',
@@ -126,12 +128,16 @@ export default StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
+    overflow: 'visible',
+    zIndex: 10,
   },
   graphCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    zIndex: 20,
+    elevation: 20,
   },
   graphTitleWrapper: {
     flexDirection: 'row',

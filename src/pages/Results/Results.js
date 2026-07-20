@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { Bell, ChevronDown, Scale, ArrowDownRight, ArrowUpRight, Activity, Dumbbell, ClipboardList, Utensils, Cookie, Plus } from 'lucide-react-native';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Path, Circle } from 'react-native-svg';
@@ -28,6 +28,7 @@ export const Results = ({ navigation }) => {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [weightInput, setWeightInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const chartScrollRef = useRef(null);
 
   // Load Inter font on component mount
   useEffect(() => {
@@ -163,9 +164,13 @@ export const Results = ({ navigation }) => {
     Math.round(minVal)
   ];
 
+  // Dynamic spacing: minimum 50px per point, ensures readability for large datasets
+  const pointSpacing = Math.max(50, rawWeightPoints.length <= 7 ? 320 / Math.max(1, rawWeightPoints.length - 1) : 50);
+  const dynamicChartWidth = Math.max(360, (rawWeightPoints.length - 1) * pointSpacing + 80);
+
   const formattedWeightPoints = rawWeightPoints.map((p, idx) => {
     const val = p.val !== undefined ? p.val : (p.value !== undefined ? p.value : currentWeightVal);
-    const x = rawWeightPoints.length > 1 ? Math.round(40 + (idx / (rawWeightPoints.length - 1)) * 320) : 200;
+    const x = rawWeightPoints.length > 1 ? Math.round(40 + idx * pointSpacing) : 200;
     const y = Math.round(130 - ((val - minVal) / valRange) * 105);
     return { day: p.day || p.label || 'Day', val, x, y };
   });
@@ -327,7 +332,7 @@ export const Results = ({ navigation }) => {
               <Text style={styles.graphTitle}>{activeSet.title}</Text>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
               {activeMetric === 'weight' && (
                 <TouchableOpacity activeOpacity={0.8} style={styles.logWeightBtn} onPress={() => setIsLogModalOpen(true)}>
                   <Plus size={12} color="#B085F5" />
@@ -382,42 +387,51 @@ export const Results = ({ navigation }) => {
                   <ActivityIndicator size="small" color={metricColor} />
                 </View>
               ) : (
-                <Svg style={styles.chartSvg} viewBox="0 0 400 150">
-                  <Defs>
-                    <SvgLinearGradient id={`grad-${activeMetric}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                      <Stop offset="0%" stopColor={metricColor} stopOpacity="0.4" />
-                      <Stop offset="100%" stopColor={metricColor} stopOpacity="0.0" />
-                    </SvgLinearGradient>
-                  </Defs>
-                  {areaPath ? <Path d={areaPath} fill={`url(#grad-${activeMetric})`} /> : null}
-                  {linePath ? <Path d={linePath} fill="none" stroke={metricColor} strokeWidth="3" strokeLinecap="round" /> : null}
-                  {chartPoints.map((p, idx) => {
-                    const isActive = idx === activeIndex;
-                    return (
-                      <Circle key={idx} cx={p.x} cy={p.y} r={isActive ? 6 : 4} fill={isActive ? '#FFFFFF' : metricColor} stroke={isActive ? metricColor : 'none'} strokeWidth={isActive ? 2 : 0} onPress={() => setSelectedPointIndex(idx)} />
-                    );
-                  })}
-                </Svg>
-              )}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  ref={chartScrollRef}
+                  onContentSizeChange={() => chartScrollRef.current?.scrollToEnd({ animated: false })}
+                  style={{ height: 170 }}
+                  contentContainerStyle={{ paddingRight: 10 }}
+                >
+                  <View style={{ width: dynamicChartWidth, height: 170 }}>
+                    <Svg width={dynamicChartWidth} height={150} viewBox={`0 0 ${dynamicChartWidth} 150`}>
+                      <Defs>
+                        <SvgLinearGradient id={`grad-${activeMetric}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                          <Stop offset="0%" stopColor={metricColor} stopOpacity="0.4" />
+                          <Stop offset="100%" stopColor={metricColor} stopOpacity="0.0" />
+                        </SvgLinearGradient>
+                      </Defs>
+                      {areaPath ? <Path d={areaPath} fill={`url(#grad-${activeMetric})`} /> : null}
+                      {linePath ? <Path d={linePath} fill="none" stroke={metricColor} strokeWidth="3" strokeLinecap="round" /> : null}
+                      {chartPoints.map((p, idx) => {
+                        const isActive = idx === activeIndex;
+                        return (
+                          <Circle key={idx} cx={p.x} cy={p.y} r={isActive ? 6 : 4} fill={isActive ? '#FFFFFF' : metricColor} stroke={isActive ? metricColor : 'none'} strokeWidth={isActive ? 2 : 0} onPress={() => setSelectedPointIndex(idx)} />
+                        );
+                      })}
+                    </Svg>
 
-              {/* Tooltip Overlay */}
-              {!loading && selectedPoint && (
-                <View style={[styles.chartTooltipBox, { left: Math.max(10, Math.min(270, selectedPoint.x - 45)), top: Math.max(0, selectedPoint.y - 48), borderColor: metricColor }]}>
-                  <Text style={styles.tooltipDate}>{selectedPoint.day}</Text>
-                  <View style={styles.tooltipValueRow}>
-                    <View style={[styles.tooltipColorIndicator, { backgroundColor: metricColor }]} />
-                    <Text style={styles.tooltipValueText}>{selectedPoint.val} {activeSet.unit}</Text>
+                    {/* X Axis Labels inside scroll */}
+                    <View style={{ flexDirection: 'row', height: 20, position: 'relative', width: dynamicChartWidth }}>
+                      {chartPoints.map((p, idx) => (
+                        <Text key={idx} onPress={() => setSelectedPointIndex(idx)} style={[styles.xAxisLabelText, { left: p.x - 14, color: idx === activeIndex ? '#FFFFFF' : '#666', fontWeight: idx === activeIndex ? '700' : '600' }]}>{p.day}</Text>
+                      ))}
+                    </View>
                   </View>
-                </View>
-              )}
 
-              {/* X Axis Labels */}
-              {!loading && (
-                <View style={styles.xAxisLabels}>
-                  {chartPoints.map((p, idx) => (
-                    <Text key={idx} onPress={() => setSelectedPointIndex(idx)} style={[styles.xAxisLabelText, { left: p.x - 12, color: idx === activeIndex ? theme.colors.textPrimary : theme.colors.textMuted, fontWeight: idx === activeIndex ? '700' : '600' }]}>{p.day}</Text>
-                  ))}
-                </View>
+                  {/* Tooltip Overlay inside scroll */}
+                  {selectedPoint && (
+                    <View style={[styles.chartTooltipBox, { position: 'absolute', left: Math.max(10, selectedPoint.x - 45), top: Math.max(0, selectedPoint.y - 48), borderColor: metricColor }]}>
+                      <Text style={styles.tooltipDate}>{selectedPoint.day}</Text>
+                      <View style={styles.tooltipValueRow}>
+                        <View style={[styles.tooltipColorIndicator, { backgroundColor: metricColor }]} />
+                        <Text style={styles.tooltipValueText}>{selectedPoint.val} {activeSet.unit}</Text>
+                      </View>
+                    </View>
+                  )}
+                </ScrollView>
               )}
             </View>
           </View>

@@ -5,6 +5,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
+  // Session loading state — true until session is validated on app mount
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
+
   // Shared user states (All start at 0 / false to display default tracker states)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('Guest');
@@ -52,6 +55,9 @@ export const UserProvider = ({ children }) => {
   // Token
   const [userToken, setUserToken] = useState('');
 
+  // Quote state — persisted in context to prevent flicker on tab switch
+  const [activeQuote, setActiveQuote] = useState('Every small effort today brings you closer to a stronger tomorrow.');
+
   // Security app background state lock tracking
   const [lastActiveTime, setLastActiveTime] = useState(Date.now());
 
@@ -74,17 +80,50 @@ export const UserProvider = ({ children }) => {
       subscription.remove();
     };
   }, [isLoggedIn, lastActiveTime]);
-  // Restore session state on app mount
+  // Restore session state on app mount with validation
   useEffect(() => {
     const restoreSession = async () => {
       try {
+        // Load cached quote first for instant display
+        const cachedQuote = await AsyncStorage.getItem('sbm_active_quote');
+        if (cachedQuote) {
+          setActiveQuote(cachedQuote);
+        }
+
         const session = await AsyncStorage.getItem('sbm_user_session');
         if (session) {
           const { name, currentWeightVal, details } = JSON.parse(session);
-          loginUser(name, currentWeightVal, details);
+          
+          // Validate session by checking if userId exists and backend responds
+          if (details && details.userId) {
+            try {
+              const response = await fetch(
+                `https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${details.userId}`
+              );
+              const result = await response.json();
+              if (response.ok && result.status === 'success') {
+                // Session is valid — restore user state
+                loginUser(name, currentWeightVal, details);
+              } else {
+                // Backend rejected the userId — session is stale
+                console.warn('Session validation failed, clearing stored session.');
+                await AsyncStorage.removeItem('sbm_user_session');
+                await AsyncStorage.removeItem('sbm_active_quote');
+              }
+            } catch (networkErr) {
+              // Network error — still restore session for offline use
+              console.warn('Network error during validation, restoring offline session.');
+              loginUser(name, currentWeightVal, details);
+            }
+          } else {
+            // No userId in stored session — invalid, clear it
+            await AsyncStorage.removeItem('sbm_user_session');
+          }
         }
       } catch (e) {
         console.error("Failed to restore session:", e);
+      } finally {
+        setIsSessionLoading(false);
       }
     };
     restoreSession();
@@ -138,6 +177,24 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // Fetch and cache the user's daily quote
+  const fetchQuote = async (uid) => {
+    const targetUserId = uid || userId;
+    if (!targetUserId) return;
+    try {
+      const fetchUrl = `https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/get-quotes?type=quotes&userId=${targetUserId}`;
+      const response = await fetch(fetchUrl);
+      const data = await response.json();
+      if (response.ok && data.status === 'success' && data.quote) {
+        setActiveQuote(data.quote);
+        // Cache to AsyncStorage for instant display on next mount
+        await AsyncStorage.setItem('sbm_active_quote', data.quote);
+      }
+    } catch (err) {
+      console.log('Error loading per-user quote:', err.message);
+    }
+  };
+
   const logWeight = (weightValue) => {
     const numericWeight = parseFloat(weightValue);
     if (!isNaN(numericWeight)) {
@@ -185,20 +242,24 @@ export const UserProvider = ({ children }) => {
 
     setIsLoggedIn(true);
 
-    // Save session to AsyncStorage for persistence
-    try {
-      AsyncStorage.setItem('sbm_user_session', JSON.stringify({
-        name,
-        currentWeightVal,
-        details
-      }));
-    } catch (e) {
-      console.error("Failed to save session:", e);
-    }
+    // Save session to AsyncStorage for persistence (properly awaited)
+    const saveSession = async () => {
+      try {
+        await AsyncStorage.setItem('sbm_user_session', JSON.stringify({
+          name,
+          currentWeightVal,
+          details
+        }));
+      } catch (e) {
+        console.error("Failed to save session:", e);
+      }
+    };
+    saveSession();
 
-    // Dynamic initial loading of user metrics from Catalyst database
+    // Dynamic initial loading of user metrics and quote from Catalyst database
     if (details.userId) {
       fetchDashboardData(details.userId);
+      fetchQuote(details.userId);
     }
   };
 
@@ -231,16 +292,24 @@ export const UserProvider = ({ children }) => {
     setWeeklyEfforts([0, 0, 0, 0, 0]);
     setHistoryLogs([]);
 
-    // Clear session from AsyncStorage
-    try {
-      AsyncStorage.removeItem('sbm_user_session');
-    } catch (e) {
-      console.error("Failed to clear session:", e);
-    }
+    // Reset quote to default
+    setActiveQuote('Every small effort today brings you closer to a stronger tomorrow.');
+
+    // Clear session and cached quote from AsyncStorage (properly awaited)
+    const clearSession = async () => {
+      try {
+        await AsyncStorage.removeItem('sbm_user_session');
+        await AsyncStorage.removeItem('sbm_active_quote');
+      } catch (e) {
+        console.error("Failed to clear session:", e);
+      }
+    };
+    clearSession();
   };
 
   return (
     <UserContext.Provider value={{
+      isSessionLoading,
       isLoggedIn,
       username,
       todayEffortLogged,
@@ -271,9 +340,11 @@ export const UserProvider = ({ children }) => {
       timezone,
       userToken,
       todayEffortScore,
+      activeQuote,
       setUserGoal,
       logTodayEffort,
       fetchDashboardData,
+      fetchQuote,
       logWeight,
       loginUser,
       logoutUser

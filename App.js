@@ -1,5 +1,5 @@
   import React from 'react';
-  import { View, useWindowDimensions, Platform, LogBox } from 'react-native';
+  import { View, Text, useWindowDimensions, Platform, LogBox, ActivityIndicator } from 'react-native';
   import { NavigationContainer } from '@react-navigation/native';
   import { StatusBar } from 'expo-status-bar';
   import { UserProvider, useUser } from './src/context/UserContext';
@@ -13,12 +13,23 @@
   ]);
 
   function MainApp() {
-    const { isLoggedIn } = useUser();
+    const { isLoggedIn, isSessionLoading } = useUser();
     const { width } = useWindowDimensions();
     
     const isWebDesktop = Platform.OS === 'web' && width > 768;
 
     const renderContent = () => {
+      // Show branded loading screen while session is being validated
+      if (isSessionLoading) {
+        return (
+          <View style={{ flex: 1, backgroundColor: '#060813', justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 28, fontWeight: '900', color: '#B085F5', marginBottom: 8, letterSpacing: 2 }}>SBM</Text>
+            <Text style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.4)', marginBottom: 24, fontWeight: '500' }}>Loading your session...</Text>
+            <ActivityIndicator size="large" color="#B085F5" />
+          </View>
+        );
+      }
+
       if (!isLoggedIn) {
         return <AuthScreen />;
       }

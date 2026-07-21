@@ -21,9 +21,8 @@ export default StyleSheet.create({
     backgroundColor: '#070913',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255, 255, 255, 0.05)',
-    paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: theme.spacing.md,
+    // paddingTop and paddingBottom are handled dynamically via safe area insets in ProfileDrawer.js
+    paddingHorizontal: 16,
     flexDirection: 'column',
     justifyContent: 'space-between',
   },

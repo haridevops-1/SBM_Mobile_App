@@ -16,8 +16,9 @@ import {
   Modal, View, Text, TouchableOpacity, Animated,
   TouchableWithoutFeedback, useWindowDimensions, ScrollView,
   Platform, TextInput, Alert, ActivityIndicator, StyleSheet,
-  KeyboardAvoidingView, Dimensions,
+  KeyboardAvoidingView, Dimensions, StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import {
   X, LogOut, Home, Flame, BarChart2, BookOpen, MessageSquare,
@@ -117,6 +118,7 @@ export const ProfileDrawer = () => {
   const { width }    = useWindowDimensions();
   const isWebDesktop = Platform.OS === 'web' && width > 768;
   const DRAWER_WIDTH = isWebDesktop ? 440 * 0.8 : width * 0.8;
+  const insets       = useSafeAreaInsets();
 
   const state       = useNavigationState(s => s);
   const activeRoute = state ? state.routes[state.index]?.name : 'Tracker';
@@ -362,7 +364,18 @@ export const ProfileDrawer = () => {
       {/* ══ Navigation Drawer ════════════════════════════════════════════════════ */}
       <Modal transparent visible={isProfileOpen} onRequestClose={handleClose} animationType="none">
         <View style={[drawerStyles.overlay, isWebDesktop && drawerStyles.webOverlay]}>
-          <Animated.View style={[drawerStyles.drawerContainer, { width: DRAWER_WIDTH, transform: [{ translateX: slideAnim }] }]}>
+          <Animated.View
+            style={[
+              drawerStyles.drawerContainer,
+              {
+                width: DRAWER_WIDTH,
+                transform: [{ translateX: slideAnim }],
+                // Respect safe area: push content below status bar and above home indicator
+                paddingTop: Math.max(insets.top, 20),
+                paddingBottom: Math.max(insets.bottom + 16, 30),
+              }
+            ]}
+          >
 
             {/* Header */}
             <View style={drawerStyles.drawerHeader}>

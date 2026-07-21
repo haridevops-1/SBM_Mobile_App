@@ -9,7 +9,7 @@ export default StyleSheet.create({
     backgroundColor: '#060813',
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   supportHeader: {
     paddingHorizontal: theme.spacing.lg,
@@ -233,7 +233,8 @@ export default StyleSheet.create({
     borderColor: 'rgba(123, 31, 162, 0.15)',
     borderRadius: 24,
     marginHorizontal: theme.spacing.lg,
-    marginVertical: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+    marginBottom: 24,
     padding: 16,
   },
   careLeft: {

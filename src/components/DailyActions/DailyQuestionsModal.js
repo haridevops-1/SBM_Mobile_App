@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FILE: DailyQuestionsModal.js
+ * PATH: C:\SBM_Mobile_App\src\components\DailyActions\DailyQuestionsModal.js
+ * 
+ * PURPOSE:
+ * Interactive Modal for answering daily program questions (Nutrition, Movement, Recovery)
+ * and Sunday Mindset Check-in 5 questions (Learning, Relationship with food, Self-kindness, 
+ * Feeling in control, Confidence). Submits score results to Catalyst backend endpoints
+ * (/aspect-effort and /api/sunday_tracker/submit).
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, Platform, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { X, Check, ChevronDown, Sparkles, ArrowRight } from 'lucide-react-native';

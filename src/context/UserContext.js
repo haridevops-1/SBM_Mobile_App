@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FILE: UserContext.js
+ * PATH: C:\SBM_Mobile_App\src\context\UserContext.js
+ * 
+ * PURPOSE:
+ * Central React Context Provider managing global application state.
+ * Handles user authentication session, profile metrics (Weight_Goal, weight, height, age, timezone),
+ * daily effort logging, consistency score calculation, Sunday mindset scores, and 
+ * synchronization with Zoho Catalyst backend APIs and local AsyncStorage persistence.
+ * ============================================================================
+ */
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -267,8 +280,10 @@ export const UserProvider = ({ children }) => {
   };
 
   const updateUserProfile = async (updatedFields) => {
+    const goalVal = updatedFields.Weight_Goal || updatedFields.weight_goal || updatedFields.weightGoal || updatedFields.userGoal || updatedFields.user_goal || updatedFields.goal;
+
     if (updatedFields.username !== undefined) setUsername(updatedFields.username);
-    if (updatedFields.userGoal !== undefined) setUserGoal(updatedFields.userGoal);
+    if (goalVal !== undefined) setUserGoal(goalVal);
     if (updatedFields.gender !== undefined) setGender(updatedFields.gender);
     if (updatedFields.age !== undefined) setAge(updatedFields.age);
     if (updatedFields.height !== undefined) setHeight(updatedFields.height);
@@ -285,7 +300,9 @@ export const UserProvider = ({ children }) => {
           name: updatedFields.username !== undefined ? updatedFields.username : parsed.name,
           details: {
             ...parsed.details,
-            userGoal:       updatedFields.userGoal !== undefined ? updatedFields.userGoal : parsed.details?.userGoal,
+            userGoal:       goalVal !== undefined ? goalVal : parsed.details?.userGoal,
+            Weight_Goal:    goalVal !== undefined ? goalVal : parsed.details?.Weight_Goal,
+            weight_goal:    goalVal !== undefined ? goalVal : parsed.details?.weight_goal,
             gender:         updatedFields.gender !== undefined ? updatedFields.gender : parsed.details?.gender,
             age:            updatedFields.age !== undefined ? updatedFields.age : parsed.details?.age,
             height:         updatedFields.height !== undefined ? updatedFields.height : parsed.details?.height,
@@ -318,12 +335,15 @@ export const UserProvider = ({ children }) => {
       setStartWeight(numericWeight);
     }
 
+    const goalVal = details.Weight_Goal || details.weight_goal || details.weightGoal || details.userGoal || details.user_goal || details.goal;
+
     if (details.gender) setGender(details.gender);
     if (details.age) setAge(parseInt(details.age, 10));
     if (details.height) setHeight(parseFloat(details.height));
     if (details.mealPreference) setMealPreference(details.mealPreference);
     if (details.timezone) setTimezone(details.timezone);
-    if (details.userGoal) setUserGoal(details.userGoal);
+    if (goalVal) setUserGoal(goalVal);
+
 
     setIsLoggedIn(true);
 

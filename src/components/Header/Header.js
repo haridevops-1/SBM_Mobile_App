@@ -1,3 +1,15 @@
+/**
+ * ============================================================================
+ * FILE: Header.js
+ * PATH: C:\SBM_Mobile_App\src\components\Header\Header.js
+ * 
+ * PURPOSE:
+ * Renders the top application navigation header on the Tracker (Home) screen.
+ * Displays interactive user avatar button (opens ProfileDrawer), dynamic time-of-day
+ * greeting ("Good Morning", "Good Afternoon", "Good Evening"), user name, and notifications bell.
+ * ============================================================================
+ */
+
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Bell } from 'lucide-react-native';

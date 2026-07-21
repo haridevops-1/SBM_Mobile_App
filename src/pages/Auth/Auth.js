@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FILE: Auth.js
+ * PATH: C:\SBM_Mobile_App\src\pages\Auth\Auth.js
+ * 
+ * PURPOSE:
+ * Provides the User Authentication interface (Login & Registration / Sign Up).
+ * Handles form validation, user profile onboarding (gender, age, weight, height,
+ * meal preference, timezone, and weight goal), and connects directly to Zoho Catalyst 
+ * serverless endpoints (/login and /signup).
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator } from 'react-native';
 import { Mail, Lock, User as UserIcon, Scale, Sparkles, Calendar, Globe, Utensils, Ruler, ChevronDown, X, Users, Activity } from 'lucide-react-native';
@@ -233,9 +246,10 @@ export const Auth = () => {
 
       const data = await response.json();
       if (response.status === 200 && data.status === 'success') {
-        // Show dynmamic welcoming positive banner message inside the auth card
         setSuccessMessage(`Login successful! Welcome back, ${data.user.name || 'User'}! 🎉`);
         
+        const goalVal = data.user.Weight_Goal || data.user.weight_goal || data.user.userGoal || 'Weight Loss';
+
         setTimeout(() => {
           loginUser(data.user.name, data.user.weight || '75.0', {
             email: data.user.email,
@@ -246,7 +260,7 @@ export const Auth = () => {
             height: data.user.height,
             mealPreference: data.user.meal_preference,
             timezone: data.user.timezone,
-            userGoal: 'Fat Loss', // defaults
+            Weight_Goal: goalVal,
           });
           setSuccessMessage('');
           setEmail('');
@@ -277,8 +291,11 @@ export const Auth = () => {
         height: Number(height) || 0.0,
         meal_preference: mealPreference,
         timezone: timezone,
+        Weight_Goal: goal,
         device_platform: Platform.OS
       };
+
+
 
       const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/server/sbm_mobile_app_function/signup', {
         method: 'POST',

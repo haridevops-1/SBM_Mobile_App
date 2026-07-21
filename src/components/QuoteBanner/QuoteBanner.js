@@ -1,3 +1,14 @@
+/**
+ * ============================================================================
+ * FILE: QuoteBanner.js
+ * PATH: C:\SBM_Mobile_App\src\components\QuoteBanner\QuoteBanner.js
+ * 
+ * PURPOSE:
+ * Renders the daily motivational quote card banner on the Tracker (Home) screen.
+ * Fetches per-user daily quotes from Catalyst backend sbm_tracker_function/get-quotes endpoint.
+ * ============================================================================
+ */
+
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Star } from 'lucide-react-native';

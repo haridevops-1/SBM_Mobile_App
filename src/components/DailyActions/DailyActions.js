@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FILE: DailyActions.js
+ * PATH: C:\SBM_Mobile_App\src\components\DailyActions\DailyActions.js
+ * 
+ * PURPOSE:
+ * Renders the Daily Action Cards section on the Tracker (Home) screen.
+ * Displays "Log Today's Effort" button (triggering DailyQuestionsModal) and
+ * "Log Today's Weight" button (triggering Weight Log modal popup).
+ * Provides immediate visual feedback modals when effort or weight is already logged.
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Check, Scale, X, ChevronsUpDown } from 'lucide-react-native';

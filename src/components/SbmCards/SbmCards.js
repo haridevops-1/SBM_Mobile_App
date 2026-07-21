@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FILE: SbmCards.js
+ * PATH: C:\SBM_Mobile_App\src\components\SbmCards\SbmCards.js
+ * 
+ * PURPOSE:
+ * Renders the top 3 core metric cards on the Tracker (Home) screen:
+ * 1. Consistency Score (e.g. 1/1, 2/3)
+ * 2. Today's Effort Score (% score calculated from daily questions)
+ * 3. Body Weight (current logged weight vs start weight)
+ * ============================================================================
+ */
+
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Flame, Zap, Scale } from 'lucide-react-native';

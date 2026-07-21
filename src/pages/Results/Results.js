@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * FILE: Results.js
+ * PATH: C:\SBM_Mobile_App\src\pages\Results\Results.js
+ * 
+ * PURPOSE:
+ * Renders Results & Trends screen. Displays:
+ * 1. Interactive Body Weight (kg) horizontal scrollable line chart starting from user's first log date.
+ * 2. Progress Overview 5 mini line charts (Learning, Relationship with food, Self-kindness, 
+ *    Feeling in control, Confidence) displaying blank state until Sunday check-ins are logged.
+ * 3. Spider / Radar comparison chart comparing weekly Sunday mindset scores (W0-W19).
+ * ============================================================================
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { Bell, ChevronDown, Scale, ArrowDownRight, ArrowUpRight, Plus } from 'lucide-react-native';

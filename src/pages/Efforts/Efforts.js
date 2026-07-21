@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * FILE: Efforts.js
+ * PATH: C:\SBM_Mobile_App\src\pages\Efforts\Efforts.js
+ * 
+ * PURPOSE:
+ * Renders the Efforts screen. Displays:
+ * 1. Overall Progress bar chart across Day / Week / Phase timeframes.
+ * 2. Aspect cards (Nutrition, Movement, Recovery) evaluated on an independent 100% scale.
+ * 3. Detailed aspect breakdown bar charts connecting to Catalyst backend (/api/efforts/overall-progress 
+ *    and /api/efforts/aspect-breakdown).
+ * ============================================================================
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { Utensils, Dumbbell, Moon } from 'lucide-react-native';
@@ -101,23 +115,46 @@ export const Efforts = () => {
     isToday: item.date === selectedDate
   }));
 
-  // Helper to parse percentages from fraction displays like '4.5/9'
-  const parsePercentFromDisplay = (displayStr) => {
-    if (!displayStr) return 0;
-    const parts = displayStr.split('/');
-    if (parts.length === 2) {
+  // Helper to parse percentages from aspect displays like '5/5', '3/3', '4/5', '2.34/3'
+  // Evaluates each aspect independently on its own 100% scale (e.g. 5/5 = 100%, 3/3 = 100%, 4/5 = 80%)
+  const parsePercentFromDisplay = (displayVal, defaultMax = 3) => {
+    if (displayVal === undefined || displayVal === null) return 0;
+    
+    // If string fraction like '5/5', '3/3', '4/5', or '2.34/3'
+    if (typeof displayVal === 'string' && displayVal.includes('/')) {
+      const parts = displayVal.split('/');
       const num = parseFloat(parts[0]) || 0;
-      const den = parseFloat(parts[1]) || 9;
+      const den = parseFloat(parts[1]) || defaultMax;
+      if (den <= 0) return 0;
       return Math.min(100, Math.max(0, Math.round((num / den) * 100)));
     }
-    return 0;
+
+    const num = parseFloat(displayVal);
+    if (isNaN(num)) return 0;
+
+    // If raw score <= 10 (e.g. 3 out of 3, 5 out of 5), convert to percentage based on defaultMax
+    if (num <= 10) {
+      const maxScore = defaultMax > 0 ? defaultMax : 3;
+      return Math.min(100, Math.max(0, Math.round((num / maxScore) * 100)));
+    }
+
+    // Already a percentage 0-100
+    return Math.min(100, Math.max(0, Math.round(num)));
   };
 
-  const nutritionPercent = effortData ? parsePercentFromDisplay(effortData.summary.nutrition_display) : 0;
-  const movementPercent = effortData ? parsePercentFromDisplay(effortData.summary.movement_display) : 0;
-  const recoveryPercent = effortData ? parsePercentFromDisplay(effortData.summary.recovery_display) : 0;
+  const nutritionPercent = effortData && effortData.summary && effortData.summary.nutrition_display
+    ? parsePercentFromDisplay(effortData.summary.nutrition_display, 3)
+    : parsePercentFromDisplay(nutritionScore, 3);
 
-  // Define categories (only Nutrition, Movement, Recovery) with percentages
+  const movementPercent = effortData && effortData.summary && effortData.summary.movement_display
+    ? parsePercentFromDisplay(effortData.summary.movement_display, 3)
+    : parsePercentFromDisplay(movementScore, 3);
+
+  const recoveryPercent = effortData && effortData.summary && effortData.summary.recovery_display
+    ? parsePercentFromDisplay(effortData.summary.recovery_display, 3)
+    : parsePercentFromDisplay(recoveryScore, 3);
+
+  // Define categories (only Nutrition, Movement, Recovery) with percentages evaluated to 100%
   const categories = [
     {
       id: 'nutrition',
@@ -177,10 +214,24 @@ export const Efforts = () => {
   }, [userId, selectedDate, activeCategory, activeTimeframe]);
 
   // Dynamic aspect details chart (Standard Chronological Order: Day 1 to Day N)
-  const activeDetailData = (aspectData || []).map((item) => ({
-    day: item.label,
-    percentage: item.percentage
-  }));
+  const activeDetailData = (aspectData || []).map((item) => {
+    let pct = 0;
+    if (item.percentage !== undefined && item.percentage > 10) {
+      pct = Math.min(100, Math.max(0, Math.round(item.percentage)));
+    } else if (item.display !== undefined) {
+      pct = parsePercentFromDisplay(item.display, 3);
+    } else if (item.percentage !== undefined) {
+      pct = parsePercentFromDisplay(item.percentage, 3);
+    } else if (item.score !== undefined) {
+      const maxScore = item.max_score || 3;
+      pct = parsePercentFromDisplay(`${item.score}/${maxScore}`, maxScore);
+    }
+    return {
+      day: item.label || item.day || 'Day',
+      percentage: pct
+    };
+  });
+
 
   const selectedCategoryObj = categories.find(cat => cat.id === activeCategory);
   const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';

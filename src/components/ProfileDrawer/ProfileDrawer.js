@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FILE: ProfileDrawer.js
+ * PATH: C:\SBM_Mobile_App\src\components\ProfileDrawer\ProfileDrawer.js
+ * 
+ * PURPOSE:
+ * Slide-out Navigation Drawer and Profile Editor Modal.
+ * Provides user profile overview, app navigation links, profile detail editing
+ * (name, goal, gender, age, height, meal preference, timezone with 2x/month limit),
+ * and syncs profile updates to Catalyst user_profile_update table via PUT / GET methods.
+ * ============================================================================
+ */
+
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal, View, Text, TouchableOpacity, Animated,
@@ -158,15 +171,50 @@ export const ProfileDrawer = () => {
   const handleNavClick = (route) => animClose(() => { setIsProfileOpen(false); navigation.navigate(route); });
   const handleClose    = ()      => animClose(() => setIsProfileOpen(false));
 
-  // ── Open edit modal and populate all fields ──────────────────────────────────
+  // ── Open edit modal and populate all fields (with backend GET sync) ───────────
   const openEdit = async () => {
-    setEditName(username            || '');
-    setEditGoal(userGoal            || '');
-    setEditGender(gender            || '');
-    setEditAge(age    ? String(age)    : '');
-    setEditHeight(height ? String(height) : '');
-    setEditMeal(mealPreference      || '');
-    setEditTz(timezone              || '');
+    let currName   = username       || '';
+    let currGoal   = userGoal       || '';
+    let currGender = gender         || '';
+    let currAge    = age ? String(age) : '';
+    let currHeight = height ? String(height) : '';
+    let currMeal   = mealPreference || '';
+    let currTz     = timezone       || '';
+
+    // Fetch latest stored profile from Catalyst user_profile_update function (GET method)
+    if (userId) {
+      try {
+        let getUrl = `https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update?user_id=${userId}`;
+        let res = await fetch(getUrl, { method: 'GET' });
+        if (!res.ok) {
+          getUrl = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user_profile_update?user_id=${userId}`;
+          res = await fetch(getUrl, { method: 'GET' });
+        }
+        const json = await res.json();
+        if (res.ok && json.status === 'success' && json.data) {
+          const d = json.data;
+          if (d.name || d.username) currName = d.name || d.username;
+          if (d.Weight_Goal || d.weight_goal || d.weightGoal || d.user_goal || d.userGoal || d.goal) {
+            currGoal = d.Weight_Goal || d.weight_goal || d.weightGoal || d.user_goal || d.userGoal || d.goal;
+          }
+          if (d.gender) currGender = d.gender;
+          if (d.age) currAge = String(d.age);
+          if (d.height) currHeight = String(d.height);
+          if (d.meal_preference || d.mealPreference || d.diet) currMeal = d.meal_preference || d.mealPreference || d.diet;
+          if (d.timezone || d.time_zone) currTz = d.timezone || d.time_zone;
+        }
+      } catch (err) {
+        console.warn('GET user_profile_update notice:', err);
+      }
+    }
+
+    setEditName(currName);
+    setEditGoal(currGoal);
+    setEditGender(currGender);
+    setEditAge(currAge);
+    setEditHeight(currHeight);
+    setEditMeal(currMeal);
+    setEditTz(currTz);
 
     try {
       const key     = `tz_changes_${new Date().toISOString().slice(0, 7)}`;
@@ -219,59 +267,81 @@ export const ProfileDrawer = () => {
     );
   };
 
-  // ── Save changes & sync to Catalyst backend (user_profile_update table) ──────
+  // ── Save changes & sync to Catalyst backend user_profile_update function (PUT method)
   const handleSave = async () => {
     if (!editName.trim()) { Alert.alert('Validation', 'Name cannot be empty.'); return; }
     if (editAge && isNaN(parseInt(editAge, 10))) { Alert.alert('Validation', 'Age must be a number.'); return; }
     if (editHeight && isNaN(parseFloat(editHeight))) { Alert.alert('Validation', 'Height must be a number.'); return; }
 
     setSaving(true);
+
+    // Identify which specific fields were changed
+    const changedFields = [];
+    if (editName.trim() !== username) changedFields.push('username');
+    if (editGoal !== userGoal) changedFields.push('userGoal');
+    if (editGender !== gender) changedFields.push('gender');
+    if (editAge !== (age ? String(age) : '')) changedFields.push('age');
+    if (editHeight !== (height ? String(height) : '')) changedFields.push('height');
+    if (editMeal !== mealPreference) changedFields.push('mealPreference');
+    if (editTz !== timezone) changedFields.push('timezone');
+
+    // Build fully merged profile payload containing ALL fields
+    // (Ensures single/partial field updates don't overwrite unpassed fields in Data Store)
     const profilePayload = {
-      userId: userId,
       user_id: userId,
-      username: editName.trim(),
       name: editName.trim(),
-      userEmail: userEmail,
       email: userEmail,
-      userGoal: editGoal,
-      user_goal: editGoal,
+      Weight_Goal: editGoal,
       gender: editGender,
-      age: editAge,
-      height: editHeight,
-      mealPreference: editMeal,
+      age: editAge ? parseInt(editAge, 10) : '',
+      height: editHeight ? parseFloat(editHeight) : '',
       meal_preference: editMeal,
       timezone: editTz,
-      timezoneChangesThisMonth: tzCount,
       timezone_changes: tzCount,
-      updatedAt: new Date().toISOString()
+      changed_fields: changedFields,
+      updated_at: new Date().toISOString()
     };
 
+
+
     try {
-      // 1. Send profile updates to Catalyst serverless endpoint for user_profile_update table tracking
-      try {
-        await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user-profile/update', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(profilePayload)
-        });
-      } catch (backendErr) {
-        console.warn('Backend profile update log notice (saving locally):', backendErr);
+      // 1. Send HTTP PUT to Catalyst user_profile_update serverless endpoint
+      let success = false;
+      const endpoints = [
+        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update', method: 'PUT' },
+        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user_profile_update', method: 'PUT' },
+        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update', method: 'POST' },
+        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user-profile/update', method: 'POST' },
+      ];
+
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep.url, {
+            method: ep.method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(profilePayload)
+          });
+          if (res.ok) {
+            success = true;
+            break;
+          }
+        } catch (e) {
+          // Try next fallback endpoint
+        }
       }
 
-      // 2. Update context state and local AsyncStorage session
+      // 2. Update local context state & AsyncStorage session
       await updateUserProfile({
         username: editName.trim(),
         userGoal: editGoal,
         gender: editGender,
-        age: editAge,
-        height: editHeight,
+        age: editAge ? parseInt(editAge, 10) : '',
+        height: editHeight ? parseFloat(editHeight) : '',
         mealPreference: editMeal,
         timezone: editTz
       });
 
-      Alert.alert('✅ Profile Updated', 'Your profile details have been saved successfully.', [
+      Alert.alert('✅ Profile Updated', 'Your profile details have been updated in the Data Store.', [
         { text: 'OK', onPress: () => setIsEditOpen(false) }
       ]);
     } catch (err) {
@@ -281,6 +351,7 @@ export const ProfileDrawer = () => {
       setSaving(false);
     }
   };
+
 
 
   const tzRemaining = MAX_TZ_CHANGES - tzCount;

@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * FILE: Home.js
+ * PATH: C:\SBM_Mobile_App\src\pages\Home\Home.js
+ * 
+ * PURPOSE:
+ * Main Tracker (Home) screen.
+ * Assembles the core user dashboard components: Header, QuoteBanner, SbmCards 
+ * (Consistency, Effort Score, Body Weight), DailyActions (Effort & Weight Log buttons),
+ * and ProfileDrawer. Synchronizes real-time dashboard data from Zoho Catalyst backend.
+ * ============================================================================
+ */
+
 import React, { useEffect } from 'react';
 import { ScrollView, View, Text, SafeAreaView } from 'react-native';
 import { Calendar } from 'lucide-react-native';

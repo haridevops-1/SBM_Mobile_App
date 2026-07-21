@@ -1,3 +1,14 @@
+/**
+ * ============================================================================
+ * FILE: BottomNav.js
+ * PATH: C:\SBM_Mobile_App\src\components\BottomNav\BottomNav.js
+ * 
+ * PURPOSE:
+ * Custom Bottom Tab Navigation Bar for the main application screens.
+ * Provides tab switching between Tracker (Home), Efforts, Results, Resources, and Support.
+ * ============================================================================
+ */
+
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Home, ClipboardList, BarChart2, BookOpen, MessageSquare } from 'lucide-react-native';

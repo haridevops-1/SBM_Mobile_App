@@ -114,12 +114,11 @@ export const Auth = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showSignupSuccessModal, setShowSignupSuccessModal] = useState(false);
 
-  // Auto-detect user's device/location timezone on component mount
-  useEffect(() => {
+  // Helper function to detect local device time zone and match against options
+  const getAutoDetectedTimezone = () => {
     try {
       const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (userTz) {
-        // Find best match in TIMEZONE_OPTIONS or map standard ones
         const lowerTz = userTz.toLowerCase();
         let matched = TIMEZONE_OPTIONS.find(opt => opt.toLowerCase().includes(lowerTz));
         
@@ -141,15 +140,19 @@ export const Auth = () => {
           }
         }
 
-        if (matched) {
-          setTimezone(matched);
-        } else {
-          // If no specific name match, fallback nicely to userTz formatted string
-          setTimezone(`${userTz}`);
-        }
+        return matched || userTz;
       }
     } catch (e) {
       console.log('Auto timezone detect error:', e);
+    }
+    return 'India (IST - UTC+5:30)'; // Standard default fallback
+  };
+
+  // Auto-detect user's device/location timezone on component mount
+  useEffect(() => {
+    const detected = getAutoDetectedTimezone();
+    if (detected) {
+      setTimezone(detected);
     }
   }, []);
 
@@ -323,6 +326,9 @@ export const Auth = () => {
   const handleSignupAPI = async () => {
     setLoading(true);
     try {
+      // Ensure timezone is auto-captured if left unselected
+      const finalTz = (timezone && timezone !== 'Select Time Zone') ? timezone : getAutoDetectedTimezone();
+
       const payload = {
         email: email.trim(),
         password: password,
@@ -332,7 +338,7 @@ export const Auth = () => {
         weight: Number(weight),
         height: Number(height) || 0.0,
         meal_preference: mealPreference,
-        timezone: timezone,
+        timezone: finalTz,
         Weight_Goal: goal,
         device_platform: Platform.OS
       };
@@ -372,7 +378,8 @@ export const Auth = () => {
   };
 
   const handleToggleMode = () => {
-    setIsLogin(!isLogin);
+    const nextIsLogin = !isLogin;
+    setIsLogin(nextIsLogin);
     setErrors({});
     
     // Clear inputs
@@ -384,8 +391,15 @@ export const Auth = () => {
     setHeight('');
     setWeight('');
     setMealPreference('Select Diet');
-    setTimezone('Select Time Zone');
     setGoal('Select Goal');
+
+    // Auto-detect & pre-fill local timezone whenever entering Signup mode
+    if (!nextIsLogin) {
+      const detected = getAutoDetectedTimezone();
+      setTimezone(detected);
+    } else {
+      setTimezone('Select Time Zone');
+    }
   };
 
   return (

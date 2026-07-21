@@ -70,8 +70,31 @@ export const DailyActions = () => {
     }
   };
 
+  const handleWeightInputChange = (text) => {
+    // Only allow numbers and a single decimal point
+    let sanitized = text.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      sanitized = parts[0] + '.' + parts.slice(1).join('');
+    }
+    // Restrict to max 2 decimal digits after dot
+    if (parts.length === 2 && parts[1].length > 2) {
+      sanitized = parts[0] + '.' + parts[1].slice(0, 2);
+    }
+    setWeightInputValue(sanitized);
+  };
+
   const handleWeightSubmit = async () => {
     if (weightInputValue.trim() !== '') {
+      const parsedWeight = parseFloat(weightInputValue);
+      if (isNaN(parsedWeight) || parsedWeight <= 0) {
+        alert("Please enter a valid weight value.");
+        return;
+      }
+
+      // Format weight strictly to 2 decimal places (e.g. 78.89)
+      const roundedWeight = parseFloat(parsedWeight.toFixed(2));
+
       try {
         const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/log-weight', {
           method: 'POST',
@@ -80,15 +103,16 @@ export const DailyActions = () => {
           },
           body: JSON.stringify({
             userId: userId,
-            weight: Number(weightInputValue)
+            weight: roundedWeight
           })
         });
 
         const data = await response.json();
         if (response.ok && data.status === 'success') {
           // Weight saved inside cloud weight_history. Sync locally
-          logWeight(weightInputValue);
+          logWeight(roundedWeight);
           fetchDashboardData();
+          setShowWeightInput(false);
         } else {
           alert("Error logging weight: " + (data.message || "Catalyst database rejected the transaction."));
         }
@@ -193,7 +217,7 @@ export const DailyActions = () => {
                 <Scale size={16} color="#FFFFFF" />
               </View>
               <Text style={styles.btnText}>
-                {todayWeightLogged ? `Today's weight logged (${loggedWeight} kg)` : "Log today's weight"}
+                {todayWeightLogged ? `Today's weight logged (${parseFloat(loggedWeight || 0).toFixed(2)} kg)` : "Log today's weight"}
               </Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -230,9 +254,10 @@ export const DailyActions = () => {
                       style={styles.weightInput}
                       keyboardType="decimal-pad"
                       value={weightInputValue}
-                      onChangeText={setWeightInputValue}
-                      placeholder="77.78"
+                      onChangeText={handleWeightInputChange}
+                      placeholder="78.89"
                       placeholderTextColor="#7F8C8D"
+                      maxLength={7}
                       autoFocus
                     />
                     <ChevronsUpDown size={18} color="#7F8C8D" />

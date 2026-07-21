@@ -412,10 +412,12 @@ export const UserProvider = ({ children }) => {
 
     // Load user-specific consistency data from AsyncStorage (ensures data survives re-login)
     if (details.userId) {
+      // Clear legacy state before loading new user data
+      setConsistencyLogged(0);
+      setConsistencyTotal(0);
       const loadConsistency = async () => {
         try {
           const consistencyKey = `sbm_consistency_${details.userId}`;
-          const lastLogKey     = `sbm_last_log_date_${details.userId}`;
           const stored = await AsyncStorage.getItem(consistencyKey);
           if (stored) {
             const { logged, total } = JSON.parse(stored);
@@ -454,6 +456,8 @@ export const UserProvider = ({ children }) => {
     setLoggedWeight(0.0);
     setStartWeight(0.0);
     setStreakDays(0);
+    setConsistencyLogged(0);
+    setConsistencyTotal(0);
     setAverageEffortScore(0);
     setNutritionScore(0);
     setMovementScore(0);

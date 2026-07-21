@@ -112,6 +112,46 @@ export const Auth = () => {
   // Field Validation errors
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [showSignupSuccessModal, setShowSignupSuccessModal] = useState(false);
+
+  // Auto-detect user's device/location timezone on component mount
+  useEffect(() => {
+    try {
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (userTz) {
+        // Find best match in TIMEZONE_OPTIONS or map standard ones
+        const lowerTz = userTz.toLowerCase();
+        let matched = TIMEZONE_OPTIONS.find(opt => opt.toLowerCase().includes(lowerTz));
+        
+        if (!matched) {
+          if (lowerTz.includes('asia/kolkata') || lowerTz.includes('calcutta') || lowerTz.includes('india')) {
+            matched = 'India (IST - UTC+5:30)';
+          } else if (lowerTz.includes('america/new_york') || lowerTz.includes('eastern')) {
+            matched = 'United States (EST - UTC-5)';
+          } else if (lowerTz.includes('america/los_angeles') || lowerTz.includes('pacific')) {
+            matched = 'United States (PST - UTC-8)';
+          } else if (lowerTz.includes('europe/london')) {
+            matched = 'United Kingdom (GMT - UTC+0)';
+          } else if (lowerTz.includes('asia/tokyo')) {
+            matched = 'Japan (JST - UTC+9)';
+          } else if (lowerTz.includes('australia')) {
+            matched = 'Australia (AEST - UTC+10)';
+          } else if (lowerTz.includes('dubai') || lowerTz.includes('asia/dubai')) {
+            matched = 'United Arab Emirates (GST - UTC+4)';
+          }
+        }
+
+        if (matched) {
+          setTimezone(matched);
+        } else {
+          // If no specific name match, fallback nicely to userTz formatted string
+          setTimezone(`${userTz}`);
+        }
+      }
+    } catch (e) {
+      console.log('Auto timezone detect error:', e);
+    }
+  }, []);
 
   // Clear inputs on mount to combat browser autofill caching
   useEffect(() => {
@@ -160,6 +200,8 @@ export const Auth = () => {
 
       if (!password) {
         tempErrors.password = "Please enter your password.";
+      } else if (password.length < 6) {
+        tempErrors.password = "Password must be at least 6 characters.";
       }
     } else {
       // Signup validations
@@ -307,13 +349,7 @@ export const Auth = () => {
 
       const data = await response.json();
       if (response.status === 201 && data.status === 'success') {
-        setSuccessMessage("Account created successfully! Redirecting to log in in 3 seconds...");
-        setTimeout(() => {
-          setIsLogin(true); // Toggle to login view
-          setPassword(''); // Clear password field
-          setErrors({}); // Reset validations
-          setSuccessMessage(''); // Re-initialize
-        }, 3000);
+        setShowSignupSuccessModal(true);
       } else {
         Alert.alert("Registration Failed", data.message || "Catalyst database rejected the registration request.");
       }
@@ -690,6 +726,55 @@ export const Auth = () => {
         onSelect={setTimezone}
         onClose={() => setTimezoneOpen(false)}
       />
+
+      {/* Signup Success Frozen Screen Modal */}
+      <Modal
+        visible={showSignupSuccessModal}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+      >
+        <View style={styles.successModalOverlay}>
+          <View style={styles.successModalCard}>
+            <LinearGradient
+              colors={['#7B1FA2', '#4A148C']}
+              style={styles.successModalHeaderBadge}
+            >
+              <Sparkles size={32} color="#FFFFFF" />
+            </LinearGradient>
+
+            <Text style={styles.successModalTitle}>Welcome to Slow Burn Method! 🎉</Text>
+            
+            <Text style={styles.successModalQuote}>
+              "Every great transformation begins with a single step. You have taken yours today. Consistency is your superpower!" 💪✨
+            </Text>
+
+            <Text style={styles.successModalSubtext}>
+              Your account has been created successfully. Log in to start tracking your progress and transforming your routine.
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.successModalBtn}
+              onPress={() => {
+                setShowSignupSuccessModal(false);
+                setIsLogin(true);
+                setPassword('');
+                setErrors({});
+              }}
+            >
+              <LinearGradient
+                colors={theme.colors.gradients.purpleButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.successModalBtnGradient}
+              >
+                <Text style={styles.successModalBtnText}>Go to Log In</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };

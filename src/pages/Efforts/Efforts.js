@@ -107,13 +107,24 @@ export const Efforts = () => {
   const displayMovement = effortData ? effortData.summary.movement_display : '0/9';
   const displayRecovery = effortData ? effortData.summary.recovery_display : '0/9';
 
-  // Dynamic Overall Progress chart (Standard Chronological Order: Day 1 to Day N)
-  const rawChartData = (effortData && effortData.chart_data) ? effortData.chart_data : [];
-  const overallChartData = rawChartData.map((item) => ({
-    day: item.label,
-    percentage: item.effort_score,
-    isToday: item.date === selectedDate
+  // Dynamic Overall Progress chart (Sequential Day 1 to Day N order)
+  const rawChartData = (effortData && effortData.chart_data && effortData.chart_data.length > 0)
+    ? effortData.chart_data
+    : (todayEffortLogged
+        ? [{ label: 'Day 1', effort_score: todayEffortScore, date: selectedDate }]
+        : [{ label: 'Day 1', effort_score: 0, date: selectedDate }]
+      );
+
+  const overallChartData = rawChartData.map((item, idx) => ({
+    day: `Day ${idx + 1}`,
+    percentage: Math.min(100, Math.max(0, Math.round(item.effort_score !== undefined ? item.effort_score : (item.percentage !== undefined ? item.percentage : 0)))),
+    isToday: item.date === selectedDate || idx === rawChartData.length - 1
   }));
+
+  // Calculate width for 5-bar viewport (max 5 days visible on screen at a time, scrollable for 5+ days)
+  const chartAreaWidth = Math.max(220, SCREEN_WIDTH - 90);
+  const barColumnWidth = Math.floor(chartAreaWidth / 5);
+
 
   // Helper to parse percentages from aspect displays like '5/5', '3/3', '4/5', '2.34/3'
   // Evaluates each aspect independently on its own 100% scale (e.g. 5/5 = 100%, 3/3 = 100%, 4/5 = 80%)
@@ -300,7 +311,7 @@ export const Efforts = () => {
                 ))}
               </View>
 
-              {/* Horizontally Scrollable Bars */}
+              {/* Horizontally Scrollable Bars (Max 5 days visible, drag left/right for 5+ days) */}
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -310,7 +321,7 @@ export const Efforts = () => {
                 contentContainerStyle={styles.scrollableBarsContent}
               >
                 {overallChartData.map((data, idx) => (
-                  <View key={idx} style={styles.scrollBarColumn}>
+                  <View key={idx} style={[styles.scrollBarColumn, { width: barColumnWidth }]}>
                     <View style={styles.barTrack}>
                       <View 
                         style={[
@@ -324,6 +335,7 @@ export const Efforts = () => {
                   </View>
                 ))}
               </ScrollView>
+
             </View>
           </View>
         </View>

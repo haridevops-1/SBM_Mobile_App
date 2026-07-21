@@ -204,6 +204,8 @@ export default StyleSheet.create({
     color: theme.colors.textSecondary,
     fontWeight: '600',
     marginTop: 6,
+    textAlign: 'center',
+    width: '100%',
   },
   dailyQuestionsSection: {
     marginHorizontal: theme.spacing.lg,
@@ -226,7 +228,8 @@ export default StyleSheet.create({
     fontWeight: '600',
   },
   categoriesRow: {
-    paddingVertical: 4,
+    paddingVertical: 6,
+    paddingRight: 20,
   },
   categoryToggleCard: {
     flexDirection: 'row',
@@ -235,9 +238,10 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     marginRight: 10,
+    minWidth: 120,
   },
   selectedCard: {
     borderColor: '#B085F5',

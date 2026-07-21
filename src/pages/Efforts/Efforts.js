@@ -435,7 +435,7 @@ export const Efforts = () => {
                   contentContainerStyle={styles.scrollableBarsContent}
                 >
                   {activeDetailData.map((data, idx) => (
-                    <View key={idx} style={styles.scrollBarColumn}>
+                    <View key={idx} style={[styles.scrollBarColumn, { width: barColumnWidth }]}>
                       <View style={styles.barTrack}>
                         <View 
                           style={[

@@ -185,12 +185,8 @@ export const ProfileDrawer = () => {
     // Fetch latest stored profile from Catalyst user_profile_update function (GET method)
     if (userId) {
       try {
-        let getUrl = `https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update?user_id=${userId}`;
-        let res = await fetch(getUrl, { method: 'GET' });
-        if (!res.ok) {
-          getUrl = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user_profile_update?user_id=${userId}`;
-          res = await fetch(getUrl, { method: 'GET' });
-        }
+        const getUrl = `https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update?user_id=${userId}`;
+        const res = await fetch(getUrl, { method: 'GET' });
         const json = await res.json();
         if (res.ok && json.status === 'success' && json.data) {
           const d = json.data;
@@ -308,27 +304,14 @@ export const ProfileDrawer = () => {
     try {
       // 1. Send HTTP PUT to Catalyst user_profile_update serverless endpoint
       let success = false;
-      const endpoints = [
-        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update', method: 'PUT' },
-        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user_profile_update', method: 'PUT' },
-        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update', method: 'POST' },
-        { url: 'https://sbm-mobile-app-906714478.development.catalystserverless.com/api/user-profile/update', method: 'POST' },
-      ];
-
-      for (const ep of endpoints) {
-        try {
-          const res = await fetch(ep.url, {
-            method: ep.method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(profilePayload)
-          });
-          if (res.ok) {
-            success = true;
-            break;
-          }
-        } catch (e) {
-          // Try next fallback endpoint
-        }
+      const updateUrl = 'https://sbm-mobile-app-906714478.development.catalystserverless.com/server/user_profile_update';
+      const res = await fetch(updateUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profilePayload)
+      });
+      if (res.ok) {
+        success = true;
       }
 
       // 2. Update local context state & AsyncStorage session
@@ -361,7 +344,13 @@ export const ProfileDrawer = () => {
   return (
     <>
       {/* ══ Navigation Drawer ════════════════════════════════════════════════════ */}
-      <Modal transparent visible={isProfileOpen} onRequestClose={handleClose} animationType="none">
+      <Modal
+        transparent
+        visible={isProfileOpen}
+        onRequestClose={handleClose}
+        animationType="none"
+        statusBarTranslucent
+      >
         <View style={[drawerStyles.overlay, isWebDesktop && drawerStyles.webOverlay]}>
           <Animated.View
             style={[
@@ -369,9 +358,10 @@ export const ProfileDrawer = () => {
               {
                 width: DRAWER_WIDTH,
                 transform: [{ translateX: slideAnim }],
-                // Top: account for Android status bar or iOS notch
+                // statusBarTranslucent=true means Modal starts at physical top of screen
+                // So we add status bar height as padding to push content below it
                 paddingTop: Platform.OS === 'android'
-                  ? (StatusBar.currentHeight || 24) + 8
+                  ? (StatusBar.currentHeight || 24) + 4
                   : 54,
               }
             ]}

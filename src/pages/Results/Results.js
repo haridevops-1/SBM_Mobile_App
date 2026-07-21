@@ -71,12 +71,8 @@ export const Results = ({ navigation }) => {
         chartTimeframe === '30days' ? 30 :
         chartTimeframe === '90days' ? 90 :
         chartTimeframe === '365days' ? 365 : 7;
-      let url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/weight/overview?user_id=${userId}&days=${daysParam}`;
-      let response = await fetch(url);
-      if (!response.ok) {
-        url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/server/bodyweight_tracker/overview?user_id=${userId}&days=${daysParam}`;
-        response = await fetch(url);
-      }
+      const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/weight/overview?user_id=${userId}&days=${daysParam}`;
+      const response = await fetch(url);
       const json = await response.json();
       if (response.ok && json.status === 'success' && json.data) {
         const data = json.data;

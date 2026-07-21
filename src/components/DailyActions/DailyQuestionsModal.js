@@ -217,15 +217,14 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     }
 
     try {
-      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/aspect-effort', {
+      const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/submit', {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: userId,
-          log_date: new Date().toISOString().split('T')[0],
-          selected_options: questionsList.map(q => answers[q.id])
+          userId: userId,
+          answers: questionsList.map(q => ({ questionId: q.id, optionId: answers[q.id] }))
         })
       });
 

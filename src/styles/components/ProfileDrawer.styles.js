@@ -17,8 +17,9 @@ export default StyleSheet.create({
     alignSelf: 'center',
   },
   drawerContainer: {
-    // Full physical screen height — covers status bar and home indicator
-    height: SCREEN_HEIGHT,
+    // minHeight covers full physical screen (status bar + content + home indicator)
+    // statusBarTranslucent on the Modal ensures this reaches the very top
+    minHeight: SCREEN_HEIGHT,
     backgroundColor: '#070913',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255, 255, 255, 0.05)',

@@ -107,24 +107,45 @@ export const Efforts = () => {
   const displayMovement = effortData ? effortData.summary.movement_display : '0/9';
   const displayRecovery = effortData ? effortData.summary.recovery_display : '0/9';
 
-  // Dynamic Overall Progress chart (Sequential Day 1 to Day N order)
+  // Dynamic Overall Progress chart
+  // Day view: Sequential Day 1, Day 2... labels
+  // Week view: W1, W2, W3... labels from backend
+  // Phase view: Phase 1, Phase 2... labels from backend
   const rawChartData = (effortData && effortData.chart_data && effortData.chart_data.length > 0)
     ? effortData.chart_data
     : (todayEffortLogged
-        ? [{ label: 'Day 1', effort_score: todayEffortScore, date: selectedDate }]
-        : [{ label: 'Day 1', effort_score: 0, date: selectedDate }]
+        ? [{ label: activeTimeframe === 'day' ? 'Day 1' : (activeTimeframe === 'week' ? 'W1' : 'Phase 1'), effort_score: todayEffortScore, date: selectedDate }]
+        : [{ label: activeTimeframe === 'day' ? 'Day 1' : (activeTimeframe === 'week' ? 'W1' : 'Phase 1'), effort_score: 0, date: selectedDate }]
       );
 
-  const overallChartData = rawChartData.map((item, idx) => ({
-    day: `Day ${idx + 1}`,
-    percentage: Math.min(100, Math.max(0, Math.round(item.effort_score !== undefined ? item.effort_score : (item.percentage !== undefined ? item.percentage : 0)))),
-    isToday: item.date === selectedDate || idx === rawChartData.length - 1
-  }));
+  const overallChartData = rawChartData.map((item, idx) => {
+    // For day view: always use sequential Day 1, Day 2... regardless of what backend sends
+    // For week view: use W1, W2... from backend label or compute
+    // For phase view: use Phase 1, Phase 2... from backend label or compute
+    let dayLabel;
+    if (activeTimeframe === 'day') {
+      dayLabel = `Day ${idx + 1}`;
+    } else if (activeTimeframe === 'week') {
+      dayLabel = item.label || `W${idx + 1}`;
+    } else {
+      // phase
+      dayLabel = item.label || `P${idx + 1}`;
+    }
+    return {
+      day: dayLabel,
+      percentage: Math.min(100, Math.max(0, Math.round(
+        item.effort_score !== undefined ? item.effort_score :
+        item.percentage !== undefined ? item.percentage : 0
+      ))),
+      isToday: activeTimeframe === 'day'
+        ? (item.date === selectedDate || idx === rawChartData.length - 1)
+        : idx === rawChartData.length - 1
+    };
+  });
 
-  // Calculate width for 5-bar viewport (max 5 days visible on screen at a time, scrollable for 5+ days)
+  // Calculate width for viewport (max 5 bars visible on screen at a time, scrollable for 5+ bars)
   const chartAreaWidth = Math.max(220, SCREEN_WIDTH - 90);
   const barColumnWidth = Math.floor(chartAreaWidth / 5);
-
 
   // Helper to parse percentages from aspect displays like '5/5', '3/3', '4/5', '2.34/3'
   // Evaluates each aspect independently on its own 100% scale (e.g. 5/5 = 100%, 3/3 = 100%, 4/5 = 80%)

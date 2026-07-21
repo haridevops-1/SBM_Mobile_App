@@ -13,8 +13,8 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
-import { Bell, ChevronDown, Scale, ArrowDownRight, ArrowUpRight, Plus } from 'lucide-react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, ActivityIndicator } from 'react-native';
+import { Bell, ChevronDown, Scale, ArrowDownRight, ArrowUpRight } from 'lucide-react-native';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Path, Circle, Line, Text as SvgText, Polygon as SvgPolygon } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Font from 'expo-font';
@@ -27,7 +27,7 @@ import styles from '../../styles/pages/Results.styles';
 const { width: screenWidth } = Dimensions.get('window');
 
 export const Results = ({ navigation }) => {
-  const { userId, startWeight, loggedWeight, logWeight, todayEffortLogged, username, setIsProfileOpen } = useUser();
+  const { userId, startWeight, loggedWeight, todayEffortLogged, username, setIsProfileOpen } = useUser();
 
   const [activeMetric, setActiveMetric] = useState('weight');
   const [selectedPointIndex, setSelectedPointIndex] = useState(0);
@@ -41,9 +41,7 @@ export const Results = ({ navigation }) => {
   const [overviewData, setOverviewData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [weightInput, setWeightInput] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  // (Log Weight modal removed — weight logging is handled via Tracker > Daily Actions)
   const chartScrollRef = useRef(null);
 
   // Load Inter font on component mount
@@ -105,46 +103,7 @@ export const Results = ({ navigation }) => {
     fetchOverview();
   }, [userId, chartTimeframe]);
 
-  // Handle Log Weight Submit
-  const handleLogWeightSubmit = async () => {
-    const numWeight = parseFloat(weightInput);
-    if (isNaN(numWeight) || numWeight <= 0) {
-      Alert.alert('Invalid Input', 'Please enter a valid weight in kg.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const todayStr = new Date().toISOString().split('T')[0];
-      let url = 'https://sbm-mobile-app-906714478.development.catalystserverless.com/api/weight/log';
-      let response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, weight: numWeight, log_date: todayStr })
-      });
-      if (!response.ok) {
-        url = 'https://sbm-mobile-app-906714478.development.catalystserverless.com/server/bodyweight_tracker/log';
-        response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId, weight: numWeight, log_date: todayStr })
-        });
-      }
-      const json = await response.json();
-      if (response.ok && json.status === 'success') {
-        logWeight(numWeight);
-        setIsLogModalOpen(false);
-        setWeightInput('');
-        await fetchOverview();
-      } else {
-        Alert.alert('Error', json.message || 'Failed to log weight.');
-      }
-    } catch (err) {
-      console.error('Error logging weight:', err);
-      Alert.alert('Error', 'Network error while logging weight.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // Weight logging removed from Results page — use Tracker > Daily Actions > Log Today's Weight
 
   // Metrics calculations & fallbacks
   const startWeightVal = overviewData ? overviewData.startWeight : (startWeight || 65);
@@ -559,48 +518,47 @@ export const Results = ({ navigation }) => {
 
         {/* Section 1: Line Chart Card */}
         <View style={styles.weightGraphCard}>
+          {/* Card header: title on left, days dropdown on right (no Log Weight button) */}
           <View style={styles.graphCardHeader}>
             <View style={styles.graphTitleWrapper}>
-              <View style={[styles.graphIconContainer, { backgroundColor: `${metricColor}1A` }]}> 
+              <View style={[styles.graphIconContainer, { backgroundColor: `${metricColor}1A` }]}>
                 {activeMetric === 'weight' && <Scale size={18} color={metricColor} />}
-                {activeMetric === 'fat' && <Activity size={18} color={metricColor} />}
-                {activeMetric === 'muscle' && <Dumbbell size={18} color={metricColor} />}
+                {activeMetric === 'fat' && <Scale size={18} color={metricColor} />}
+                {activeMetric === 'muscle' && <Scale size={18} color={metricColor} />}
               </View>
               <Text style={styles.graphTitle}>{activeSet.title}</Text>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
-              {activeMetric === 'weight' && (
-                <TouchableOpacity activeOpacity={0.8} style={styles.logWeightBtn} onPress={() => setIsLogModalOpen(true)}>
-                  <Plus size={12} color="#B085F5" />
-                  <Text style={styles.logWeightBtnText}>Log Weight</Text>
-                </TouchableOpacity>
+            {/* Days range dropdown sits directly inside the card header */}
+            <View style={styles.dropdownWrapper}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.dropdownFilterBtn}
+                onPress={() => setChartDropdownOpen(!chartDropdownOpen)}
+              >
+                <Text style={styles.dropdownFilterText}>
+                  {chartTimeframe === '7days' ? '7 Days'
+                    : chartTimeframe === '30days' ? '30 Days'
+                    : chartTimeframe === '90days' ? '90 Days'
+                    : '1 Year'}
+                </Text>
+                <ChevronDown size={12} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+              {chartDropdownOpen && (
+                <View style={[styles.dropdownMenu, { top: 36, right: 0 }]}>
+                  {['7days', '30days', '90days', '365days'].map((tf) => (
+                    <TouchableOpacity
+                      key={tf}
+                      style={styles.dropdownMenuItem}
+                      onPress={() => { setChartTimeframe(tf); setChartDropdownOpen(false); }}
+                    >
+                      <Text style={styles.dropdownMenuItemText}>
+                        {tf === '7days' ? '7 Days' : tf === '30days' ? '30 Days' : tf === '90days' ? '90 Days' : '1 Year'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               )}
-
-              <View style={styles.dropdownWrapper}>
-                <TouchableOpacity activeOpacity={0.8} style={styles.dropdownFilterBtn} onPress={() => setChartDropdownOpen(!chartDropdownOpen)}>
-                  <Text style={styles.dropdownFilterText}>
-                    {chartTimeframe === '7days' ? '7 Days' : chartTimeframe === '30days' ? '30 Days' : chartTimeframe === '90days' ? '90 Days' : '1 Year'}
-                  </Text>
-                  <ChevronDown size={12} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-                {chartDropdownOpen && (
-                  <View style={[styles.dropdownMenu, { top: 36 }]}>
-                    <TouchableOpacity style={styles.dropdownMenuItem} onPress={() => { setChartTimeframe('7days'); setChartDropdownOpen(false); }}>
-                      <Text style={styles.dropdownMenuItemText}>7 Days</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.dropdownMenuItem} onPress={() => { setChartTimeframe('30days'); setChartDropdownOpen(false); }}>
-                      <Text style={styles.dropdownMenuItemText}>30 Days</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.dropdownMenuItem} onPress={() => { setChartTimeframe('90days'); setChartDropdownOpen(false); }}>
-                      <Text style={styles.dropdownMenuItemText}>90 Days</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.dropdownMenuItem} onPress={() => { setChartTimeframe('365days'); setChartDropdownOpen(false); }}>
-                      <Text style={styles.dropdownMenuItemText}>1 Year</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
             </View>
           </View>
 
@@ -867,27 +825,7 @@ export const Results = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Log Weight Modal */}
-      <Modal visible={isLogModalOpen} transparent={true} animationType="fade" onRequestClose={() => setIsLogModalOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Log Body Weight</Text>
-            <Text style={styles.modalSubtitle}>Enter today's weight to update your progress chart.</Text>
-            <View style={styles.modalInputWrapper}>
-              <TextInput style={styles.modalInput} placeholder="e.g. 68.5" placeholderTextColor={theme.colors.textMuted} keyboardType="numeric" value={weightInput} onChangeText={setWeightInput} />
-              <Text style={styles.modalUnit}>kg</Text>
-            </View>
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => { setIsLogModalOpen(false); setWeightInput(''); }} disabled={submitting}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalSubmitBtn} onPress={handleLogWeightSubmit} disabled={submitting}>
-                {submitting ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Text style={styles.modalSubmitText}>Submit Log</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Log Weight Modal removed — weight logging via Tracker > Daily Actions */}
 
       {/* Profile menu drawer overlay */}
       <ProfileDrawer />

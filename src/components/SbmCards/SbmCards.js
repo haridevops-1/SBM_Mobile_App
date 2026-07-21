@@ -32,10 +32,11 @@ export const SbmCards = () => {
     ? `${consistencyLogged} / ${consistencyTotal}`
     : '0 / 0';
 
-  // ── Effort: today's raw score → percentage (backend max is 9 per question)
-  // If nothing logged today yet → show 0%
-  const effortPercent = todayEffortScore > 0
-    ? Math.min(100, Math.max(0, Math.round((todayEffortScore / 9) * 100)))
+  // ── Effort: Pure consistency ratio across all days since program start
+  // Formula: (daysLogged / totalDaysElapsed) * 100
+  // e.g. logged 6 out of 8 days → 75%. Logged every day → 100%. Missed a day → drops.
+  const effortPercent = consistencyTotal > 0
+    ? Math.min(100, Math.max(0, Math.round((consistencyLogged / consistencyTotal) * 100)))
     : 0;
   const effortScore = `${effortPercent}%`;
 

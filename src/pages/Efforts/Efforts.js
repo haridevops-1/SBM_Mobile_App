@@ -147,30 +147,24 @@ export const Efforts = () => {
   const chartAreaWidth = Math.max(220, SCREEN_WIDTH - 90);
   const barColumnWidth = Math.floor(chartAreaWidth / 5);
 
-  // Helper to parse percentages from aspect displays like '5/5', '3/3', '4/5', '2.34/3'
-  // Evaluates each aspect independently on its own 100% scale (e.g. 5/5 = 100%, 3/3 = 100%, 4/5 = 80%)
-  const parsePercentFromDisplay = (displayVal, defaultMax = 3) => {
-    if (displayVal === undefined || displayVal === null) return 0;
+  // Helper to parse percentages cleanly from aspect values/displays
+  const parsePercentFromDisplay = (val) => {
+    if (val === undefined || val === null) return 0;
     
-    // If string fraction like '5/5', '3/3', '4/5', or '2.34/3'
-    if (typeof displayVal === 'string' && displayVal.includes('/')) {
-      const parts = displayVal.split('/');
-      const num = parseFloat(parts[0]) || 0;
-      const den = parseFloat(parts[1]) || defaultMax;
-      if (den <= 0) return 0;
-      return Math.min(100, Math.max(0, Math.round((num / den) * 100)));
+    // String fraction like '4/6' or '67%'
+    if (typeof val === 'string') {
+      if (val.includes('/')) {
+        const parts = val.split('/');
+        const num = parseFloat(parts[0]) || 0;
+        const den = parseFloat(parts[1]) || 1;
+        if (den <= 0) return 0;
+        return Math.min(100, Math.max(0, Math.round((num / den) * 100)));
+      }
+      val = val.replace('%', '');
     }
 
-    const num = parseFloat(displayVal);
+    const num = parseFloat(val);
     if (isNaN(num)) return 0;
-
-    // If raw score <= 10 (e.g. 3 out of 3, 5 out of 5), convert to percentage based on defaultMax
-    if (num <= 10) {
-      const maxScore = defaultMax > 0 ? defaultMax : 3;
-      return Math.min(100, Math.max(0, Math.round((num / maxScore) * 100)));
-    }
-
-    // Already a percentage 0-100
     return Math.min(100, Math.max(0, Math.round(num)));
   };
 
@@ -248,15 +242,13 @@ export const Efforts = () => {
   // Dynamic aspect details chart (Standard Chronological Order: Day 1 to Day N)
   const activeDetailData = (aspectData || []).map((item) => {
     let pct = 0;
-    if (item.percentage !== undefined && item.percentage > 10) {
-      pct = Math.min(100, Math.max(0, Math.round(item.percentage)));
+    if (item.percentage !== undefined) {
+      pct = parsePercentFromDisplay(item.percentage);
     } else if (item.display !== undefined) {
-      pct = parsePercentFromDisplay(item.display, 3);
-    } else if (item.percentage !== undefined) {
-      pct = parsePercentFromDisplay(item.percentage, 3);
+      pct = parsePercentFromDisplay(item.display);
     } else if (item.score !== undefined) {
-      const maxScore = item.max_score || 3;
-      pct = parsePercentFromDisplay(`${item.score}/${maxScore}`, maxScore);
+      const maxScore = item.max_score || 1;
+      pct = parsePercentFromDisplay(`${item.score}/${maxScore}`);
     }
     return {
       day: item.label || item.day || 'Day',

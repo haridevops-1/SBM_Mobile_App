@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import theme from '../../theme/theme';
 
-const { width } = Dimensions.get('window');
+const { width, height: SCREEN_HEIGHT } = Dimensions.get('screen');
 const DRAWER_WIDTH = width * 0.8;
 
 export default StyleSheet.create({
@@ -9,7 +9,7 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     flexDirection: 'row',
-    overflow: 'hidden',
+    // No overflow:hidden — allows drawer to cover full screen including status bar
   },
   webOverlay: {
     width: '100%',
@@ -17,7 +17,8 @@ export default StyleSheet.create({
     alignSelf: 'center',
   },
   drawerContainer: {
-    height: '100%',
+    // Use full physical screen height to cover status bar & home indicator areas
+    height: SCREEN_HEIGHT,
     backgroundColor: '#070913',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255, 255, 255, 0.05)',

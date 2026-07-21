@@ -82,17 +82,22 @@ export const UserProvider = ({ children }) => {
   // Security app background state lock tracking
   const [lastActiveTime, setLastActiveTime] = useState(Date.now());
 
+  // Session timeout: auto-logout if app is backgrounded for more than 30 minutes
+  const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
+
   useEffect(() => {
     const handleAppStateChange = (nextAppState) => {
       if (nextAppState === 'background') {
+        // Record the time user left the app
         setLastActiveTime(Date.now());
       } else if (nextAppState === 'active') {
         const elapsed = Date.now() - lastActiveTime;
-        // Auto-logout if backgrounded for more than 2 minutes for profile protection
-        if (isLoggedIn && elapsed > 120000) {
+        // Auto-logout ONLY if backgrounded for more than 30 minutes
+        if (isLoggedIn && elapsed > SESSION_TIMEOUT_MS) {
           logoutUser();
-          alert("Session expired for security. Please log in again.");
+          alert("Session expired. Please log in again.");
         }
+        // If returned within 30 minutes — session stays intact, no action needed
       }
     };
 
@@ -101,6 +106,7 @@ export const UserProvider = ({ children }) => {
       subscription.remove();
     };
   }, [isLoggedIn, lastActiveTime]);
+
   // Restore session state on app mount with validation
   useEffect(() => {
     const restoreSession = async () => {
@@ -115,20 +121,14 @@ export const UserProvider = ({ children }) => {
         if (session) {
           const { name, currentWeightVal, details } = JSON.parse(session);
 
-          // Load persisted consistency and pre-sbm score
+          // Load pre-sbm score (non-user-specific, ok as only one user per device typically)
           try {
-            const storedConsistency = await AsyncStorage.getItem('sbm_consistency');
-            if (storedConsistency) {
-              const { logged, total } = JSON.parse(storedConsistency);
-              setConsistencyLogged(logged || 0);
-              setConsistencyTotal(total || 0);
-            }
             const storedPreSbm = await AsyncStorage.getItem('sbm_pre_sbm_score');
             if (storedPreSbm !== null) {
               setPreSbmScore(parseInt(storedPreSbm, 10) || 0);
             }
           } catch (_) {}
-          
+
           // Validate session by checking if userId exists and backend responds
           if (details && details.userId) {
             try {
@@ -137,7 +137,7 @@ export const UserProvider = ({ children }) => {
               );
               const result = await response.json();
               if (response.ok && result.status === 'success') {
-                // Session is valid — restore user state
+                // Session is valid — restore user state (consistency loaded inside loginUser)
                 loginUser(name, currentWeightVal, details);
               } else {
                 // Backend rejected the userId — session is stale
@@ -238,7 +238,8 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const logTodayEffort = async (score) => {
+  const logTodayEffort = async (score, currentUserId) => {
+    const uid = currentUserId || userId;
     const num = parseInt(score, 10);
     if (!isNaN(num)) {
       setTodayEffortScore(num);
@@ -249,9 +250,7 @@ export const UserProvider = ({ children }) => {
       updatedEfforts[4] = num;
       setWeeklyEfforts(updatedEfforts);
 
-      // Calculate today's effort as percentage (max raw score = 9 per question * num questions)
-      // The backend returns total_effort as a raw sum; convert to % for Pre-SBM storage
-      // We store today's % so tomorrow it shows as Pre-SBM score
+      // Calculate today's effort as percentage for Pre-SBM storage
       const pct = Math.min(100, Math.max(0, Math.round((num / 9) * 100)));
 
       // Bump consistency count
@@ -260,11 +259,13 @@ export const UserProvider = ({ children }) => {
       setConsistencyLogged(newLogged);
       setConsistencyTotal(newTotal);
 
-      // Persist to AsyncStorage
+      // Persist to AsyncStorage using USER-SPECIFIC KEY so data survives re-login
       try {
+        const consistencyKey = uid ? `sbm_consistency_${uid}` : 'sbm_consistency';
+        const lastLogKey     = uid ? `sbm_last_log_date_${uid}` : 'sbm_last_log_date';
         await AsyncStorage.setItem('sbm_pre_sbm_score', String(pct));
-        await AsyncStorage.setItem('sbm_consistency', JSON.stringify({ logged: newLogged, total: newTotal }));
-        await AsyncStorage.setItem('sbm_last_log_date', new Date().toISOString().split('T')[0]);
+        await AsyncStorage.setItem(consistencyKey, JSON.stringify({ logged: newLogged, total: newTotal }));
+        await AsyncStorage.setItem(lastLogKey, new Date().toISOString().split('T')[0]);
       } catch (_) {}
     }
   };
@@ -275,7 +276,8 @@ export const UserProvider = ({ children }) => {
     const newTotal = consistencyTotal + 1;
     setConsistencyTotal(newTotal);
     try {
-      await AsyncStorage.setItem('sbm_consistency', JSON.stringify({ logged: consistencyLogged, total: newTotal }));
+      const consistencyKey = userId ? `sbm_consistency_${userId}` : 'sbm_consistency';
+      await AsyncStorage.setItem(consistencyKey, JSON.stringify({ logged: consistencyLogged, total: newTotal }));
     } catch (_) {}
   };
 
@@ -344,7 +346,6 @@ export const UserProvider = ({ children }) => {
     if (details.timezone) setTimezone(details.timezone);
     if (goalVal) setUserGoal(goalVal);
 
-
     setIsLoggedIn(true);
 
     // Save session to AsyncStorage for persistence (properly awaited)
@@ -360,6 +361,23 @@ export const UserProvider = ({ children }) => {
       }
     };
     saveSession();
+
+    // Load user-specific consistency data from AsyncStorage (ensures data survives re-login)
+    if (details.userId) {
+      const loadConsistency = async () => {
+        try {
+          const consistencyKey = `sbm_consistency_${details.userId}`;
+          const lastLogKey     = `sbm_last_log_date_${details.userId}`;
+          const stored = await AsyncStorage.getItem(consistencyKey);
+          if (stored) {
+            const { logged, total } = JSON.parse(stored);
+            setConsistencyLogged(logged || 0);
+            setConsistencyTotal(total || 0);
+          }
+        } catch (_) {}
+      };
+      loadConsistency();
+    }
 
     // Dynamic initial loading of user metrics and quote from Catalyst database
     if (details.userId) {
@@ -414,24 +432,26 @@ export const UserProvider = ({ children }) => {
     clearSession();
   };
 
-  // ── Missed day detection: run on fetchDashboardData calls ──────────────────
-  // (Minimal version — checks last-log-date in AsyncStorage vs today)
+  // ── Missed day detection: run on app open ───────────────────────────────────
+  // Checks last-log-date in AsyncStorage vs today using user-specific key
   const checkAndMarkMissedDays = async () => {
     try {
-      const stored = await AsyncStorage.getItem('sbm_last_log_date');
+      const lastLogKey = userId ? `sbm_last_log_date_${userId}` : 'sbm_last_log_date';
+      const consistencyKey = userId ? `sbm_consistency_${userId}` : 'sbm_consistency';
+      const stored = await AsyncStorage.getItem(lastLogKey);
       const today  = new Date().toISOString().split('T')[0];
       if (stored && stored !== today) {
         // Count calendar days between last log and today (exclusive of today)
-        const last    = new Date(stored);
-        const todayD  = new Date(today);
-        const diffMs  = todayD - last;
+        const last     = new Date(stored);
+        const todayD   = new Date(today);
+        const diffMs   = todayD - last;
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         if (diffDays > 1) {
-          // Missed (diffDays - 1) days
+          // Missed (diffDays - 1) days between last log and today
           const missed   = diffDays - 1;
           const newTotal = consistencyTotal + missed;
           setConsistencyTotal(newTotal);
-          await AsyncStorage.setItem('sbm_consistency', JSON.stringify({ logged: consistencyLogged, total: newTotal }));
+          await AsyncStorage.setItem(consistencyKey, JSON.stringify({ logged: consistencyLogged, total: newTotal }));
         }
       }
     } catch (_) {}

@@ -231,7 +231,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        logTodayEffort(data.data.total_effort);
+        logTodayEffort(data.data.total_effort, userId);
         fetchDashboardData();
 
         // If today is Sunday, transition to Sunday 5 Mindset Questions!

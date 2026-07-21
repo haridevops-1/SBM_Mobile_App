@@ -51,13 +51,13 @@ export const DailyActions = () => {
   const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
   
-  // Dynamically calculate gauges from user scores
-  const todayEffortPercent = Math.min(100, Math.max(0, Math.round((todayEffortScore / 9) * 100)));
+  // todayEffortScore is already a percentage (0-100) from backend
+  const todayEffortPercent = Math.min(100, Math.max(0, Math.round(todayEffortScore)));
   
   let last7DaysEffortPercent = 0;
   if (historyLogs && historyLogs.length > 0) {
-    const sumEffort = historyLogs.reduce((acc, l) => acc + l.effort, 0);
-    last7DaysEffortPercent = Math.min(100, Math.max(0, Math.round((sumEffort / historyLogs.length / 9) * 100)));
+    const sumEffort = historyLogs.reduce((acc, l) => acc + (l.effort || 0), 0);
+    last7DaysEffortPercent = Math.min(100, Math.max(0, Math.round(sumEffort / historyLogs.length)));
   }
 
   const strokeDashoffset = circumference - (todayEffortPercent / 100) * circumference;

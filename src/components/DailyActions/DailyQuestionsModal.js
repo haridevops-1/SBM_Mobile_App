@@ -146,10 +146,22 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   };
 
   const handleSelectOption = (questionId, optionId) => {
-    setAnswers({
-      ...answers,
+    setAnswers(prev => ({
+      ...prev,
       [questionId]: optionId
-    });
+    }));
+
+    // Auto-advance after 1 second if not on final question
+    setTimeout(() => {
+      setCurrentIndex(prevIndex => {
+        if (prevIndex < questionsList.length - 1) {
+          return prevIndex + 1;
+        } else {
+          setViewMode('review');
+          return prevIndex;
+        }
+      });
+    }, 1000);
   };
 
   const handleSelectSundayOption = (key, pts) => {
@@ -468,7 +480,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
                 onPress={handleNext}
               >
                 <Text style={styles.btnSubmitText}>
-                  {currentIndex === questionsList.length - 1 ? 'Go to Review' : 'Submit'}
+                  {currentIndex === questionsList.length - 1 ? 'Go to Review' : 'Next'}
                 </Text>
               </TouchableOpacity>
             </LinearGradient>

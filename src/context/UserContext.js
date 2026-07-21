@@ -121,13 +121,17 @@ export const UserProvider = ({ children }) => {
         if (session) {
           const { name, currentWeightVal, details } = JSON.parse(session);
 
-          // Load pre-sbm score (non-user-specific, ok as only one user per device typically)
-          try {
-            const storedPreSbm = await AsyncStorage.getItem('sbm_pre_sbm_score');
-            if (storedPreSbm !== null) {
-              setPreSbmScore(parseInt(storedPreSbm, 10) || 0);
-            }
-          } catch (_) {}
+          // Load pre-sbm score using user-specific key
+          if (details && details.userId) {
+            try {
+              const storedPreSbm = await AsyncStorage.getItem(`sbm_pre_sbm_score_${details.userId}`);
+              if (storedPreSbm !== null) {
+                setPreSbmScore(parseInt(storedPreSbm, 10) || 0);
+              } else {
+                setPreSbmScore(0);
+              }
+            } catch (_) {}
+          }
 
           // Validate session by checking if userId exists and backend responds
           if (details && details.userId) {
@@ -309,8 +313,9 @@ export const UserProvider = ({ children }) => {
       // Persist to AsyncStorage using USER-SPECIFIC KEY so data survives re-login
       try {
         const consistencyKey = uid ? `sbm_consistency_${uid}` : 'sbm_consistency';
+        const preSbmKey       = uid ? `sbm_pre_sbm_score_${uid}` : 'sbm_pre_sbm_score';
         const lastLogKey     = uid ? `sbm_last_log_date_${uid}` : 'sbm_last_log_date';
-        await AsyncStorage.setItem('sbm_pre_sbm_score', String(pct));
+        await AsyncStorage.setItem(preSbmKey, String(pct));
         await AsyncStorage.setItem(consistencyKey, JSON.stringify({ logged: newLogged, total: newTotal }));
         await AsyncStorage.setItem(lastLogKey, new Date().toISOString().split('T')[0]);
       } catch (_) {}
@@ -458,6 +463,7 @@ export const UserProvider = ({ children }) => {
     setStreakDays(0);
     setConsistencyLogged(0);
     setConsistencyTotal(0);
+    setPreSbmScore(0);
     setAverageEffortScore(0);
     setNutritionScore(0);
     setMovementScore(0);

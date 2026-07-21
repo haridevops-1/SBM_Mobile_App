@@ -2,7 +2,7 @@
  * ============================================================================
  * FILE: Header.js
  * PATH: C:\SBM_Mobile_App\src\components\Header\Header.js
- * 
+ *
  * PURPOSE:
  * Renders the top application navigation header on the Tracker (Home) screen.
  * Displays interactive user avatar button (opens ProfileDrawer), dynamic time-of-day
@@ -10,30 +10,33 @@
  * ============================================================================
  */
 
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Bell } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useUser } from '../../context/UserContext';
-import theme from '../../theme/theme';
-import styles from '../../styles/components/Header.styles';
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { Bell } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useUser } from "../../context/UserContext";
+import theme from "../../theme/theme";
+import styles from "../../styles/components/Header.styles";
 
 export const Header = () => {
   const { username, setIsProfileOpen } = useUser();
-  const initial = username ? username.charAt(0).toUpperCase() : 'H';
+  const initial = username ? username.charAt(0).toUpperCase() : "H";
 
   // Calculate greeting dynamically based on local clock hours
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
   };
 
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerTop}>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => setIsProfileOpen(true)}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setIsProfileOpen(true)}
+        >
           <LinearGradient
             colors={theme.colors.gradients.avatar}
             start={{ x: 0, y: 0 }}
@@ -43,7 +46,7 @@ export const Header = () => {
             <Text style={styles.avatarText}>{initial}</Text>
           </LinearGradient>
         </TouchableOpacity>
-        
+
         <TouchableOpacity activeOpacity={0.8} style={styles.notificationBtn}>
           <Bell size={24} color={theme.colors.textPrimary} />
           <View style={styles.notificationBadge}>
@@ -51,7 +54,7 @@ export const Header = () => {
           </View>
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.headerGreeting}>
         <Text style={styles.greetingTitle}>
           {getGreeting()}, {username}! 👋

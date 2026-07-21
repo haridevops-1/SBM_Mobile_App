@@ -2,7 +2,7 @@
  * ============================================================================
  * FILE: DailyActions.js
  * PATH: C:\SBM_Mobile_App\src\components\DailyActions\DailyActions.js
- * 
+ *
  * PURPOSE:
  * Renders the Daily Action Cards section on the Tracker (Home) screen.
  * Displays "Log Today's Effort" button (triggering DailyQuestionsModal) and
@@ -11,21 +11,21 @@
  * ============================================================================
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Modal } from 'react-native';
-import { Check, Scale, X, ChevronsUpDown } from 'lucide-react-native';
-import Svg, { Circle } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useUser } from '../../context/UserContext';
-import theme from '../../theme/theme';
-import styles from '../../styles/components/DailyActions.styles';
-import DailyQuestionsModal from './DailyQuestionsModal';
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, TextInput, Modal } from "react-native";
+import { Check, Scale, X, ChevronsUpDown } from "lucide-react-native";
+import Svg, { Circle } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
+import { useUser } from "../../context/UserContext";
+import theme from "../../theme/theme";
+import styles from "../../styles/components/DailyActions.styles";
+import DailyQuestionsModal from "./DailyQuestionsModal";
 
 export const DailyActions = () => {
-  const { 
-    todayEffortLogged, 
-    todayWeightLogged, 
-    loggedWeight, 
+  const {
+    todayEffortLogged,
+    todayWeightLogged,
+    loggedWeight,
     todayEffortScore,
     userId,
     streakDays,
@@ -42,7 +42,9 @@ export const DailyActions = () => {
   }, []);
 
   const [showWeightInput, setShowWeightInput] = useState(false);
-  const [weightInputValue, setWeightInputValue] = useState(loggedWeight ? loggedWeight.toString() : '');
+  const [weightInputValue, setWeightInputValue] = useState(
+    loggedWeight ? loggedWeight.toString() : "",
+  );
   const [modalVisible, setModalVisible] = useState(false);
   const [showEffortSuccessModal, setShowEffortSuccessModal] = useState(false);
 
@@ -50,17 +52,24 @@ export const DailyActions = () => {
   const radius = 45;
   const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
-  
+
   // todayEffortScore is already a percentage (0-100) from backend
-  const todayEffortPercent = Math.min(100, Math.max(0, Math.round(todayEffortScore)));
-  
+  const todayEffortPercent = Math.min(
+    100,
+    Math.max(0, Math.round(todayEffortScore)),
+  );
+
   let last7DaysEffortPercent = 0;
   if (historyLogs && historyLogs.length > 0) {
     const sumEffort = historyLogs.reduce((acc, l) => acc + (l.effort || 0), 0);
-    last7DaysEffortPercent = Math.min(100, Math.max(0, Math.round(sumEffort / historyLogs.length)));
+    last7DaysEffortPercent = Math.min(
+      100,
+      Math.max(0, Math.round(sumEffort / historyLogs.length)),
+    );
   }
 
-  const strokeDashoffset = circumference - (todayEffortPercent / 100) * circumference;
+  const strokeDashoffset =
+    circumference - (todayEffortPercent / 100) * circumference;
 
   const handleLogEffortClick = () => {
     if (!todayEffortLogged) {
@@ -72,20 +81,20 @@ export const DailyActions = () => {
 
   const handleWeightInputChange = (text) => {
     // Only allow numbers and a single decimal point
-    let sanitized = text.replace(/[^0-9.]/g, '');
-    const parts = sanitized.split('.');
+    let sanitized = text.replace(/[^0-9.]/g, "");
+    const parts = sanitized.split(".");
     if (parts.length > 2) {
-      sanitized = parts[0] + '.' + parts.slice(1).join('');
+      sanitized = parts[0] + "." + parts.slice(1).join("");
     }
     // Restrict to max 2 decimal digits after dot
     if (parts.length === 2 && parts[1].length > 2) {
-      sanitized = parts[0] + '.' + parts[1].slice(0, 2);
+      sanitized = parts[0] + "." + parts[1].slice(0, 2);
     }
     setWeightInputValue(sanitized);
   };
 
   const handleWeightSubmit = async () => {
-    if (weightInputValue.trim() !== '') {
+    if (weightInputValue.trim() !== "") {
       const parsedWeight = parseFloat(weightInputValue);
       if (isNaN(parsedWeight) || parsedWeight <= 0) {
         alert("Please enter a valid weight value.");
@@ -96,25 +105,31 @@ export const DailyActions = () => {
       const roundedWeight = parseFloat(parsedWeight.toFixed(2));
 
       try {
-        const response = await fetch('https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/log-weight', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain',
+        const response = await fetch(
+          "https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/log-weight",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "text/plain",
+            },
+            body: JSON.stringify({
+              userId: userId,
+              weight: roundedWeight,
+            }),
           },
-          body: JSON.stringify({
-            userId: userId,
-            weight: roundedWeight
-          })
-        });
+        );
 
         const data = await response.json();
-        if (response.ok && data.status === 'success') {
+        if (response.ok && data.status === "success") {
           // Weight saved inside cloud weight_history. Sync locally
           logWeight(roundedWeight);
           fetchDashboardData();
           setShowWeightInput(false);
         } else {
-          alert("Error logging weight: " + (data.message || "Catalyst database rejected the transaction."));
+          alert(
+            "Error logging weight: " +
+              (data.message || "Catalyst database rejected the transaction."),
+          );
         }
       } catch (err) {
         console.error(err);
@@ -179,20 +194,26 @@ export const DailyActions = () => {
         {/* Log Effort Button */}
         <View style={styles.actionBtnContainer}>
           <LinearGradient
-            colors={todayEffortLogged ? theme.colors.gradients.redButton : theme.colors.gradients.greenButton}
+            colors={
+              todayEffortLogged
+                ? theme.colors.gradients.redButton
+                : theme.colors.gradients.greenButton
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <TouchableOpacity 
-              activeOpacity={0.8} 
-              style={styles.actionBtn} 
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.actionBtn}
               onPress={handleLogEffortClick}
             >
               <View style={styles.btnIconBox}>
                 <Check size={16} color="#FFFFFF" />
               </View>
               <Text style={styles.btnText}>
-                {todayEffortLogged ? "Today's effort logged!" : "Log today's effort"}
+                {todayEffortLogged
+                  ? "Today's effort logged!"
+                  : "Log today's effort"}
               </Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -201,15 +222,21 @@ export const DailyActions = () => {
         {/* Log Weight Button */}
         <View style={styles.actionBtnContainer}>
           <LinearGradient
-            colors={todayWeightLogged ? theme.colors.gradients.redButton : theme.colors.gradients.greenButton}
+            colors={
+              todayWeightLogged
+                ? theme.colors.gradients.redButton
+                : theme.colors.gradients.greenButton
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <TouchableOpacity 
-              activeOpacity={0.8} 
-              style={styles.actionBtn} 
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.actionBtn}
               onPress={() => {
-                setWeightInputValue(loggedWeight ? loggedWeight.toString() : '');
+                setWeightInputValue(
+                  loggedWeight ? loggedWeight.toString() : "",
+                );
                 setShowWeightInput(true);
               }}
             >
@@ -217,7 +244,9 @@ export const DailyActions = () => {
                 <Scale size={16} color="#FFFFFF" />
               </View>
               <Text style={styles.btnText}>
-                {todayWeightLogged ? `Today's weight logged (${parseFloat(loggedWeight || 0).toFixed(2)} kg)` : "Log today's weight"}
+                {todayWeightLogged
+                  ? `Today's weight logged (${parseFloat(loggedWeight || 0).toFixed(2)} kg)`
+                  : "Log today's weight"}
               </Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -233,24 +262,33 @@ export const DailyActions = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.centeredWeightCard}>
-            
             {/* If weight is NOT logged today yet: show input form */}
             {!todayWeightLogged ? (
               <>
-                <TouchableOpacity 
-                  style={styles.closeModalBtn} 
+                <TouchableOpacity
+                  style={styles.closeModalBtn}
                   onPress={() => setShowWeightInput(false)}
                 >
                   <X size={20} color="#FFFFFF" />
                 </TouchableOpacity>
-                
+
                 <View style={styles.weightModalForm}>
-                  <Text style={[styles.modalTitleText, { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 20 }]}>
+                  <Text
+                    style={[
+                      styles.modalTitleText,
+                      {
+                        fontSize: 15,
+                        fontWeight: "700",
+                        color: "#FFFFFF",
+                        marginBottom: 20,
+                      },
+                    ]}
+                  >
                     Enter today's weight to keep your log updated.
                   </Text>
-                  
+
                   <View style={styles.weightInputWrapper}>
-                    <TextInput 
+                    <TextInput
                       style={styles.weightInput}
                       keyboardType="decimal-pad"
                       value={weightInputValue}
@@ -263,9 +301,9 @@ export const DailyActions = () => {
                     <ChevronsUpDown size={18} color="#7F8C8D" />
                   </View>
 
-                  <TouchableOpacity 
-                    activeOpacity={0.8} 
-                    style={styles.saveBtn} 
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.saveBtn}
                     onPress={handleWeightSubmit}
                   >
                     <Text style={styles.saveBtnText}>Save</Text>
@@ -274,28 +312,38 @@ export const DailyActions = () => {
               </>
             ) : (
               /* If weight IS logged today: show success card */
-              <View style={{ alignItems: 'center', width: '100%' }}>
+              <View style={{ alignItems: "center", width: "100%" }}>
                 <View style={styles.successCheckIconContainer}>
                   <Check size={28} color="#FFFFFF" strokeWidth={3} />
                 </View>
-                
+
                 <Text style={styles.successTitleText}>Weight Logged</Text>
-                
+
                 <Text style={styles.successPromptText}>
                   You've logged your weight for{"\n"}
-                  <Text style={{ fontWeight: 'bold', color: '#FFFFFF' }}>Day {streakDays || 1}</Text>{"\n"}
-                  <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#FFFFFF', marginTop: 4 }}>
+                  <Text style={{ fontWeight: "bold", color: "#FFFFFF" }}>
+                    Day {streakDays || 1}
+                  </Text>
+                  {"\n"}
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: 18,
+                      color: "#FFFFFF",
+                      marginTop: 4,
+                    }}
+                  >
                     {loggedWeight} kg
                   </Text>
                 </Text>
-                
+
                 <Text style={styles.successSubPromptText}>
                   Come back tomorrow to log the{"\n"}next entry 💪
                 </Text>
 
-                <TouchableOpacity 
-                  activeOpacity={0.8} 
-                  style={styles.successCloseBtn} 
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.successCloseBtn}
                   onPress={() => setShowWeightInput(false)}
                 >
                   <Text style={styles.successCloseBtnText}>Close</Text>
@@ -315,28 +363,38 @@ export const DailyActions = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.centeredWeightCard}>
-            <View style={{ alignItems: 'center', width: '100%' }}>
+            <View style={{ alignItems: "center", width: "100%" }}>
               <View style={styles.successCheckIconContainer}>
                 <Check size={28} color="#FFFFFF" strokeWidth={3} />
               </View>
-              
+
               <Text style={styles.successTitleText}>Effort Logged</Text>
-              
+
               <Text style={styles.successPromptText}>
                 You've logged your effort for{"\n"}
-                <Text style={{ fontWeight: 'bold', color: '#FFFFFF' }}>Day {streakDays || 1}</Text>{"\n"}
-                <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#FFFFFF', marginTop: 4 }}>
+                <Text style={{ fontWeight: "bold", color: "#FFFFFF" }}>
+                  Day {streakDays || 1}
+                </Text>
+                {"\n"}
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 18,
+                    color: "#FFFFFF",
+                    marginTop: 4,
+                  }}
+                >
                   {todayEffortPercent}%
                 </Text>
               </Text>
-              
+
               <Text style={styles.successSubPromptText}>
                 Come back tomorrow to log the{"\n"}next entry 💪
               </Text>
 
-              <TouchableOpacity 
-                activeOpacity={0.8} 
-                style={styles.successCloseBtn} 
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.successCloseBtn}
                 onPress={() => setShowEffortSuccessModal(false)}
               >
                 <Text style={styles.successCloseBtnText}>Close</Text>
@@ -346,9 +404,8 @@ export const DailyActions = () => {
         </View>
       </Modal>
 
-
       {/* Daily 10-Questionnaire Modal Overlay */}
-      <DailyQuestionsModal 
+      <DailyQuestionsModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />

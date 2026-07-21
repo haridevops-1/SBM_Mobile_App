@@ -2,37 +2,44 @@
  * ============================================================================
  * FILE: Efforts.js
  * PATH: C:\SBM_Mobile_App\src\pages\Efforts\Efforts.js
- * 
+ *
  * PURPOSE:
  * Renders the Efforts screen. Displays:
  * 1. Overall Progress bar chart across Day / Week / Phase timeframes.
  * 2. Aspect cards (Nutrition, Movement, Recovery) evaluated on an independent 100% scale.
- * 3. Detailed aspect breakdown bar charts connecting to Catalyst backend (/api/efforts/overall-progress 
+ * 3. Detailed aspect breakdown bar charts connecting to Catalyst backend (/api/efforts/overall-progress
  *    and /api/efforts/aspect-breakdown).
  * ============================================================================
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
-import { Utensils, Dumbbell, Moon } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useUser } from '../../context/UserContext';
-import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
-import theme from '../../theme/theme';
-import styles from '../../styles/pages/Efforts.styles';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  Dimensions,
+} from "react-native";
+import { Utensils, Dumbbell, Moon } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useUser } from "../../context/UserContext";
+import ProfileDrawer from "../../components/ProfileDrawer/ProfileDrawer";
+import theme from "../../theme/theme";
+import styles from "../../styles/pages/Efforts.styles";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHART_VIEWPORT_WIDTH = Math.max(220, SCREEN_WIDTH - 100);
 
 export const Efforts = () => {
-  const [activeTimeframe, setActiveTimeframe] = useState('day');
-  const [activeCategory, setActiveCategory] = useState('nutrition');
-  
+  const [activeTimeframe, setActiveTimeframe] = useState("day");
+  const [activeCategory, setActiveCategory] = useState("nutrition");
+
   const overallScrollRef = useRef(null);
   const detailScrollRef = useRef(null);
 
   // Always anchored dynamically to Today's ISO date
-  const selectedDate = new Date().toISOString().split('T')[0];
+  const selectedDate = new Date().toISOString().split("T")[0];
 
   // Overall progress fetched state
   const [effortData, setEffortData] = useState(null);
@@ -42,7 +49,7 @@ export const Efforts = () => {
   const [aspectData, setAspectData] = useState([]);
   const [aspectLoading, setAspectLoading] = useState(false);
 
-  const { 
+  const {
     todayEffortLogged,
     todayEffortScore,
     nutritionScore,
@@ -51,10 +58,10 @@ export const Efforts = () => {
     historyLogs,
     setIsProfileOpen,
     username,
-    userId
+    userId,
   } = useUser();
 
-  const timeframes = ['Day', 'Week', 'Phase'];
+  const timeframes = ["Day", "Week", "Phase"];
 
   // Fetch overall progress details dynamically from the Catalyst API Gateway route
   useEffect(() => {
@@ -65,11 +72,13 @@ export const Efforts = () => {
         const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/efforts/overall-progress?user_id=${userId}&date=${selectedDate}&view_type=${activeTimeframe.toLowerCase()}`;
         const response = await fetch(url);
         const rawResult = await response.json();
-        
+
         // Handle Basic I/O wrapping
-        const result = rawResult.output ? JSON.parse(rawResult.output) : rawResult;
-        
-        if (result && result.status === 'success') {
+        const result = rawResult.output
+          ? JSON.parse(rawResult.output)
+          : rawResult;
+
+        if (result && result.status === "success") {
           setEffortData(result.data);
         } else {
           console.warn("Failed to fetch efforts progress:", result);
@@ -103,29 +112,57 @@ export const Efforts = () => {
 
   // Compute metrics dynamically based on Day, Week, Month timeframe
   const displayEffort = effortData ? effortData.summary.effort_percentage : 0;
-  const displayNutrition = effortData ? effortData.summary.nutrition_display : '0/9';
-  const displayMovement = effortData ? effortData.summary.movement_display : '0/9';
-  const displayRecovery = effortData ? effortData.summary.recovery_display : '0/9';
+  const displayNutrition = effortData
+    ? effortData.summary.nutrition_display
+    : "0/9";
+  const displayMovement = effortData
+    ? effortData.summary.movement_display
+    : "0/9";
+  const displayRecovery = effortData
+    ? effortData.summary.recovery_display
+    : "0/9";
 
   // Dynamic Overall Progress chart
   // Day view: Sequential Day 1, Day 2... labels
   // Week view: W1, W2, W3... labels from backend
   // Phase view: Phase 1, Phase 2... labels from backend
-  const rawChartData = (effortData && effortData.chart_data && effortData.chart_data.length > 0)
-    ? effortData.chart_data
-    : (todayEffortLogged
-        ? [{ label: activeTimeframe === 'day' ? 'Day 1' : (activeTimeframe === 'week' ? 'W1' : 'Phase 1'), effort_score: todayEffortScore, date: selectedDate }]
-        : [{ label: activeTimeframe === 'day' ? 'Day 1' : (activeTimeframe === 'week' ? 'W1' : 'Phase 1'), effort_score: 0, date: selectedDate }]
-      );
+  const rawChartData =
+    effortData && effortData.chart_data && effortData.chart_data.length > 0
+      ? effortData.chart_data
+      : todayEffortLogged
+        ? [
+            {
+              label:
+                activeTimeframe === "day"
+                  ? "Day 1"
+                  : activeTimeframe === "week"
+                    ? "W1"
+                    : "Phase 1",
+              effort_score: todayEffortScore,
+              date: selectedDate,
+            },
+          ]
+        : [
+            {
+              label:
+                activeTimeframe === "day"
+                  ? "Day 1"
+                  : activeTimeframe === "week"
+                    ? "W1"
+                    : "Phase 1",
+              effort_score: 0,
+              date: selectedDate,
+            },
+          ];
 
   const overallChartData = rawChartData.map((item, idx) => {
     // For day view: always use sequential Day 1, Day 2... regardless of what backend sends
     // For week view: use W1, W2... from backend label or compute
     // For phase view: use Phase 1, Phase 2... from backend label or compute
     let dayLabel;
-    if (activeTimeframe === 'day') {
+    if (activeTimeframe === "day") {
       dayLabel = `Day ${idx + 1}`;
-    } else if (activeTimeframe === 'week') {
+    } else if (activeTimeframe === "week") {
       dayLabel = item.label || `W${idx + 1}`;
     } else {
       // phase
@@ -133,13 +170,23 @@ export const Efforts = () => {
     }
     return {
       day: dayLabel,
-      percentage: Math.min(100, Math.max(0, Math.round(
-        item.effort_score !== undefined ? item.effort_score :
-        item.percentage !== undefined ? item.percentage : 0
-      ))),
-      isToday: activeTimeframe === 'day'
-        ? (item.date === selectedDate || idx === rawChartData.length - 1)
-        : idx === rawChartData.length - 1
+      percentage: Math.min(
+        100,
+        Math.max(
+          0,
+          Math.round(
+            item.effort_score !== undefined
+              ? item.effort_score
+              : item.percentage !== undefined
+                ? item.percentage
+                : 0,
+          ),
+        ),
+      ),
+      isToday:
+        activeTimeframe === "day"
+          ? item.date === selectedDate || idx === rawChartData.length - 1
+          : idx === rawChartData.length - 1,
     };
   });
 
@@ -150,17 +197,17 @@ export const Efforts = () => {
   // Helper to parse percentages cleanly from aspect values/displays
   const parsePercentFromDisplay = (val) => {
     if (val === undefined || val === null) return 0;
-    
+
     // String fraction like '4/6' or '67%'
-    if (typeof val === 'string') {
-      if (val.includes('/')) {
-        const parts = val.split('/');
+    if (typeof val === "string") {
+      if (val.includes("/")) {
+        const parts = val.split("/");
         const num = parseFloat(parts[0]) || 0;
         const den = parseFloat(parts[1]) || 1;
         if (den <= 0) return 0;
         return Math.min(100, Math.max(0, Math.round((num / den) * 100)));
       }
-      val = val.replace('%', '');
+      val = val.replace("%", "");
     }
 
     const num = parseFloat(val);
@@ -168,47 +215,50 @@ export const Efforts = () => {
     return Math.min(100, Math.max(0, Math.round(num)));
   };
 
-  const nutritionPercent = effortData && effortData.summary && effortData.summary.nutrition_display
-    ? parsePercentFromDisplay(effortData.summary.nutrition_display, 3)
-    : parsePercentFromDisplay(nutritionScore, 3);
+  const nutritionPercent =
+    effortData && effortData.summary && effortData.summary.nutrition_display
+      ? parsePercentFromDisplay(effortData.summary.nutrition_display, 3)
+      : parsePercentFromDisplay(nutritionScore, 3);
 
-  const movementPercent = effortData && effortData.summary && effortData.summary.movement_display
-    ? parsePercentFromDisplay(effortData.summary.movement_display, 3)
-    : parsePercentFromDisplay(movementScore, 3);
+  const movementPercent =
+    effortData && effortData.summary && effortData.summary.movement_display
+      ? parsePercentFromDisplay(effortData.summary.movement_display, 3)
+      : parsePercentFromDisplay(movementScore, 3);
 
-  const recoveryPercent = effortData && effortData.summary && effortData.summary.recovery_display
-    ? parsePercentFromDisplay(effortData.summary.recovery_display, 3)
-    : parsePercentFromDisplay(recoveryScore, 3);
+  const recoveryPercent =
+    effortData && effortData.summary && effortData.summary.recovery_display
+      ? parsePercentFromDisplay(effortData.summary.recovery_display, 3)
+      : parsePercentFromDisplay(recoveryScore, 3);
 
   // Define categories (only Nutrition, Movement, Recovery) with percentages evaluated to 100%
   const categories = [
     {
-      id: 'nutrition',
-      label: 'Nutrition',
+      id: "nutrition",
+      label: "Nutrition",
       score: `${nutritionPercent}%`,
       icon: (color) => <Utensils size={18} color={color} />,
-      iconBg: 'rgba(76, 175, 80, 0.15)',
-      accentColor: '#4CAF50',
-      titleFull: 'Nutrition & Meals'
+      iconBg: "rgba(76, 175, 80, 0.15)",
+      accentColor: "#4CAF50",
+      titleFull: "Nutrition & Meals",
     },
     {
-      id: 'movement',
-      label: 'Movement',
+      id: "movement",
+      label: "Movement",
       score: `${movementPercent}%`,
       icon: (color) => <Dumbbell size={18} color={color} />,
-      iconBg: 'rgba(41, 182, 246, 0.15)',
-      accentColor: '#29B6F6',
-      titleFull: 'Movement & Exercise'
+      iconBg: "rgba(41, 182, 246, 0.15)",
+      accentColor: "#29B6F6",
+      titleFull: "Movement & Exercise",
     },
     {
-      id: 'recovery',
-      label: 'Recovery',
+      id: "recovery",
+      label: "Recovery",
       score: `${recoveryPercent}%`,
       icon: (color) => <Moon size={18} color={color} />,
-      iconBg: 'rgba(123, 31, 162, 0.15)',
-      accentColor: '#B085F5',
-      titleFull: 'Recovery & Sleep'
-    }
+      iconBg: "rgba(123, 31, 162, 0.15)",
+      accentColor: "#B085F5",
+      titleFull: "Recovery & Sleep",
+    },
   ];
 
   // Fetch aspect breakdown details dynamically from the Catalyst API Gateway route
@@ -220,11 +270,13 @@ export const Efforts = () => {
         const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/api/efforts/aspect-breakdown?user_id=${userId}&date=${selectedDate}&aspect=${activeCategory}&view_type=${activeTimeframe.toLowerCase()}`;
         const response = await fetch(url);
         const rawResult = await response.json();
-        
+
         // Handle Basic I/O wrapping
-        const result = rawResult.output ? JSON.parse(rawResult.output) : rawResult;
-        
-        if (result && result.status === 'success') {
+        const result = rawResult.output
+          ? JSON.parse(rawResult.output)
+          : rawResult;
+
+        if (result && result.status === "success") {
           setAspectData(result.data || []);
         } else {
           console.warn("Failed to fetch aspect breakdown:", result);
@@ -251,14 +303,15 @@ export const Efforts = () => {
       pct = parsePercentFromDisplay(`${item.score}/${maxScore}`);
     }
     return {
-      day: item.label || item.day || 'Day',
-      percentage: pct
+      day: item.label || item.day || "Day",
+      percentage: pct,
     };
   });
 
-
-  const selectedCategoryObj = categories.find(cat => cat.id === activeCategory);
-  const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
+  const selectedCategoryObj = categories.find(
+    (cat) => cat.id === activeCategory,
+  );
+  const initialLetter = username ? username.charAt(0).toUpperCase() : "H";
 
   return (
     <SafeAreaView style={styles.container}>
@@ -266,8 +319,8 @@ export const Efforts = () => {
         {/* Top Header */}
         <View style={styles.effortsHeader}>
           <View style={styles.headerActions}>
-            <TouchableOpacity 
-              activeOpacity={0.8} 
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => setIsProfileOpen(true)}
             >
               <LinearGradient
@@ -282,7 +335,9 @@ export const Efforts = () => {
             <Text style={styles.headerTitle}>Efforts</Text>
             <View style={{ width: 32 }} />
           </View>
-          <Text style={styles.headerSubtitle}>Keep pushing your limits! 💪</Text>
+          <Text style={styles.headerSubtitle}>
+            Keep pushing your limits! 💪
+          </Text>
         </View>
 
         {/* Section 1: Overall Progress */}
@@ -290,16 +345,24 @@ export const Efforts = () => {
           <View style={styles.progressCardHeader}>
             <Text style={styles.progressTitle}>Overall Progress</Text>
             <View style={styles.timeframeSelector}>
-              {timeframes.map(tf => {
+              {timeframes.map((tf) => {
                 const isActive = activeTimeframe === tf.toLowerCase();
                 return (
                   <TouchableOpacity
                     key={tf}
                     activeOpacity={0.8}
-                    style={[styles.timeframeBtn, isActive && styles.activeTimeframeBtn]}
+                    style={[
+                      styles.timeframeBtn,
+                      isActive && styles.activeTimeframeBtn,
+                    ]}
                     onPress={() => setActiveTimeframe(tf.toLowerCase())}
                   >
-                    <Text style={[styles.timeframeBtnText, isActive && styles.activeTimeframeBtnText]}>
+                    <Text
+                      style={[
+                        styles.timeframeBtnText,
+                        isActive && styles.activeTimeframeBtnText,
+                      ]}
+                    >
                       {tf}
                     </Text>
                   </TouchableOpacity>
@@ -311,11 +374,13 @@ export const Efforts = () => {
           {/* Bar Chart */}
           <View style={styles.chartWrapper}>
             <View style={styles.yAxis}>
-              {['100%', '80%', '60%', '40%', '20%', '0%'].map((lbl, idx) => (
-                <Text key={idx} style={styles.yAxisText}>{lbl}</Text>
+              {["100%", "80%", "60%", "40%", "20%", "0%"].map((lbl, idx) => (
+                <Text key={idx} style={styles.yAxisText}>
+                  {lbl}
+                </Text>
               ))}
             </View>
-            
+
             <View style={styles.chartAreaContainer}>
               {/* Grid Lines */}
               <View style={styles.gridLines}>
@@ -329,26 +394,34 @@ export const Efforts = () => {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ref={overallScrollRef}
-                onContentSizeChange={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
-                onLayout={() => overallScrollRef.current?.scrollToEnd({ animated: false })}
+                onContentSizeChange={() =>
+                  overallScrollRef.current?.scrollToEnd({ animated: false })
+                }
+                onLayout={() =>
+                  overallScrollRef.current?.scrollToEnd({ animated: false })
+                }
                 contentContainerStyle={styles.scrollableBarsContent}
               >
                 {overallChartData.map((data, idx) => (
-                  <View key={idx} style={[styles.scrollBarColumn, { width: barColumnWidth }]}>
+                  <View
+                    key={idx}
+                    style={[styles.scrollBarColumn, { width: barColumnWidth }]}
+                  >
                     <View style={styles.barTrack}>
-                      <View 
+                      <View
                         style={[
-                          styles.barFill, 
-                          data.isToday ? styles.highlightFill : styles.standardFill,
-                          { height: `${data.percentage}%` }
-                        ]} 
+                          styles.barFill,
+                          data.isToday
+                            ? styles.highlightFill
+                            : styles.standardFill,
+                          { height: `${data.percentage}%` },
+                        ]}
                       />
                     </View>
                     <Text style={styles.barLabel}>{data.day}</Text>
                   </View>
                 ))}
               </ScrollView>
-
             </View>
           </View>
         </View>
@@ -360,23 +433,31 @@ export const Efforts = () => {
           </View>
 
           {/* Categories Row */}
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesRow}
           >
             {categories.map((cat) => {
               const isSelected = activeCategory === cat.id;
-              const iconColor = isSelected ? '#FFFFFF' : cat.accentColor;
+              const iconColor = isSelected ? "#FFFFFF" : cat.accentColor;
               const iconBg = isSelected ? cat.accentColor : cat.iconBg;
               return (
                 <TouchableOpacity
                   key={cat.id}
                   activeOpacity={0.8}
-                  style={[styles.categoryToggleCard, isSelected && styles.selectedCard]}
+                  style={[
+                    styles.categoryToggleCard,
+                    isSelected && styles.selectedCard,
+                  ]}
                   onPress={() => setActiveCategory(cat.id)}
                 >
-                  <View style={[styles.categoryIconCircle, { backgroundColor: iconBg }]}>
+                  <View
+                    style={[
+                      styles.categoryIconCircle,
+                      { backgroundColor: iconBg },
+                    ]}
+                  >
                     {cat.icon(iconColor)}
                   </View>
                   <View style={styles.categoryMeta}>
@@ -394,24 +475,38 @@ export const Efforts = () => {
           <View style={styles.categoryDetailsCard}>
             <View style={styles.detailsHeader}>
               <View style={styles.detailsTitleWrapper}>
-                <View style={[styles.detailsIconCircle, { backgroundColor: selectedCategoryObj.iconBg }]}>
+                <View
+                  style={[
+                    styles.detailsIconCircle,
+                    { backgroundColor: selectedCategoryObj.iconBg },
+                  ]}
+                >
                   {selectedCategoryObj.icon(selectedCategoryObj.accentColor)}
                 </View>
-                <Text style={styles.detailsTitle}>{selectedCategoryObj.titleFull}</Text>
+                <Text style={styles.detailsTitle}>
+                  {selectedCategoryObj.titleFull}
+                </Text>
               </View>
             </View>
 
             {/* 7-Day Chart */}
             <View style={styles.chartWrapper}>
               <View style={styles.yAxis}>
-                {['100%', '75%', '50%', '25%', '0%'].map((lbl, idx) => (
-                  <Text key={idx} style={styles.yAxisText}>{lbl}</Text>
+                {["100%", "75%", "50%", "25%", "0%"].map((lbl, idx) => (
+                  <Text key={idx} style={styles.yAxisText}>
+                    {lbl}
+                  </Text>
                 ))}
               </View>
 
               <View style={styles.chartAreaContainer}>
                 {/* Grid Lines */}
-                <View style={[styles.gridLines, { justifyContent: 'space-between' }]}>
+                <View
+                  style={[
+                    styles.gridLines,
+                    { justifyContent: "space-between" },
+                  ]}
+                >
                   {[1, 2, 3, 4, 5].map((_, idx) => (
                     <View key={idx} style={styles.gridLine} />
                   ))}
@@ -422,21 +517,31 @@ export const Efforts = () => {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   ref={detailScrollRef}
-                  onContentSizeChange={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
-                  onLayout={() => detailScrollRef.current?.scrollToEnd({ animated: false })}
+                  onContentSizeChange={() =>
+                    detailScrollRef.current?.scrollToEnd({ animated: false })
+                  }
+                  onLayout={() =>
+                    detailScrollRef.current?.scrollToEnd({ animated: false })
+                  }
                   contentContainerStyle={styles.scrollableBarsContent}
                 >
                   {activeDetailData.map((data, idx) => (
-                    <View key={idx} style={[styles.scrollBarColumn, { width: barColumnWidth }]}>
+                    <View
+                      key={idx}
+                      style={[
+                        styles.scrollBarColumn,
+                        { width: barColumnWidth },
+                      ]}
+                    >
                       <View style={styles.barTrack}>
-                        <View 
+                        <View
                           style={[
                             styles.barFill,
-                            { 
+                            {
                               backgroundColor: selectedCategoryObj.accentColor,
-                              height: `${data.percentage}%` 
-                            }
-                          ]} 
+                              height: `${data.percentage}%`,
+                            },
+                          ]}
                         />
                       </View>
                       <Text style={styles.barLabel}>{data.day}</Text>

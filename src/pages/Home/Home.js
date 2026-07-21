@@ -2,29 +2,35 @@
  * ============================================================================
  * FILE: Home.js
  * PATH: C:\SBM_Mobile_App\src\pages\Home\Home.js
- * 
+ *
  * PURPOSE:
  * Main Tracker (Home) screen.
- * Assembles the core user dashboard components: Header, QuoteBanner, SbmCards 
+ * Assembles the core user dashboard components: Header, QuoteBanner, SbmCards
  * (Consistency, Effort Score, Body Weight), DailyActions (Effort & Weight Log buttons),
  * and ProfileDrawer. Synchronizes real-time dashboard data from Zoho Catalyst backend.
  * ============================================================================
  */
 
-import React, { useEffect } from 'react';
-import { ScrollView, View, Text, SafeAreaView } from 'react-native';
-import { Calendar } from 'lucide-react-native';
-import Header from '../../components/Header/Header';
-import QuoteBanner from '../../components/QuoteBanner/QuoteBanner';
-import SbmCards from '../../components/SbmCards/SbmCards';
-import DailyActions from '../../components/DailyActions/DailyActions';
-import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
-import { useUser } from '../../context/UserContext';
-import theme from '../../theme/theme';
-import styles from '../../styles/pages/Home.styles';
+import React, { useEffect } from "react";
+import { ScrollView, View, Text, SafeAreaView } from "react-native";
+import { Calendar } from "lucide-react-native";
+import Header from "../../components/Header/Header";
+import QuoteBanner from "../../components/QuoteBanner/QuoteBanner";
+import SbmCards from "../../components/SbmCards/SbmCards";
+import DailyActions from "../../components/DailyActions/DailyActions";
+import ProfileDrawer from "../../components/ProfileDrawer/ProfileDrawer";
+import { useUser } from "../../context/UserContext";
+import theme from "../../theme/theme";
+import styles from "../../styles/pages/Home.styles";
 
 export const Home = () => {
-  const { isLoggedIn, fetchDashboardData, currentWeek, phaseNumber, phaseName } = useUser();
+  const {
+    isLoggedIn,
+    fetchDashboardData,
+    currentWeek,
+    phaseNumber,
+    phaseName,
+  } = useUser();
 
   // Dynamic dashboard synchronizations upon page render sessions
   useEffect(() => {
@@ -35,31 +41,81 @@ export const Home = () => {
 
   // Calculate dynamic date matching original date formats (e.g. "Thursday, 16 July 2026")
   const getDynamicDateString = () => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
     const d = new Date();
     return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Top welcome greeting header */}
         <Header />
 
         {/* Date Row positioned above the daily quote message */}
         <View style={styles.dateRow}>
-          <Calendar size={14} color={theme.colors.textSecondary} style={styles.calendarIcon} />
+          <Calendar
+            size={14}
+            color={theme.colors.textSecondary}
+            style={styles.calendarIcon}
+          />
           <Text style={styles.dateText}>{getDynamicDateString()}</Text>
         </View>
 
         {/* Week and Phase display row */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, marginTop: 4 }}>
-          <Text style={{ fontSize: 16, fontWeight: '800', color: theme.colors.textPrimary }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginHorizontal: 16,
+            marginBottom: 12,
+            marginTop: 4,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "800",
+              color: theme.colors.textPrimary,
+            }}
+          >
             Week {currentWeek} of 20
           </Text>
-          <View style={{ backgroundColor: theme.colors.purple, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', color: '#FFFFFF' }}>
+          <View
+            style={{
+              backgroundColor: theme.colors.purple,
+              borderRadius: 20,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
               Phase {phaseNumber}: {phaseName}
             </Text>
           </View>

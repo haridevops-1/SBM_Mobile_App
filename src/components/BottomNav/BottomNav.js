@@ -2,30 +2,36 @@
  * ============================================================================
  * FILE: BottomNav.js
  * PATH: C:\SBM_Mobile_App\src\components\BottomNav\BottomNav.js
- * 
+ *
  * PURPOSE:
  * Custom Bottom Tab Navigation Bar for the main application screens.
  * Provides tab switching between Tracker (Home), Efforts, Results, Resources, and Support.
  * ============================================================================
  */
 
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Home, ClipboardList, BarChart2, BookOpen, MessageSquare } from 'lucide-react-native';
-import styles from '../../styles/components/BottomNav.styles';
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import {
+  Home,
+  ClipboardList,
+  BarChart2,
+  BookOpen,
+  MessageSquare,
+} from "lucide-react-native";
+import styles from "../../styles/components/BottomNav.styles";
 
 export const BottomNav = ({ state, descriptors, navigation }) => {
   const getIcon = (routeName, color) => {
     switch (routeName) {
-      case 'Tracker':
+      case "Tracker":
         return <Home size={18} color={color} />;
-      case 'Efforts':
+      case "Efforts":
         return <ClipboardList size={18} color={color} />;
-      case 'Results':
+      case "Results":
         return <BarChart2 size={18} color={color} />;
-      case 'Resources':
+      case "Resources":
         return <BookOpen size={18} color={color} />;
-      case 'Support':
+      case "Support":
         return <MessageSquare size={18} color={color} />;
       default:
         return <Home size={18} color={color} />;
@@ -40,14 +46,14 @@ export const BottomNav = ({ state, descriptors, navigation }) => {
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-            ? options.title
-            : route.name;
+              ? options.title
+              : route.name;
 
         const isFocused = state.index === index;
 
         const onPress = () => {
           const event = navigation.emit({
-            type: 'tabPress',
+            type: "tabPress",
             target: route.key,
             canPreventDefault: true,
           });
@@ -57,7 +63,7 @@ export const BottomNav = ({ state, descriptors, navigation }) => {
           }
         };
 
-        const color = isFocused ? '#B085F5' : '#90A4AE';
+        const color = isFocused ? "#B085F5" : "#90A4AE";
 
         return (
           <TouchableOpacity

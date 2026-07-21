@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Modal, SafeAreaView, Platform, Linking, ActivityIndicator, Alert } from 'react-native';
-import { Bell, Search, Play, X, Calendar } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useUser } from '../../context/UserContext';
-import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
-import theme from '../../theme/theme';
-import styles from '../../styles/pages/Resources.styles';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  Modal,
+  SafeAreaView,
+  Platform,
+  Linking,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { Bell, Search, Play, X, Calendar } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useUser } from "../../context/UserContext";
+import ProfileDrawer from "../../components/ProfileDrawer/ProfileDrawer";
+import theme from "../../theme/theme";
+import styles from "../../styles/pages/Resources.styles";
 
 function getEmbedUrl(url) {
   if (!url) return "";
@@ -32,19 +45,19 @@ function getEmbedUrl(url) {
 export const Resources = () => {
   const { username, setIsProfileOpen } = useUser();
 
-  const [activeFilter, setActiveFilter] = useState('strength workout');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState("strength workout");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [activeVideo, setActiveVideo] = useState(null);
-  
+
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const filters = [
-    { key: 'action plan', label: 'Action Plan' },
-    { key: 'strength workout', label: 'Strength Workout' },
-    { key: 'guides', label: 'Guides' },
-    { key: 'webinar', label: 'Webinar' }
+    { key: "action plan", label: "Action Plan" },
+    { key: "strength workout", label: "Strength Workout" },
+    { key: "guides", label: "Guides" },
+    { key: "webinar", label: "Webinar" },
   ];
 
   useEffect(() => {
@@ -53,13 +66,13 @@ export const Resources = () => {
       try {
         const url = `https://sbm-mobile-app-906714478.development.catalystserverless.com/resources?type=${encodeURIComponent(activeFilter)}&search=${encodeURIComponent(appliedSearch)}`;
         const response = await fetch(url, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'text/plain',
-          }
+            "Content-Type": "text/plain",
+          },
         });
         const json = await response.json();
-        if (response.ok && json.status === 'success') {
+        if (response.ok && json.status === "success") {
           setResources(json.data || []);
         } else {
           setResources([]);
@@ -80,7 +93,7 @@ export const Resources = () => {
   };
 
   const handlePlayVideo = (item) => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === "web") {
       setActiveVideo(item);
     } else {
       Linking.openURL(item.videoUrl).catch((err) => {
@@ -89,7 +102,7 @@ export const Resources = () => {
     }
   };
 
-  const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
+  const initialLetter = username ? username.charAt(0).toUpperCase() : "H";
 
   return (
     <SafeAreaView style={styles.container}>
@@ -97,8 +110,8 @@ export const Resources = () => {
         {/* Top Header */}
         <View style={styles.resourcesHeader}>
           <View style={styles.headerActionsRow}>
-            <TouchableOpacity 
-              activeOpacity={0.8} 
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => setIsProfileOpen(true)}
             >
               <LinearGradient
@@ -123,7 +136,11 @@ export const Resources = () => {
         {/* Search Input Bar */}
         <View style={styles.searchForm}>
           <View style={styles.searchInputWrapper}>
-            <Search size={16} color={theme.colors.textSecondary} style={styles.searchBarIcon} />
+            <Search
+              size={16}
+              color={theme.colors.textSecondary}
+              style={styles.searchBarIcon}
+            />
             <TextInput
               style={styles.searchInputField}
               placeholder="Search for resources..."
@@ -133,8 +150,8 @@ export const Resources = () => {
               onSubmitEditing={handleSearchSubmit}
             />
           </View>
-          <TouchableOpacity 
-            activeOpacity={0.8} 
+          <TouchableOpacity
+            activeOpacity={0.8}
             style={styles.searchSubmitBtn}
             onPress={handleSearchSubmit}
           >
@@ -143,8 +160,8 @@ export const Resources = () => {
         </View>
 
         {/* Scrolling Filter buttons */}
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filtersTabRow}
         >
@@ -154,14 +171,22 @@ export const Resources = () => {
               <TouchableOpacity
                 key={filter.key}
                 activeOpacity={0.8}
-                style={[styles.filterTabBtn, isActive && styles.activeFilterTabBtn]}
+                style={[
+                  styles.filterTabBtn,
+                  isActive && styles.activeFilterTabBtn,
+                ]}
                 onPress={() => {
                   setActiveFilter(filter.key);
-                  setSearchQuery('');
-                  setAppliedSearch('');
+                  setSearchQuery("");
+                  setAppliedSearch("");
                 }}
               >
-                <Text style={[styles.filterTabBtnText, isActive && styles.activeFilterTabBtnText]}>
+                <Text
+                  style={[
+                    styles.filterTabBtnText,
+                    isActive && styles.activeFilterTabBtnText,
+                  ]}
+                >
                   {filter.label}
                 </Text>
               </TouchableOpacity>
@@ -172,22 +197,33 @@ export const Resources = () => {
         {/* Video Cards Grid */}
         <View style={styles.videoCardsGrid}>
           {loading ? (
-            <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-              <ActivityIndicator size="large" color={theme.colors.accentPurple} />
-              <Text style={{ color: theme.colors.textSecondary, marginTop: 12 }}>Loading resources...</Text>
+            <View style={{ paddingVertical: 40, alignItems: "center" }}>
+              <ActivityIndicator
+                size="large"
+                color={theme.colors.accentPurple}
+              />
+              <Text
+                style={{ color: theme.colors.textSecondary, marginTop: 12 }}
+              >
+                Loading resources...
+              </Text>
             </View>
           ) : resources.length > 0 ? (
             resources.map((item) => (
-              <TouchableOpacity 
-                key={item.id} 
-                activeOpacity={0.9} 
-                style={styles.videoResourceCard} 
+              <TouchableOpacity
+                key={item.id}
+                activeOpacity={0.9}
+                style={styles.videoResourceCard}
                 onPress={() => handlePlayVideo(item)}
               >
                 {/* Thumbnail */}
                 <View style={styles.videoThumbnailWrapper}>
-                  <Image 
-                    source={{ uri: item.thumbnail || 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop' }} 
+                  <Image
+                    source={{
+                      uri:
+                        item.thumbnail ||
+                        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop",
+                    }}
                     style={styles.videoThumbnailImg}
                   />
                   <View style={styles.videoPlayOverlay}>
@@ -201,18 +237,30 @@ export const Resources = () => {
                 <View style={styles.videoCardDetails}>
                   <Text style={styles.videoCardTitle}>{item.title}</Text>
                   <View style={styles.videoCardDateRow}>
-                    <Calendar size={12} color={theme.colors.textSecondary} style={styles.dateIconSvg} />
-                    <Text style={styles.videoCardDate}>{item.date || '01-May-2026'}</Text>
+                    <Calendar
+                      size={12}
+                      color={theme.colors.textSecondary}
+                      style={styles.dateIconSvg}
+                    />
+                    <Text style={styles.videoCardDate}>
+                      {item.date || "01-May-2026"}
+                    </Text>
                   </View>
                 </View>
               </TouchableOpacity>
             ))
           ) : (
             <View style={styles.emptyResultsBox}>
-              <Text style={styles.emptyResultsText}>No resources found matching your query.</Text>
-              <TouchableOpacity 
-                style={styles.clearSearchBtn} 
-                onPress={() => { setSearchQuery(''); setAppliedSearch(''); setActiveFilter('strength workout'); }}
+              <Text style={styles.emptyResultsText}>
+                No resources found matching your query.
+              </Text>
+              <TouchableOpacity
+                style={styles.clearSearchBtn}
+                onPress={() => {
+                  setSearchQuery("");
+                  setAppliedSearch("");
+                  setActiveFilter("strength workout");
+                }}
               >
                 <Text style={styles.clearSearchBtnText}>Reset Filters</Text>
               </TouchableOpacity>
@@ -222,7 +270,7 @@ export const Resources = () => {
       </ScrollView>
 
       {/* Video Player Modal */}
-      {activeVideo && Platform.OS === 'web' && (
+      {activeVideo && Platform.OS === "web" && (
         <Modal
           transparent={true}
           visible={!!activeVideo}
@@ -231,33 +279,35 @@ export const Resources = () => {
         >
           <View style={styles.videoPlayerModalOverlay}>
             <View style={styles.videoPlayerModalContent}>
-              <TouchableOpacity 
-                style={styles.videoModalCloseBtn} 
+              <TouchableOpacity
+                style={styles.videoModalCloseBtn}
                 onPress={() => setActiveVideo(null)}
               >
                 <X size={18} color="#FFFFFF" />
               </TouchableOpacity>
-              
+
               <View style={styles.videoViewportWrapper}>
                 <Text style={styles.videoModalTitle}>{activeVideo.title}</Text>
-                
+
                 <iframe
                   src={getEmbedUrl(activeVideo.videoUrl)}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   style={{
-                    width: '100%',
+                    width: "100%",
                     height: 300,
                     borderRadius: 12,
-                    border: 'none',
-                    backgroundColor: '#000000'
+                    border: "none",
+                    backgroundColor: "#000000",
                   }}
                 />
-                
+
                 <View style={styles.videoModalMetaRow}>
                   <Calendar size={12} color={theme.colors.textSecondary} />
-                  <Text style={styles.videoModalMetaText}>Uploaded: {activeVideo.date || '01-May-2026'}</Text>
+                  <Text style={styles.videoModalMetaText}>
+                    Uploaded: {activeVideo.date || "01-May-2026"}
+                  </Text>
                 </View>
               </View>
             </View>

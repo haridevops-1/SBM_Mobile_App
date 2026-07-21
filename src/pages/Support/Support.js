@@ -1,11 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, SafeAreaView, Linking } from 'react-native';
-import { Bell, MessageSquare, HelpCircle, Clock, Mail, Phone, ChevronRight, X, Send, Heart } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useUser } from '../../context/UserContext';
-import ProfileDrawer from '../../components/ProfileDrawer/ProfileDrawer';
-import theme from '../../theme/theme';
-import styles from '../../styles/pages/Support.styles';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  SafeAreaView,
+  Linking,
+} from "react-native";
+import {
+  Bell,
+  MessageSquare,
+  HelpCircle,
+  Clock,
+  Mail,
+  Phone,
+  ChevronRight,
+  X,
+  Send,
+  Heart,
+} from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useUser } from "../../context/UserContext";
+import ProfileDrawer from "../../components/ProfileDrawer/ProfileDrawer";
+import theme from "../../theme/theme";
+import styles from "../../styles/pages/Support.styles";
 
 export const Support = () => {
   const { username, setIsProfileOpen } = useUser();
@@ -13,12 +33,16 @@ export const Support = () => {
   // Modal states
   const [chatOpen, setChatOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
-  
+
   // Chat messaging states
   const [messages, setMessages] = useState([
-    { id: 1, text: `Hi ${username}! 👋 How can I help you today on your fitness journey?`, isBot: true }
+    {
+      id: 1,
+      text: `Hi ${username}! 👋 How can I help you today on your fitness journey?`,
+      isBot: true,
+    },
   ]);
-  const [inputVal, setInputVal] = useState('');
+  const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
   // FAQ accordion state
@@ -38,47 +62,61 @@ export const Support = () => {
   const faqs = [
     {
       q: "What is the Slow Burn Method?",
-      a: "The Slow Burn Method is a science-based approach to sustainable fat loss, habit building, and strength retention through progressive resistance workouts, mindful nutrition, and consistent tracking."
+      a: "The Slow Burn Method is a science-based approach to sustainable fat loss, habit building, and strength retention through progressive resistance workouts, mindful nutrition, and consistent tracking.",
     },
     {
       q: "How do I log my daily actions?",
-      a: "Navigate to the Tracker (Home) tab and click the green buttons to record today's effort logs and input your current body weight."
+      a: "Navigate to the Tracker (Home) tab and click the green buttons to record today's effort logs and input your current body weight.",
     },
     {
       q: "When can I see my weight progress chart?",
-      a: "Go to the Results tab (the chart icon) to view your body weight curve, current statistics, and fat loss progress overview charts."
+      a: "Go to the Results tab (the chart icon) to view your body weight curve, current statistics, and fat loss progress overview charts.",
     },
     {
       q: "What do the different score cards mean?",
-      a: "Pre-SBM Score measures baseline scores, Effort Score represents daily actions completed, and Consistency measures your tracking compliance over the last 7 days."
-    }
+      a: "Pre-SBM Score measures baseline scores, Effort Score represents daily actions completed, and Consistency measures your tracking compliance over the last 7 days.",
+    },
   ];
 
   const handleSendMessage = () => {
-    if (inputVal.trim() === '') return;
+    if (inputVal.trim() === "") return;
 
     const userMessage = { id: Date.now(), text: inputVal, isBot: false };
     setMessages((prev) => [...prev, userMessage]);
     const typedQuery = inputVal.toLowerCase();
-    setInputVal('');
-    
+    setInputVal("");
+
     // Simulate bot typing
     setIsTyping(true);
 
     setTimeout(() => {
-      let replyText = "Thanks for reaching out! A coach will review your query and respond within 1 business day.";
+      let replyText =
+        "Thanks for reaching out! A coach will review your query and respond within 1 business day.";
 
-      if (typedQuery.includes('hi') || typedQuery.includes('hello')) {
+      if (typedQuery.includes("hi") || typedQuery.includes("hello")) {
         replyText = "Hello! How can I assist you with your SBM plan today?";
-      } else if (typedQuery.includes('workout') || typedQuery.includes('exercise')) {
-        replyText = "Our Strength Workouts are scheduled 3 days a week. You can check details under the Resources tab!";
-      } else if (typedQuery.includes('diet') || typedQuery.includes('nutrition') || typedQuery.includes('food')) {
-        replyText = "Mindful eating is key! Check out the Nutrition Plan document in the Resources tab for full guidelines.";
-      } else if (typedQuery.includes('weight') || typedQuery.includes('log')) {
-        replyText = "You can log your weight under the Tracker (Home) tab, and view progress graphs in the Results tab.";
+      } else if (
+        typedQuery.includes("workout") ||
+        typedQuery.includes("exercise")
+      ) {
+        replyText =
+          "Our Strength Workouts are scheduled 3 days a week. You can check details under the Resources tab!";
+      } else if (
+        typedQuery.includes("diet") ||
+        typedQuery.includes("nutrition") ||
+        typedQuery.includes("food")
+      ) {
+        replyText =
+          "Mindful eating is key! Check out the Nutrition Plan document in the Resources tab for full guidelines.";
+      } else if (typedQuery.includes("weight") || typedQuery.includes("log")) {
+        replyText =
+          "You can log your weight under the Tracker (Home) tab, and view progress graphs in the Results tab.";
       }
 
-      setMessages((prev) => [...prev, { id: Date.now() + 1, text: replyText, isBot: true }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, text: replyText, isBot: true },
+      ]);
       setIsTyping(false);
     }, 1200);
   };
@@ -88,18 +126,18 @@ export const Support = () => {
   };
 
   const handleEmailPress = () => {
-    Linking.openURL('mailto:support@slowburnmethod.com').catch(() => {
+    Linking.openURL("mailto:support@slowburnmethod.com").catch(() => {
       // Fail-safe if no email client is configured
     });
   };
 
   const handleCallPress = () => {
-    Linking.openURL('tel:+911234567890').catch(() => {
+    Linking.openURL("tel:+911234567890").catch(() => {
       // Fail-safe if no dialer
     });
   };
 
-  const initialLetter = username ? username.charAt(0).toUpperCase() : 'H';
+  const initialLetter = username ? username.charAt(0).toUpperCase() : "H";
 
   return (
     <SafeAreaView style={styles.container}>
@@ -107,8 +145,8 @@ export const Support = () => {
         {/* Top Header */}
         <View style={styles.supportHeader}>
           <View style={styles.headerActionsRow}>
-            <TouchableOpacity 
-              activeOpacity={0.8} 
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => setIsProfileOpen(true)}
             >
               <LinearGradient
@@ -128,15 +166,17 @@ export const Support = () => {
               </View>
             </TouchableOpacity>
           </View>
-          <Text style={styles.headerSubtitleText}>We're here to help you on your journey. 💜</Text>
+          <Text style={styles.headerSubtitleText}>
+            We're here to help you on your journey. 💜
+          </Text>
         </View>
 
         {/* Main Support Cards */}
         <View style={styles.mainSupportLinks}>
           {/* Live Chat Link */}
-          <TouchableOpacity 
-            activeOpacity={0.8} 
-            style={styles.supportLinkCard} 
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.supportLinkCard}
             onPress={() => setChatOpen(true)}
           >
             <View style={styles.cardLeftInfo}>
@@ -145,16 +185,18 @@ export const Support = () => {
               </View>
               <View style={styles.supportTextDetails}>
                 <Text style={styles.supportCardTitle}>Live Chat</Text>
-                <Text style={styles.supportCardDesc}>Chat with our support team in real-time</Text>
+                <Text style={styles.supportCardDesc}>
+                  Chat with our support team in real-time
+                </Text>
               </View>
             </View>
             <ChevronRight size={18} color={theme.colors.textSecondary} />
           </TouchableOpacity>
 
           {/* FAQ Accordion Link */}
-          <TouchableOpacity 
-            activeOpacity={0.8} 
-            style={styles.supportLinkCard} 
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.supportLinkCard}
             onPress={() => setFaqOpen(true)}
           >
             <View style={styles.cardLeftInfo}>
@@ -163,7 +205,9 @@ export const Support = () => {
               </View>
               <View style={styles.supportTextDetails}>
                 <Text style={styles.supportCardTitle}>FAQ</Text>
-                <Text style={styles.supportCardDesc}>Find answers to common questions about the program</Text>
+                <Text style={styles.supportCardDesc}>
+                  Find answers to common questions about the program
+                </Text>
               </View>
             </View>
             <ChevronRight size={18} color={theme.colors.textSecondary} />
@@ -188,13 +232,15 @@ export const Support = () => {
             </View>
             <View style={styles.hoursRow}>
               <Text style={styles.hoursDay}>Sunday</Text>
-              <Text style={[styles.hoursTime, styles.statusClosed]}>Closed</Text>
+              <Text style={[styles.hoursTime, styles.statusClosed]}>
+                Closed
+              </Text>
             </View>
           </View>
 
           <Text style={styles.hoursDisclaimer}>
-            Please give us 1 business day to respond to your queries. 
-            If you don't hear back within that time, please inform your coach.
+            Please give us 1 business day to respond to your queries. If you
+            don't hear back within that time, please inform your coach.
           </Text>
         </View>
 
@@ -203,9 +249,9 @@ export const Support = () => {
           <Text style={styles.sectionTitle}>Other Ways to Reach Us</Text>
           <View style={styles.reachUsGrid}>
             {/* Email Us */}
-            <TouchableOpacity 
-              activeOpacity={0.8} 
-              style={styles.reachCard} 
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.reachCard}
               onPress={handleEmailPress}
             >
               <View style={styles.cardLeftInfo}>
@@ -214,16 +260,18 @@ export const Support = () => {
                 </View>
                 <View style={styles.reachDetails}>
                   <Text style={styles.reachHeading}>Email Us</Text>
-                  <Text style={styles.reachSubtext}>support@slowburnmethod.com</Text>
+                  <Text style={styles.reachSubtext}>
+                    support@slowburnmethod.com
+                  </Text>
                 </View>
               </View>
               <ChevronRight size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>
 
             {/* Call Us */}
-            <TouchableOpacity 
-              activeOpacity={0.8} 
-              style={styles.reachCard} 
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.reachCard}
               onPress={handleCallPress}
             >
               <View style={styles.cardLeftInfo}>
@@ -248,7 +296,10 @@ export const Support = () => {
             </View>
             <View style={styles.careText}>
               <Text style={styles.careTitle}>We Care About You</Text>
-              <Text style={styles.careDesc}>Your success is our priority. We're here to support you every step of the way.</Text>
+              <Text style={styles.careDesc}>
+                Your success is our priority. We're here to support you every
+                step of the way.
+              </Text>
             </View>
           </View>
         </View>
@@ -263,8 +314,12 @@ export const Support = () => {
       >
         <View style={styles.modalOverlay}>
           {/* Backdrop Touch Zone */}
-          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setChatOpen(false)} />
-          
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => setChatOpen(false)}
+          />
+
           <View style={styles.chatModalContent}>
             <View style={styles.chatModalHeader}>
               <View style={styles.chatHeaderProfile}>
@@ -276,22 +331,32 @@ export const Support = () => {
                   <Text style={styles.botStatusIndicator}>Online</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.chatCloseBtn} onPress={() => setChatOpen(false)}>
+              <TouchableOpacity
+                style={styles.chatCloseBtn}
+                onPress={() => setChatOpen(false)}
+              >
                 <X size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
             {/* Scrollable messages log */}
-            <ScrollView 
+            <ScrollView
               ref={chatScrollRef}
               style={styles.chatMessagesLog}
               contentContainerStyle={{ paddingBottom: 20 }}
             >
               {messages.map((msg) => {
-                const bubbleStyle = msg.isBot ? styles.botBubble : styles.userBubble;
-                const alignmentStyle = msg.isBot ? styles.botRow : styles.userRow;
+                const bubbleStyle = msg.isBot
+                  ? styles.botBubble
+                  : styles.userBubble;
+                const alignmentStyle = msg.isBot
+                  ? styles.botRow
+                  : styles.userRow;
                 return (
-                  <View key={msg.id} style={[styles.chatBubbleRow, alignmentStyle]}>
+                  <View
+                    key={msg.id}
+                    style={[styles.chatBubbleRow, alignmentStyle]}
+                  >
                     <View style={[styles.chatBubble, bubbleStyle]}>
                       <Text style={styles.chatBubbleText}>{msg.text}</Text>
                     </View>
@@ -300,7 +365,13 @@ export const Support = () => {
               })}
               {isTyping && (
                 <View style={[styles.chatBubbleRow, styles.botRow]}>
-                  <View style={[styles.chatBubble, styles.botBubble, styles.typingBubble]}>
+                  <View
+                    style={[
+                      styles.chatBubble,
+                      styles.botBubble,
+                      styles.typingBubble,
+                    ]}
+                  >
                     <View style={styles.dot} />
                     <View style={styles.dot} />
                     <View style={styles.dot} />
@@ -319,8 +390,8 @@ export const Support = () => {
                 onChangeText={setInputVal}
                 onSubmitEditing={handleSendMessage}
               />
-              <TouchableOpacity 
-                activeOpacity={0.8} 
+              <TouchableOpacity
+                activeOpacity={0.8}
                 style={styles.chatSendBtn}
                 onPress={handleSendMessage}
               >
@@ -340,12 +411,21 @@ export const Support = () => {
       >
         <View style={styles.modalOverlay}>
           {/* Backdrop Touch Zone */}
-          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setFaqOpen(false)} />
-          
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => setFaqOpen(false)}
+          />
+
           <View style={styles.faqModalContent}>
             <View style={styles.faqModalHeader}>
-              <Text style={styles.faqModalTitle}>Frequently Asked Questions</Text>
-              <TouchableOpacity style={styles.faqCloseBtn} onPress={() => setFaqOpen(false)}>
+              <Text style={styles.faqModalTitle}>
+                Frequently Asked Questions
+              </Text>
+              <TouchableOpacity
+                style={styles.faqCloseBtn}
+                onPress={() => setFaqOpen(false)}
+              >
                 <X size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
@@ -355,22 +435,24 @@ export const Support = () => {
                 const isOpen = expandedFaq === idx;
                 return (
                   <View key={idx} style={styles.faqAccordionItem}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       activeOpacity={0.7}
                       style={styles.faqQuestionRow}
                       onPress={() => toggleFaq(idx)}
                     >
                       <Text style={styles.faqQuestionText}>{faq.q}</Text>
-                      <ChevronRight 
-                        size={16} 
+                      <ChevronRight
+                        size={16}
                         color={theme.colors.textSecondary}
                         style={[
                           styles.faqArrowIcon,
-                          { transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }
+                          {
+                            transform: [{ rotate: isOpen ? "90deg" : "0deg" }],
+                          },
                         ]}
                       />
                     </TouchableOpacity>
-                    
+
                     {isOpen && (
                       <View style={styles.faqAnswerRow}>
                         <Text style={styles.faqAnswerText}>{faq.a}</Text>

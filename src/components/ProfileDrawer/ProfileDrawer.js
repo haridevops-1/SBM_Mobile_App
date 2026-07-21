@@ -18,7 +18,6 @@ import {
   Platform, TextInput, Alert, ActivityIndicator, StyleSheet,
   KeyboardAvoidingView, Dimensions, StatusBar,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import {
   X, LogOut, Home, Flame, BarChart2, BookOpen, MessageSquare,
@@ -118,7 +117,7 @@ export const ProfileDrawer = () => {
   const { width }    = useWindowDimensions();
   const isWebDesktop = Platform.OS === 'web' && width > 768;
   const DRAWER_WIDTH = isWebDesktop ? 440 * 0.8 : width * 0.8;
-  const insets       = useSafeAreaInsets();
+
 
   const state       = useNavigationState(s => s);
   const activeRoute = state ? state.routes[state.index]?.name : 'Tracker';
@@ -370,9 +369,10 @@ export const ProfileDrawer = () => {
               {
                 width: DRAWER_WIDTH,
                 transform: [{ translateX: slideAnim }],
-                // Respect safe area: push content below status bar and above home indicator
-                paddingTop: Math.max(insets.top, 20),
-                paddingBottom: Math.max(insets.bottom + 16, 30),
+                // Top: account for Android status bar or iOS notch
+                paddingTop: Platform.OS === 'android'
+                  ? (StatusBar.currentHeight || 24) + 8
+                  : 54,
               }
             ]}
           >
@@ -385,7 +385,11 @@ export const ProfileDrawer = () => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+            <ScrollView
+              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 0 }}
+            >
 
               {/* Avatar row + Edit pencil */}
               <View style={drawerStyles.drawerAvatarSection}>
@@ -455,15 +459,15 @@ export const ProfileDrawer = () => {
                 </View>
               </View>
 
-            </ScrollView>
+              {/* Logout button — placed INSIDE ScrollView so it is always reachable */}
+              <View style={drawerStyles.drawerLogoutWrapper}>
+                <TouchableOpacity activeOpacity={0.8} style={drawerStyles.drawerLogoutBtn} onPress={logoutUser}>
+                  <LogOut size={16} color="#FF5252" />
+                  <Text style={drawerStyles.logoutText}>Log Out Session</Text>
+                </TouchableOpacity>
+              </View>
 
-            {/* Logout */}
-            <View style={drawerStyles.drawerActionContainer}>
-              <TouchableOpacity activeOpacity={0.8} style={drawerStyles.drawerLogoutBtn} onPress={logoutUser}>
-                <LogOut size={16} color="#FF5252" />
-                <Text style={drawerStyles.logoutText}>Log Out Session</Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </Animated.View>
 
           <TouchableWithoutFeedback onPress={handleClose}>

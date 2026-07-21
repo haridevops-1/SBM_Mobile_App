@@ -231,7 +231,9 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
       const data = await response.json();
       if (response.ok && data.status === 'success') {
-        logTodayEffort(data.data.total_effort, userId);
+        // Backend returns 'score' (percentage 0-100). Fallback to total_effort for compatibility.
+        const effortScore = data.data.score ?? data.data.total_effort ?? data.data.effort_score ?? 0;
+        logTodayEffort(effortScore, userId);
         fetchDashboardData();
 
         // If today is Sunday, transition to Sunday 5 Mindset Questions!

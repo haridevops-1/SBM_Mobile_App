@@ -171,23 +171,30 @@ export const UserProvider = ({ children }) => {
       const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${targetUserId}`);
       const result = await response.json();
       if (response.ok && result.status === 'success') {
-        const { 
-          today_effort_logged, 
-          today_effort_score, 
-          today_weight_logged, 
-          current_weight, 
-          start_weight, 
-          streak_days, 
-          current_week, 
-          phase_number, 
+        const {
+          today_effort_logged,
+          today_effort_score,
+          today_weight_logged,
+          current_weight,
+          start_weight,
+          streak_days,
+          current_week,
+          phase_number,
           phase_name,
           nutrition_score,
           movement_score,
           recovery_score,
           history_logs,
-          average_effort_score
+          average_effort_score,
+          // Consistency fields — returned by backend if table is configured
+          consistency_logged,
+          consistency_total,
+          days_logged,
+          days_elapsed,
+          total_days_logged,
+          total_days_elapsed,
         } = result.data;
-        
+
         setTodayEffortLogged(today_effort_logged);
         setTodayEffortScore(today_effort_score);
         setTodayWeightLogged(today_weight_logged);
@@ -202,13 +209,51 @@ export const UserProvider = ({ children }) => {
         if (recovery_score !== undefined) setRecoveryScore(recovery_score);
         if (history_logs !== undefined) setHistoryLogs(history_logs || []);
         if (average_effort_score !== undefined) setAverageEffortScore(average_effort_score);
-        
+
         // Sync weekly progress efforts
         const updatedEfforts = [0, 0, 0, 0, today_effort_score];
         setWeeklyEfforts(updatedEfforts);
+
+        // ── Consistency: prefer backend values if present, fallback to AsyncStorage ──
+        // Backend may return these as: consistency_logged/consistency_total
+        // OR days_logged/days_elapsed OR total_days_logged/total_days_elapsed
+        const backendLogged = consistency_logged ?? days_logged ?? total_days_logged;
+        const backendTotal  = consistency_total  ?? days_elapsed ?? total_days_elapsed;
+
+        if (backendLogged !== undefined && backendLogged !== null && backendTotal !== undefined && backendTotal !== null) {
+          // Backend has real data — use it as source of truth
+          const bl = parseInt(backendLogged, 10) || 0;
+          const bt = parseInt(backendTotal,  10) || 0;
+          setConsistencyLogged(bl);
+          setConsistencyTotal(bt);
+          // Also cache locally with user-specific key
+          const consistencyKey = `sbm_consistency_${targetUserId}`;
+          await AsyncStorage.setItem(consistencyKey, JSON.stringify({ logged: bl, total: bt }));
+        } else {
+          // Backend not returning consistency — fall back to AsyncStorage
+          const consistencyKey = `sbm_consistency_${targetUserId}`;
+          const stored = await AsyncStorage.getItem(consistencyKey);
+          if (stored) {
+            const { logged, total } = JSON.parse(stored);
+            setConsistencyLogged(logged || 0);
+            setConsistencyTotal(total  || 0);
+          }
+        }
       }
     } catch (err) {
       console.error("Dashboard Fetch Error:", err);
+      // On network error — still load consistency from AsyncStorage cache
+      const consistencyKey = uid ? `sbm_consistency_${uid}` : (userId ? `sbm_consistency_${userId}` : null);
+      if (consistencyKey) {
+        try {
+          const stored = await AsyncStorage.getItem(consistencyKey);
+          if (stored) {
+            const { logged, total } = JSON.parse(stored);
+            setConsistencyLogged(logged || 0);
+            setConsistencyTotal(total  || 0);
+          }
+        } catch (_) {}
+      }
     }
   };
 
@@ -241,7 +286,9 @@ export const UserProvider = ({ children }) => {
   const logTodayEffort = async (score, currentUserId) => {
     const uid = currentUserId || userId;
     const num = parseInt(score, 10);
-    if (!isNaN(num)) {
+    if (!isNaN(num) && num >= 0) {
+      // Backend sends finalPercentageScore (0-100 percentage already)
+      // Store as-is for todayEffortScore display
       setTodayEffortScore(num);
       setTodayEffortLogged(true);
       setStreakDays(prev => prev + 1);
@@ -250,10 +297,10 @@ export const UserProvider = ({ children }) => {
       updatedEfforts[4] = num;
       setWeeklyEfforts(updatedEfforts);
 
-      // Calculate today's effort as percentage for Pre-SBM storage
-      const pct = Math.min(100, Math.max(0, Math.round((num / 9) * 100)));
+      // Score is already a percentage (0-100) from backend — store directly
+      const pct = Math.min(100, Math.max(0, num));
 
-      // Bump consistency count
+      // Bump consistency: logged one more day out of total days elapsed
       const newLogged = consistencyLogged + 1;
       const newTotal  = consistencyTotal + 1;
       setConsistencyLogged(newLogged);
@@ -269,6 +316,7 @@ export const UserProvider = ({ children }) => {
       } catch (_) {}
     }
   };
+
 
   // Called each time the app is opened on a NEW calendar day where the user did NOT log:
   // increments consistencyTotal without incrementing consistencyLogged

@@ -17,15 +17,14 @@ export default StyleSheet.create({
     alignSelf: 'center',
   },
   drawerContainer: {
-    // Use full physical screen height to cover status bar & home indicator areas
+    // Full physical screen height — covers status bar and home indicator
     height: SCREEN_HEIGHT,
     backgroundColor: '#070913',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255, 255, 255, 0.05)',
-    // paddingTop and paddingBottom are handled dynamically via safe area insets in ProfileDrawer.js
     paddingHorizontal: 16,
     flexDirection: 'column',
-    justifyContent: 'space-between',
+    // NO justifyContent:space-between — logout is inside ScrollView
   },
   drawerHeader: {
     flexDirection: 'row',
@@ -149,6 +148,13 @@ export default StyleSheet.create({
     fontWeight: '500',
     marginTop: 1,
   },
+  drawerLogoutWrapper: {
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    paddingTop: 16,
+    paddingBottom: 32,
+  },
   drawerActionContainer: {
     width: '100%',
   },
@@ -159,7 +165,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C62828',
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 13,
   },
   logoutText: {
     color: '#FF5252',

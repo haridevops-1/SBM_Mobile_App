@@ -40,7 +40,6 @@ import Svg, {
   Polygon as SvgPolygon,
 } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Font from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from "../../context/UserContext";
 import ProfileDrawer from "../../components/ProfileDrawer/ProfileDrawer";
@@ -74,21 +73,9 @@ export const Results = ({ navigation }) => {
   // (Log Weight modal removed — weight logging is handled via Tracker > Daily Actions)
   const chartScrollRef = useRef(null);
 
-  // Load Inter font on component mount
+  // Set fontsLoaded on component mount
   useEffect(() => {
-    const loadFonts = async () => {
-      try {
-        await Font.loadAsync({
-          InterRegular: require("../../assets/fonts/Inter-Regular.ttf"),
-          InterBold: require("../../assets/fonts/Inter-Bold.ttf"),
-        });
-        setFontsLoaded(true);
-      } catch (e) {
-        console.warn("Font load error", e);
-        setFontsLoaded(true);
-      }
-    };
-    loadFonts();
+    setFontsLoaded(true);
   }, []);
 
   // Fetch Live Weight Overview from Catalyst bodyweight_tracker function

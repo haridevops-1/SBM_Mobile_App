@@ -113,7 +113,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
   // Sunday Mindset Questionnaire States
   const [sundayIndex, setSundayIndex] = useState(0);
   const [sundayAnswers, setSundayAnswers] = useState({});
-  const [isSunday, setIsSunday] = useState(true); // TEMPORARY FOR TESTING SUNDAY MODE
+  const [isSunday, setIsSunday] = useState(new Date().getDay() === 0);
 
   // Fetch phase questions dynamically from Zoho Catalyst sbm_questionnaire_function
   const fetchQuestions = async () => {
@@ -151,7 +151,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
 
   useEffect(() => {
     if (visible && userId) {
-      setIsSunday(true); // TEMPORARY FOR TESTING SUNDAY MODE
+      setIsSunday(new Date().getDay() === 0);
       fetchQuestions();
     }
   }, [visible, userId]);
@@ -291,7 +291,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
         fetchDashboardData();
 
         // If today is Sunday, transition to Sunday 5 Mindset Questions!
-        if (true || isSunday) {
+        if (new Date().getDay() === 0 || isSunday) {
           setViewMode("sunday_intro");
         } else {
           setViewMode("completed");

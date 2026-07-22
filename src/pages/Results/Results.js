@@ -36,6 +36,7 @@ import Svg, {
   Path,
   Circle,
   Line,
+  Rect,
   Text as SvgText,
   Polygon as SvgPolygon,
 } from "react-native-svg";
@@ -422,80 +423,84 @@ export const Results = ({ navigation }) => {
   const metricColor = activeSet.color;
   const initialLetter = username ? username.charAt(0).toUpperCase() : "H";
 
-  // Inline MiniLineChart with Vertical Line View (Blank at first, shows line only for logged weeks)
-  const MiniLineChart = ({ data, color, chartW }) => {
+  // Inline MiniBarChart Component (Renders sleek rounded Bar Chart per week)
+  const MiniBarChart = ({ data, color, chartW }) => {
     const chartH = 75;
     const padX = 14;
-    const padY = 10;
+    const padY = 8;
     const n = data.length;
     if (n < 2) return null;
 
+    const barW = 16;
+    const maxBarH = chartH - 2 * padY;
+    const gradId = `mbg-${color.replace("#", "")}`;
+
     const pts = data.map((d, i) => {
       const x = padX + (i / (n - 1)) * (chartW - 2 * padX);
-      const y =
-        padY + (chartH - 2 * padY) - (d.value / 3) * (chartH - 2 * padY);
-      return { x, y, value: d.value, week: d.week, isLogged: d.isLogged };
+      return { x, value: d.value, week: d.week, isLogged: d.isLogged };
     });
-
-    const activePts = pts.filter((p) => p.isLogged);
-
-    const linePth =
-      activePts.length >= 2
-        ? activePts
-            .map(
-              (p, i) =>
-                `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
-            )
-            .join(" ")
-        : "";
-    const areaPth =
-      activePts.length >= 2
-        ? `${linePth} L ${activePts[activePts.length - 1].x.toFixed(1)} ${chartH - padY} L ${activePts[0].x.toFixed(1)} ${chartH - padY} Z`
-        : "";
-    const gradId = `mg-${color.replace("#", "")}`;
 
     return (
       <Svg width={chartW} height={chartH}>
         <Defs>
           <SvgLinearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={color} stopOpacity="0.45" />
-            <Stop offset="100%" stopColor={color} stopOpacity="0.02" />
+            <Stop offset="0%" stopColor={color} stopOpacity="0.95" />
+            <Stop offset="100%" stopColor={color} stopOpacity="0.35" />
           </SvgLinearGradient>
         </Defs>
 
-        {/* Vertical Grid Lines View across all week columns */}
-        {pts.map((p, i) => (
-          <Line
-            key={`vgrid-${i}`}
-            x1={p.x}
-            y1={padY}
-            x2={p.x}
-            y2={chartH - padY}
-            stroke="rgba(255, 255, 255, 0.07)"
-            strokeWidth="1"
-            strokeDasharray="2 2"
-          />
-        ))}
-
-        {/* Only render line path and gradient area if 2+ logged weeks exist */}
-        {activePts.length >= 2 && (
-          <>
-            <Path d={areaPth} fill={`url(#${gradId})`} />
-            <Path
-              d={linePth}
-              fill="none"
-              stroke={color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        {/* Horizontal grid lines for 1, 2, 3 values */}
+        {[1, 2, 3].map((v) => {
+          const y = chartH - padY - (v / 3) * maxBarH;
+          return (
+            <Line
+              key={`hgrid-${v}`}
+              x1={padX}
+              y1={y}
+              x2={chartW - padX}
+              y2={y}
+              stroke="rgba(255, 255, 255, 0.07)"
+              strokeWidth="1"
+              strokeDasharray="2 2"
             />
-          </>
-        )}
+          );
+        })}
 
-        {/* Only render circle node dots for logged weeks */}
-        {activePts.map((p, i) => (
-          <Circle key={i} cx={p.x} cy={p.y} r={3.5} fill={color} />
-        ))}
+        {/* Render Bar per week column */}
+        {pts.map((p, i) => {
+          const barX = p.x - barW / 2;
+          const barH = p.isLogged ? Math.max(6, (p.value / 3) * maxBarH) : 0;
+          const barY = chartH - padY - barH;
+
+          return (
+            <React.Fragment key={i}>
+              {/* Background slot bar (subtle grey pill) */}
+              <Rect
+                x={barX}
+                y={padY}
+                width={barW}
+                height={maxBarH}
+                rx={6}
+                ry={6}
+                fill="rgba(255, 255, 255, 0.05)"
+              />
+              {/* Active filled value bar */}
+              {p.isLogged && (
+                <Rect
+                  x={barX}
+                  y={barY}
+                  width={barW}
+                  height={barH}
+                  rx={6}
+                  ry={6}
+                  fill={`url(#${gradId})`}
+                  stroke={color}
+                  strokeWidth="1.5"
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
       </Svg>
     );
   };
@@ -1042,7 +1047,7 @@ export const Results = ({ navigation }) => {
                     contentContainerStyle={{ paddingRight: 12 }}
                   >
                     <View style={{ width: chartW }}>
-                      <MiniLineChart
+                      <MiniBarChart
                         data={dimData}
                         color={dim.color}
                         chartW={chartW}

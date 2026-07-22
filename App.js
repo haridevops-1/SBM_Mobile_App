@@ -1,159 +1,80 @@
-import React, { useEffect } from "react"; // <-- useEffect import panniyachu
-import {
-  View,
-  Text,
-  useWindowDimensions,
-  Platform,
-  LogBox,
-  ActivityIndicator,
-} from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
-import { UserProvider, useUser } from "./src/context/UserContext";
-import AuthScreen from "./src/pages/Auth/Auth";
-import AppRouter from "./src/router/AppRouter";
+  import React from 'react';
+  import { View, Text, useWindowDimensions, Platform, LogBox, ActivityIndicator } from 'react-native';
+  import { NavigationContainer } from '@react-navigation/native';
+  import { StatusBar } from 'expo-status-bar';
+  import { UserProvider, useUser } from './src/context/UserContext';
+  import AuthScreen from './src/pages/Auth/Auth';
+  import AppRouter from './src/router/AppRouter';
 
-// ---> PUDHU IMPORTS (Push Notification) <---
-import messaging from "@react-native-firebase/messaging";
-import { ZCatalystApp } from "zcatalyst-react-native";
+  // Ignore noisy deprecated package warning logs in development and simulator runs
+  LogBox.ignoreLogs([
+    '[expo-av]',
+    'SafeAreaView has been deprecated',
+  ]);
 
-// Ignore noisy deprecated package warning logs in development and simulator runs
-LogBox.ignoreLogs(["[expo-av]", "SafeAreaView has been deprecated"]);
+  function MainApp() {
+    const { isLoggedIn, isSessionLoading } = useUser();
+    const { width } = useWindowDimensions();
+    
+    const isWebDesktop = Platform.OS === 'web' && width > 768;
 
-function MainApp() {
-  const { isLoggedIn, isSessionLoading } = useUser();
-  const { width } = useWindowDimensions();
-
-  const isWebDesktop = Platform.OS === "web" && width > 768;
-
-  // ---> PUDHU LOGIC (Push Notification) START <---
-  useEffect(() => {
-    // Mobile-la mattum run aaga intha check
-    if (Platform.OS !== "web") {
-      setupCatalystPushNotifications();
-    }
-  }, []);
-
-  const setupCatalystPushNotifications = async () => {
-    try {
-      const authStatus = await messaging().requestPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-      if (enabled) {
-        const fcmToken = await messaging().getToken();
-        console.log("FCM Token:", fcmToken);
-
-        const app = ZCatalystApp.getInstance();
-
-        const bundleID = "com.anonymous.sbmmobileapp";
-        const appID = "56022000000045093"; // Catalyst console ID
-        const isTestDevice = true; // Test device true
-
-        await app.registerPushNotification(
-          fcmToken,
-          bundleID,
-          appID,
-          isTestDevice,
+    const renderContent = () => {
+      // Show branded loading screen while session is being validated
+      if (isSessionLoading) {
+        return (
+          <View style={{ flex: 1, backgroundColor: '#060813', justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 28, fontWeight: '900', color: '#B085F5', marginBottom: 8, letterSpacing: 2 }}>SBM</Text>
+            <Text style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.4)', marginBottom: 24, fontWeight: '500' }}>Loading your session...</Text>
+            <ActivityIndicator size="large" color="#B085F5" />
+          </View>
         );
-        console.log("Catalyst Push Notification successfully registered!");
-      } else {
-        console.log("Push notification permission denied by user");
       }
-    } catch (error) {
-      console.error("Push Notification Setup Error: ", error);
-    }
-  };
-  // ---> PUDHU LOGIC (Push Notification) END <---
 
-  const renderContent = () => {
-    // Show branded loading screen while session is being validated
-    if (isSessionLoading) {
+      if (!isLoggedIn) {
+        return <AuthScreen />;
+      }
       return (
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "#060813",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 28,
-              fontWeight: "900",
-              color: "#B085F5",
-              marginBottom: 8,
-              letterSpacing: 2,
-            }}
-          >
-            SBM
-          </Text>
-          <Text
-            style={{
-              fontSize: 12,
-              color: "rgba(255, 255, 255, 0.4)",
-              marginBottom: 24,
-              fontWeight: "500",
-            }}
-          >
-            Loading your session...
-          </Text>
-          <ActivityIndicator size="large" color="#B085F5" />
-        </View>
+        <NavigationContainer>
+          <AppRouter />
+        </NavigationContainer>
       );
-    }
+    };
 
-    if (!isLoggedIn) {
-      return <AuthScreen />;
-    }
     return (
-      <NavigationContainer>
-        <AppRouter />
-      </NavigationContainer>
-    );
-  };
-
-  return (
-    <View
-      style={{
+      <View style={{
         flex: 1,
-        backgroundColor: "#03040B", // Premium dark space backdrop
-        justifyContent: "center",
-        alignItems: "center",
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      <View
-        style={{
+        backgroundColor: '#03040B', // Premium dark space backdrop
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+      }}>
+        <View style={{
           flex: 1,
-          backgroundColor: "#060813", // Simulator background
-          width: isWebDesktop ? 440 : "100%",
-          maxWidth: isWebDesktop ? 440 : "100%",
-          alignSelf: "center",
+          backgroundColor: '#060813', // Simulator background
+          width: isWebDesktop ? 440 : '100%',
+          maxWidth: isWebDesktop ? 440 : '100%',
+          alignSelf: 'center',
           borderLeftWidth: isWebDesktop ? 1 : 0,
           borderRightWidth: isWebDesktop ? 1 : 0,
-          borderColor: "rgba(255, 255, 255, 0.06)",
-          shadowColor: "#000000",
+          borderColor: 'rgba(255, 255, 255, 0.06)',
+          shadowColor: '#000000',
           shadowOffset: { width: 0, height: 16 },
           shadowOpacity: isWebDesktop ? 0.6 : 0,
           shadowRadius: 40,
           elevation: isWebDesktop ? 20 : 0,
-        }}
-      >
-        {renderContent()}
+        }}>
+          {renderContent()}
+        </View>
       </View>
-    </View>
-  );
-}
+    );
+  }
 
-export default function App() {
-  return (
-    <UserProvider>
-      <StatusBar style="light" />
-      <MainApp />
-    </UserProvider>
-  );
-}
+  export default function App() {
+    return (
+      <UserProvider>
+        <StatusBar style="light" />
+        <MainApp />
+      </UserProvider>
+    );
+  }

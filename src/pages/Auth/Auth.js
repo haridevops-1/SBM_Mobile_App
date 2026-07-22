@@ -39,6 +39,8 @@ import {
   X,
   Users,
   Activity,
+  Eye,
+  EyeOff,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useUser } from "../../context/UserContext";
@@ -150,6 +152,7 @@ export const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Custom Registration states
   const [gender, setGender] = useState("Select Gender");
@@ -487,6 +490,7 @@ export const Auth = () => {
     setName("");
     setEmail("");
     setPassword("");
+    setShowPassword(false);
     setGender("Select Gender");
     setAge("");
     setHeight("");
@@ -632,7 +636,7 @@ export const Auth = () => {
                   style={styles.authInput}
                   placeholder="Enter your password"
                   placeholderTextColor="#546E7A"
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   autoComplete="new-password"
                   textContentType="none"
                   importantForAutofill="no"
@@ -640,6 +644,17 @@ export const Auth = () => {
                   onChangeText={setPassword}
                   editable={!loading}
                 />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={{ padding: 6 }}
+                  activeOpacity={0.7}
+                >
+                  {showPassword ? (
+                    <EyeOff size={18} color="#B085F5" />
+                  ) : (
+                    <Eye size={18} color="#B085F5" />
+                  )}
+                </TouchableOpacity>
               </View>
               {errors.password && (
                 <Text style={styles.errorText}>{errors.password}</Text>

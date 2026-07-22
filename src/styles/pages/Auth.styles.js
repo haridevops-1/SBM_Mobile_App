@@ -61,6 +61,7 @@ export default StyleSheet.create({
     marginBottom: 10,
     borderWidth: 2,
     borderColor: "rgba(176, 133, 245, 0.4)",
+    backgroundColor: "#7B1FA2",
     shadowColor: "#7B1FA2",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
@@ -70,6 +71,7 @@ export default StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 32,
+    backgroundColor: "#7B1FA2",
   },
   brandTitle: {
     fontSize: 16,
@@ -303,6 +305,7 @@ export default StyleSheet.create({
     marginBottom: 16,
     borderWidth: 2,
     borderColor: "rgba(176, 133, 245, 0.4)",
+    backgroundColor: "#7B1FA2",
     shadowColor: "#B085F5",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,

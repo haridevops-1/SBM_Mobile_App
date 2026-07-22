@@ -45,6 +45,8 @@ import { useUser } from "../../context/UserContext";
 import theme from "../../theme/theme";
 import styles from "../../styles/pages/Auth.styles";
 
+const APP_PURPLE_LOGO = require("../../assets/app_purple_logo.jpg");
+
 const GENDER_OPTIONS = ["Male", "Female", "Other"];
 const MEAL_OPTIONS = ["Veg", "Non-Veg", "Veg + Egg"];
 const GOAL_OPTIONS = [
@@ -519,9 +521,7 @@ export const Auth = () => {
           <View style={styles.brandHeader}>
             <View style={styles.brandLogoRing}>
               <Image
-                source={{
-                  uri: "https://cdn.dribbble.com/userupload/11047563/file/original-2c2cc8ef91f3e88746a6264eb315a11c.jpg?resize=752x&vertical=center",
-                }}
+                source={APP_PURPLE_LOGO}
                 style={styles.brandLogoImage}
                 resizeMode="cover"
               />
@@ -1003,9 +1003,7 @@ export const Auth = () => {
           <View style={styles.successModalCard}>
             <View style={styles.successModalHeaderBadge}>
               <Image
-                source={{
-                  uri: "https://cdn.dribbble.com/userupload/11047563/file/original-2c2cc8ef91f3e88746a6264eb315a11c.jpg?resize=752x&vertical=center",
-                }}
+                source={APP_PURPLE_LOGO}
                 style={styles.brandLogoImage}
                 resizeMode="cover"
               />

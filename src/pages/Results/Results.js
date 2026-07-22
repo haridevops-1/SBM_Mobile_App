@@ -301,13 +301,13 @@ export const Results = ({ navigation }) => {
       ? `${linePath} L ${chartPoints[chartPoints.length - 1].x} 140 L ${chartPoints[0].x} 140 Z`
       : "";
 
-  // All 20 weeks available for selection (W0 to W19)
-  const allWeeks = Array.from({ length: 20 }, (_, i) => `W${i}`);
+  // All 20 weeks available for selection (W1 to W20)
+  const allWeeks = Array.from({ length: 20 }, (_, i) => `W${i + 1}`);
 
   // Create empty mindset data initialized to 0 for all weeks
   const createEmptyMindset = () => {
     const initial = {};
-    for (let i = 0; i <= 19; i++) {
+    for (let i = 0; i <= 20; i++) {
       initial[`W${i}`] = {
         learning: 0,
         food: 0,
@@ -323,9 +323,9 @@ export const Results = ({ navigation }) => {
     useState(createEmptyMindset);
   const [loggedWeeksSet, setLoggedWeeksSet] = useState(new Set());
 
-  // Default spider chart week selectors: W0 vs W1
-  const [spiderWeek1, setSpiderWeek1] = useState("W0");
-  const [spiderWeek2, setSpiderWeek2] = useState("W1");
+  // Default spider chart week selectors: W1 vs W2
+  const [spiderWeek1, setSpiderWeek1] = useState("W1");
+  const [spiderWeek2, setSpiderWeek2] = useState("W2");
 
   // Fetch real Sunday tracker mindset scores from Catalyst backend & local storage
   useEffect(() => {
@@ -423,20 +423,22 @@ export const Results = ({ navigation }) => {
   const metricColor = activeSet.color;
   const initialLetter = username ? username.charAt(0).toUpperCase() : "H";
 
-  // Inline MiniBarChart Component (Renders sleek rounded Bar Chart per week)
-  const MiniBarChart = ({ data, color, chartW }) => {
+  // Inline MiniBarChart Component (Renders exactly 5 week bars per viewport page)
+  const MiniBarChart = ({ data, color, containerWidth }) => {
     const chartH = 75;
-    const padX = 14;
     const padY = 8;
     const n = data.length;
-    if (n < 2) return null;
+    if (n < 1) return null;
 
-    const barW = 16;
+    const visibleCount = 5;
+    const slotW = containerWidth / visibleCount;
+    const chartW = n * slotW;
+    const barW = Math.min(20, Math.max(12, slotW * 0.42));
     const maxBarH = chartH - 2 * padY;
     const gradId = `mbg-${color.replace("#", "")}`;
 
     const pts = data.map((d, i) => {
-      const x = padX + (i / (n - 1)) * (chartW - 2 * padX);
+      const x = i * slotW + slotW / 2;
       return { x, value: d.value, week: d.week, isLogged: d.isLogged };
     });
 
@@ -455,9 +457,9 @@ export const Results = ({ navigation }) => {
           return (
             <Line
               key={`hgrid-${v}`}
-              x1={padX}
+              x1={0}
               y1={y}
-              x2={chartW - padX}
+              x2={chartW}
               y2={y}
               stroke="rgba(255, 255, 255, 0.07)"
               strokeWidth="1"
@@ -480,8 +482,8 @@ export const Results = ({ navigation }) => {
                 y={padY}
                 width={barW}
                 height={maxBarH}
-                rx={6}
-                ry={6}
+                rx={5}
+                ry={5}
                 fill="rgba(255, 255, 255, 0.05)"
               />
               {/* Active filled value bar */}
@@ -491,8 +493,8 @@ export const Results = ({ navigation }) => {
                   y={barY}
                   width={barW}
                   height={barH}
-                  rx={6}
-                  ry={6}
+                  rx={5}
+                  ry={5}
                   fill={`url(#${gradId})`}
                   stroke={color}
                   strokeWidth="1.5"
@@ -1021,8 +1023,9 @@ export const Results = ({ navigation }) => {
 
           {mindsetDimensions.map((dim) => {
             const dimData = buildDimData(dim.key);
-            const chartW = Math.max(screenWidth - 100, allWeeks.length * 42);
-            const padX = 14;
+            const containerWidth = Math.max(260, screenWidth - 100);
+            const slotW = containerWidth / 5;
+            const chartW = allWeeks.length * slotW;
 
             return (
               <View key={dim.key} style={styles.miniChartCard}>
@@ -1039,39 +1042,37 @@ export const Results = ({ navigation }) => {
                     ))}
                   </View>
 
-                  {/* Scrollable line chart */}
+                  {/* Scrollable bar chart showing 5 bars at a time, snaps 5 bars per page */}
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
+                    snapToInterval={containerWidth}
+                    decelerationRate="fast"
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingRight: 12 }}
                   >
                     <View style={{ width: chartW }}>
                       <MiniBarChart
                         data={dimData}
                         color={dim.color}
-                        chartW={chartW}
+                        containerWidth={containerWidth}
                       />
                       {/* X-axis week labels */}
                       <View style={styles.miniXAxis}>
                         {allWeeks.map((w, i) => {
-                          const xPos =
-                            padX +
-                            (i / (allWeeks.length - 1)) * (chartW - 2 * padX);
-                          const labelText = w === "W1" ? "1" : w;
+                          const xPos = i * slotW + slotW / 2;
                           return (
                             <Text
                               key={w}
                               style={[
                                 styles.miniXLabel,
                                 {
-                                  left: xPos - 12,
-                                  width: 24,
+                                  left: xPos - 18,
+                                  width: 36,
                                   textAlign: "center",
                                 },
                               ]}
                             >
-                              {labelText}
+                              {w}
                             </Text>
                           );
                         })}

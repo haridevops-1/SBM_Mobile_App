@@ -9,7 +9,7 @@
  * 2. Aspect cards (Nutrition, Movement, Recovery) evaluated on an independent 100% scale.
  * 3. Detailed aspect breakdown bar charts connecting to Catalyst backend (/api/efforts/overall-progress
  *    and /api/efforts/aspect-breakdown).
- * ============================================================================
+ * ==================================================== ========================
  */
 
 import React, { useState, useEffect, useRef } from "react";

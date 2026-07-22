@@ -23,6 +23,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import {
   Mail,
@@ -517,7 +518,13 @@ export const Auth = () => {
           {/* Brand Logo Header */}
           <View style={styles.brandHeader}>
             <View style={styles.brandLogoRing}>
-              <Sparkles size={22} color="white" />
+              <Image
+                source={{
+                  uri: "https://cdn.dribbble.com/userupload/11047563/file/original-2c2cc8ef91f3e88746a6264eb315a11c.jpg?resize=752x&vertical=center",
+                }}
+                style={styles.brandLogoImage}
+                resizeMode="cover"
+              />
             </View>
             <Text style={styles.brandTitle}>SLOW BURN METHOD</Text>
             <Text style={styles.brandTagline}>
@@ -994,12 +1001,15 @@ export const Auth = () => {
       >
         <View style={styles.successModalOverlay}>
           <View style={styles.successModalCard}>
-            <LinearGradient
-              colors={["#7B1FA2", "#4A148C"]}
-              style={styles.successModalHeaderBadge}
-            >
-              <Sparkles size={32} color="#FFFFFF" />
-            </LinearGradient>
+            <View style={styles.successModalHeaderBadge}>
+              <Image
+                source={{
+                  uri: "https://cdn.dribbble.com/userupload/11047563/file/original-2c2cc8ef91f3e88746a6264eb315a11c.jpg?resize=752x&vertical=center",
+                }}
+                style={styles.brandLogoImage}
+                resizeMode="cover"
+              />
+            </View>
 
             <Text style={styles.successModalTitle}>
               Welcome to Slow Burn Method! 🎉

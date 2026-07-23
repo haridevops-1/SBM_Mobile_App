@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
@@ -10,6 +11,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Modal,
 } from "react-native";
 import {
   Menu,
@@ -17,11 +19,14 @@ import {
   Edit2,
   Trash2,
   RefreshCw,
+  Plus,
+  X,
 } from "lucide-react-native";
 import AdminSidebar from "../../components/Admin/AdminSidebar";
 import AdminEditModal from "../../components/Admin/AdminEditModal";
 import AdminDeleteModal from "../../components/Admin/AdminDeleteModal";
 import styles from "../../styles/pages/Admin/AdminQuotesManagement.styles";
+import modalStyles from "../../styles/pages/Admin/AdminModals.styles";
 
 export const AdminQuotesManagement = ({
   activeModule = "quotes_management",
@@ -38,6 +43,10 @@ export const AdminQuotesManagement = ({
   // Modal States
   const [editItem, setEditItem] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
+
+  // Add Quote Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newQuoteText, setNewQuoteText] = useState("");
 
   const QUOTES_API_ENDPOINT = "https://sbm-mobile-app-906714478.development.catalystserverless.com/api/daily-quotes";
 
@@ -68,6 +77,8 @@ export const AdminQuotesManagement = ({
             return {
               ROWID: rowId,
               Quotes: item.Quotes || item.quotes || item.quote || "",
+              CREATEDTIME: item.CREATEDTIME || item.createdTime || item.created_at || "",
+              MODIFIEDTIME: item.MODIFIEDTIME || item.modifiedTime || "",
             };
           });
           safeAnimate();
@@ -80,7 +91,6 @@ export const AdminQuotesManagement = ({
       console.warn("Quotes Management GET API notice:", e);
     }
 
-    // Default fallback if network offline
     setDataList([]);
     setLoading(false);
   };
@@ -108,23 +118,16 @@ export const AdminQuotesManagement = ({
         }),
       });
 
-      const json = await res.json();
-      if (res.ok && json.status === "success") {
-        setDataList((prev) =>
-          prev.map((row) => (row.id === targetId || row.ROWID === targetId ? { ...row, ...updatedItem, Quotes: updatedQuoteText } : row))
-        );
-        if (selectedRecord && (selectedRecord.id === targetId || selectedRecord.ROWID === targetId)) {
-          setSelectedRecord({ ...selectedRecord, ...updatedItem, Quotes: updatedQuoteText });
-        }
-      } else {
-        setDataList((prev) =>
-          prev.map((row) => (row.id === targetId || row.ROWID === targetId ? { ...row, ...updatedItem, Quotes: updatedQuoteText } : row))
-        );
+      setDataList((prev) =>
+        prev.map((row) => (row.ROWID === targetId ? { ...row, ...updatedItem, Quotes: updatedQuoteText } : row))
+      );
+      if (selectedRecord && selectedRecord.ROWID === targetId) {
+        setSelectedRecord({ ...selectedRecord, ...updatedItem, Quotes: updatedQuoteText });
       }
     } catch (err) {
       console.warn("PATCH Quote API error:", err);
       setDataList((prev) =>
-        prev.map((row) => (row.id === targetId || row.ROWID === targetId ? { ...row, ...updatedItem, Quotes: updatedQuoteText } : row))
+        prev.map((row) => (row.ROWID === targetId ? { ...row, ...updatedItem, Quotes: updatedQuoteText } : row))
       );
     } finally {
       setEditItem(null);
@@ -138,26 +141,58 @@ export const AdminQuotesManagement = ({
     safeAnimate();
     const targetId = itemToDelete.ROWID || itemToDelete.id;
     try {
-      const res = await fetch(`${QUOTES_API_ENDPOINT}?id=${targetId}`, {
+      await fetch(`${QUOTES_API_ENDPOINT}?id=${targetId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ROWID: targetId, id: targetId }),
       });
 
-      const json = await res.json();
-      if (res.ok && json.status === "success") {
-        setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
-      } else {
-        setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
-      }
+      setDataList((prev) => prev.filter((row) => row.ROWID !== targetId));
     } catch (err) {
       console.warn("DELETE Quote API error:", err);
-      setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
+      setDataList((prev) => prev.filter((row) => row.ROWID !== targetId));
     } finally {
-      if (selectedRecord && (selectedRecord.id === targetId || selectedRecord.ROWID === targetId)) {
+      if (selectedRecord && selectedRecord.ROWID === targetId) {
         setSelectedRecord(null);
       }
       setDeleteItem(null);
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 4. POST METHOD: Create New Daily Message / Quote in Catalyst DataStore & UI
+  // ──────────────────────────────────────────────────────────
+  const handleCreateQuote = async () => {
+    if (!newQuoteText.trim()) return;
+    safeAnimate();
+    const tempId = `5602200000004${Date.now().toString().slice(-4)}`;
+    const newQuoteObj = {
+      ROWID: tempId,
+      Quotes: newQuoteText.trim(),
+      CREATEDTIME: new Date().toISOString().replace("T", " ").substring(0, 19),
+    };
+
+    setDataList((prev) => [newQuoteObj, ...prev]);
+    setShowAddModal(false);
+    setNewQuoteText("");
+
+    try {
+      const res = await fetch(QUOTES_API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Quotes: newQuoteText.trim(),
+        }),
+      });
+
+      const json = await res.json();
+      if (res.ok && json.data && json.data.ROWID) {
+        setDataList((prev) =>
+          prev.map((q) => (q.ROWID === tempId ? { ...q, ROWID: json.data.ROWID, id: json.data.ROWID } : q))
+        );
+      }
+    } catch (e) {
+      console.warn("Create Quote API notice:", e);
     }
   };
 
@@ -193,6 +228,41 @@ export const AdminQuotesManagement = ({
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteItem(null)}
       />
+
+      {/* Add New Quote Modal */}
+      <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.modalCard}>
+            <View style={modalStyles.header}>
+              <Text style={modalStyles.headerTitle}>Add New Daily Quote / Message</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={modalStyles.closeBtn}>
+                <X size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <View style={modalStyles.formScroll}>
+              <View style={modalStyles.fieldGroup}>
+                <Text style={modalStyles.fieldLabel}>Quote / Message Text</Text>
+                <TextInput
+                  style={[modalStyles.input, { minHeight: 80, textAlignVertical: "top" }]}
+                  value={newQuoteText}
+                  onChangeText={setNewQuoteText}
+                  placeholder="Enter daily motivational quote or message..."
+                  placeholderTextColor="#546E7A"
+                  multiline
+                />
+              </View>
+            </View>
+            <View style={modalStyles.btnRow}>
+              <TouchableOpacity style={modalStyles.cancelBtn} onPress={() => setShowAddModal(false)}>
+                <Text style={modalStyles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={modalStyles.saveBtn} onPress={handleCreateQuote}>
+                <Text style={modalStyles.saveBtnText}>Save Quote</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Top Header */}
       <View style={styles.header}>
@@ -234,7 +304,7 @@ export const AdminQuotesManagement = ({
                 QUOTE #{String(selectedRecord.ROWID || selectedRecord.id).slice(-6)}
               </Text>
 
-              {/* Action Buttons Top Right: EDIT (blue) & DELETE (red) */}
+              {/* Action Buttons Top Right: EDIT & DELETE */}
               <View style={styles.detailActionRow}>
                 <TouchableOpacity
                   style={styles.detailEditBtn}
@@ -265,18 +335,18 @@ export const AdminQuotesManagement = ({
             <View style={styles.detailFieldGroup}>
               <Text style={styles.detailFieldLabel}>Quote Content</Text>
               <Text style={styles.detailFieldValue}>
-                "{selectedRecord.Quotes || selectedRecord.quotes}"
+                "{selectedRecord.Quotes}"
               </Text>
             </View>
 
-            {selectedRecord.CREATEDTIME && (
+            {!!selectedRecord.CREATEDTIME && (
               <View style={styles.detailFieldGroup}>
                 <Text style={styles.detailFieldLabel}>Created Time</Text>
                 <Text style={styles.detailFieldValue}>{selectedRecord.CREATEDTIME}</Text>
               </View>
             )}
 
-            {selectedRecord.MODIFIEDTIME && (
+            {!!selectedRecord.MODIFIEDTIME && (
               <View style={styles.detailFieldGroup}>
                 <Text style={styles.detailFieldLabel}>Last Modified Time</Text>
                 <Text style={styles.detailFieldValue}>{selectedRecord.MODIFIEDTIME}</Text>
@@ -285,53 +355,63 @@ export const AdminQuotesManagement = ({
           </View>
         ) : (
           /* ─── DATA LISTING TABLE VIEW (ID | QUOTES | ACTIONS) ─── */
-          <View style={styles.tableCard}>
-            {/* Table Header Row */}
-            <View style={styles.tableHeaderRow}>
-              <Text style={[styles.tableHeaderCell, styles.colId]}>ID</Text>
-              <Text style={[styles.tableHeaderCell, styles.colQuotes]}>QUOTES</Text>
-              <Text style={[styles.tableHeaderCell, styles.colActions, { textAlign: "right" }]}>
-                ACTIONS
-              </Text>
+          <View>
+            <TouchableOpacity
+              style={styles.addBtnTop}
+              activeOpacity={0.8}
+              onPress={() => setShowAddModal(true)}
+            >
+              <Plus size={16} color="#FFFFFF" />
+              <Text style={styles.addBtnTopText}>Add New Daily Quote</Text>
+            </TouchableOpacity>
+
+            <View style={styles.tableCard}>
+              <View style={styles.tableHeaderRow}>
+                <Text style={[styles.tableHeaderCell, styles.colId]}>ID</Text>
+                <Text style={[styles.tableHeaderCell, styles.colQuotes]}>QUOTES</Text>
+                <Text style={[styles.tableHeaderCell, styles.colActions, { textAlign: "right" }]}>
+                  ACTIONS
+                </Text>
+              </View>
+
+              {dataList.map((row, idx) => (
+                <TouchableOpacity
+                  key={row.ROWID || row.id || `quote_${idx}`}
+                  activeOpacity={0.7}
+                  style={[styles.tableRow, idx % 2 === 1 && styles.tableRowEven]}
+                  onPress={() => handleSelectRecord(row)}
+                >
+                  <Text style={[styles.cellText, styles.colId]} numberOfLines={1}>
+                    {String(row.ROWID || row.id).slice(-4)}
+                  </Text>
+                  <Text style={[styles.cellText, styles.colQuotes]} numberOfLines={1}>
+                    {row.Quotes}
+                  </Text>
+
+                  <View style={styles.colActions}>
+                    <TouchableOpacity
+                      style={styles.actionEditBtn}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setEditItem(row);
+                      }}
+                    >
+                      <Edit2 size={14} color="#29B6F6" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.actionDeleteBtn}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setDeleteItem(row);
+                      }}
+                    >
+                      <Trash2 size={14} color="#FF5252" />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ))}
             </View>
-
-            {dataList.map((row, idx) => (
-              <TouchableOpacity
-                key={row.ROWID || row.id || `quote_${idx}`}
-                activeOpacity={0.7}
-                style={[styles.tableRow, idx % 2 === 1 && styles.tableRowEven]}
-                onPress={() => handleSelectRecord(row)}
-              >
-                <Text style={[styles.cellText, styles.colId]} numberOfLines={1}>
-                  {String(row.ROWID || row.id).slice(-4)}
-                </Text>
-                <Text style={[styles.cellText, styles.colQuotes]} numberOfLines={1}>
-                  {row.Quotes || row.quotes}
-                </Text>
-
-                <View style={styles.colActions}>
-                  <TouchableOpacity
-                    style={styles.actionEditBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      setEditItem(row);
-                    }}
-                  >
-                    <Edit2 size={14} color="#29B6F6" />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.actionDeleteBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      setDeleteItem(row);
-                    }}
-                  >
-                    <Trash2 size={14} color="#FF5252" />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))}
           </View>
         )}
       </ScrollView>

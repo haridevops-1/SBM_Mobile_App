@@ -67,19 +67,14 @@ export const AdminDailyLogsManagement = ({
             const rowId = item.ROWID || item.id || `LOG_${index + 1}`;
             const userId = item.User_ID || item.user_id || "56022000000030005";
             return {
-              id: rowId,
               ROWID: rowId,
               User_ID: userId,
-              user_id: userId,
               log_date: item.log_date || "2026-07-23",
               effort_score: item.effort_score !== null && item.effort_score !== undefined ? String(item.effort_score) : "N/A",
               nutrition_score: item.nutrition_score !== null && item.nutrition_score !== undefined ? String(item.nutrition_score) : "N/A",
               movement_score: item.movement_score !== null && item.movement_score !== undefined ? String(item.movement_score) : "N/A",
               recovery_score: item.recovery_score !== null && item.recovery_score !== undefined ? String(item.recovery_score) : "N/A",
               streak_count: item.streak_count !== null && item.streak_count !== undefined ? String(item.streak_count) : "0",
-              CREATEDTIME: item.CREATEDTIME || "2026-07-23 12:00:00",
-              MODIFIEDTIME: item.MODIFIEDTIME || "2026-07-23 12:00:00",
-              raw: item,
             };
           });
           safeAnimate();

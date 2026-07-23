@@ -66,14 +66,8 @@ export const AdminQuotesManagement = ({
           const formatted = items.map((item, index) => {
             const rowId = item.ROWID || item.id || `QUOTE_${index + 1}`;
             return {
-              id: rowId,
               ROWID: rowId,
               Quotes: item.Quotes || item.quotes || item.quote || "",
-              quotes: item.Quotes || item.quotes || item.quote || "",
-              createdDate: item.CREATEDTIME ? String(item.CREATEDTIME).split(" ")[0] : item.created_at || "2026-07-16",
-              CREATEDTIME: item.CREATEDTIME || "2026-07-16 12:00:00",
-              MODIFIEDTIME: item.MODIFIEDTIME || "2026-07-16 12:00:00",
-              raw: item,
             };
           });
           safeAnimate();

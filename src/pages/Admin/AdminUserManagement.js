@@ -79,7 +79,6 @@ export const AdminUserManagement = ({
             meal_preference: item.meal_preference || "Veg + Egg",
             timezone: item.timezone || "India (IST - UTC+5:30)",
             device_platform: item.device_platform || "web",
-            raw: item,
           }));
           safeAnimate();
           setDataList(formatted);

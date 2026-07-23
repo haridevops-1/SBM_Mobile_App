@@ -6,6 +6,7 @@ import AdminQuotesManagement from "./AdminQuotesManagement";
 import AdminDailyLogsManagement from "./AdminDailyLogsManagement";
 import AdminPhaseManagement from "./AdminPhaseManagement";
 import AdminSundayQuestionsManagement from "./AdminSundayQuestionsManagement";
+import AdminGroupCodeManagement from "./AdminGroupCodeManagement";
 import { useUser } from "../../context/UserContext";
 
 export const AdminFlow = () => {
@@ -85,6 +86,22 @@ export const AdminFlow = () => {
   ) {
     return (
       <AdminSundayQuestionsManagement
+        activeModule={currentScreen}
+        onNavigateBack={handleNavigateBack}
+        onNavigateModule={handleNavigateModule}
+        onSignOut={logoutUser}
+        adminName={username || "Super Admin"}
+      />
+    );
+  }
+
+  if (
+    currentScreen === "group_code_management" ||
+    currentScreen === "group_code" ||
+    currentScreen === "user_group_mapping"
+  ) {
+    return (
+      <AdminGroupCodeManagement
         activeModule={currentScreen}
         onNavigateBack={handleNavigateBack}
         onNavigateModule={handleNavigateModule}

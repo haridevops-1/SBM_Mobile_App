@@ -17,6 +17,7 @@ import {
   Edit2,
   Trash2,
   RefreshCw,
+  Plus,
 } from "lucide-react-native";
 import AdminSidebar from "../../components/Admin/AdminSidebar";
 import AdminEditModal from "../../components/Admin/AdminEditModal";
@@ -35,7 +36,7 @@ export const AdminResourceManagement = ({
   const [dataList, setDataList] = useState([]);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  // Modal States
+  // Modals
   const [editItem, setEditItem] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
 
@@ -51,7 +52,7 @@ export const AdminResourceManagement = ({
   };
 
   // ──────────────────────────────────────────────────────────
-  // 1. GET METHOD: Fetch all resources from Catalyst DataStore API
+  // 1. GET METHOD: Fetch all Resources from Catalyst DataStore API
   // ──────────────────────────────────────────────────────────
   const fetchData = async () => {
     setLoading(true);
@@ -66,25 +67,15 @@ export const AdminResourceManagement = ({
           const formatted = items.map((item, index) => {
             const rowId = item.ROWID || item.id || `RES_${index + 1}`;
             return {
-              id: rowId,
               ROWID: rowId,
-              title: item.Title || item.title || `Resource ${index + 1}`,
               Title: item.Title || item.title || `Resource ${index + 1}`,
-              type: item.Resource_Type || item.resource_type || item.type || "Guides",
               Resource_Type: item.Resource_Type || item.resource_type || item.type || "Guides",
-              description: item.Description || item.description || "",
               Description: item.Description || item.description || "",
-              resourceUrl: item.Resource_URL || item.resource_url || item.videoUrl || "",
               Resource_URL: item.Resource_URL || item.resource_url || item.videoUrl || "",
-              thumbnailUrl: item.Thumbnail_URL || item.thumbnail || "",
               Thumbnail_URL: item.Thumbnail_URL || item.thumbnail || "",
-              isActive: item.Is_Active ?? true,
               Is_Active: item.Is_Active ?? true,
-              publishedDate: item.Published_Date || item.date || "",
               Published_Date: item.Published_Date || item.date || "",
-              displayOrder: item.Display_Order || item.displayOrder || 1,
               Display_Order: item.Display_Order || item.displayOrder || 1,
-              raw: item,
             };
           });
           safeAnimate();
@@ -97,7 +88,6 @@ export const AdminResourceManagement = ({
       console.warn("Resource Management GET API notice:", e);
     }
 
-    // Default fallback if network offline
     setDataList([]);
     setLoading(false);
   };
@@ -118,34 +108,26 @@ export const AdminResourceManagement = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ROWID: targetId,
-          id: targetId,
-          Title: updatedItem.Title || updatedItem.title,
-          Resource_Type: updatedItem.Resource_Type || updatedItem.type,
-          Description: updatedItem.Description || updatedItem.description,
-          Resource_URL: updatedItem.Resource_URL || updatedItem.resourceUrl,
-          Thumbnail_URL: updatedItem.Thumbnail_URL || updatedItem.thumbnailUrl,
-          Display_Order: updatedItem.Display_Order || updatedItem.displayOrder,
-          Is_Active: updatedItem.Is_Active !== undefined ? updatedItem.Is_Active : updatedItem.isActive,
+          Title: updatedItem.Title,
+          Resource_Type: updatedItem.Resource_Type,
+          Description: updatedItem.Description,
+          Resource_URL: updatedItem.Resource_URL,
+          Thumbnail_URL: updatedItem.Thumbnail_URL,
+          Display_Order: updatedItem.Display_Order,
+          Is_Active: updatedItem.Is_Active,
         }),
       });
 
-      const json = await res.json();
-      if (res.ok && json.status === "success") {
-        setDataList((prev) =>
-          prev.map((row) => (row.id === targetId ? { ...row, ...updatedItem } : row))
-        );
-        if (selectedRecord && (selectedRecord.id === targetId || selectedRecord.ROWID === targetId)) {
-          setSelectedRecord({ ...selectedRecord, ...updatedItem });
-        }
-      } else {
-        setDataList((prev) =>
-          prev.map((row) => (row.id === targetId ? { ...row, ...updatedItem } : row))
-        );
+      setDataList((prev) =>
+        prev.map((row) => (row.ROWID === targetId ? { ...row, ...updatedItem } : row))
+      );
+      if (selectedRecord && selectedRecord.ROWID === targetId) {
+        setSelectedRecord({ ...selectedRecord, ...updatedItem });
       }
     } catch (err) {
       console.warn("PATCH Resource API error:", err);
       setDataList((prev) =>
-        prev.map((row) => (row.id === targetId ? { ...row, ...updatedItem } : row))
+        prev.map((row) => (row.ROWID === targetId ? { ...row, ...updatedItem } : row))
       );
     } finally {
       setEditItem(null);
@@ -159,23 +141,18 @@ export const AdminResourceManagement = ({
     safeAnimate();
     const targetId = itemToDelete.ROWID || itemToDelete.id;
     try {
-      const res = await fetch(`${RESOURCE_API_ENDPOINT}?id=${targetId}`, {
+      await fetch(`${RESOURCE_API_ENDPOINT}?id=${targetId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ROWID: targetId, id: targetId }),
+        body: JSON.stringify({ ROWID: targetId }),
       });
 
-      const json = await res.json();
-      if (res.ok && json.status === "success") {
-        setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
-      } else {
-        setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
-      }
+      setDataList((prev) => prev.filter((row) => row.ROWID !== targetId));
     } catch (err) {
       console.warn("DELETE Resource API error:", err);
-      setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
+      setDataList((prev) => prev.filter((row) => row.ROWID !== targetId));
     } finally {
-      if (selectedRecord && (selectedRecord.id === targetId || selectedRecord.ROWID === targetId)) {
+      if (selectedRecord && selectedRecord.ROWID === targetId) {
         setSelectedRecord(null);
       }
       setDeleteItem(null);
@@ -252,10 +229,10 @@ export const AdminResourceManagement = ({
           <View style={styles.detailCard}>
             <View style={styles.detailHeader}>
               <Text style={styles.detailTitle} numberOfLines={1}>
-                {selectedRecord.Title || selectedRecord.title}
+                {selectedRecord.Title}
               </Text>
 
-              {/* Action Buttons Top Right: EDIT (blue) & DELETE (red) */}
+              {/* Action Buttons Top Right: EDIT & DELETE */}
               <View style={styles.detailActionRow}>
                 <TouchableOpacity
                   style={styles.detailEditBtn}
@@ -280,25 +257,25 @@ export const AdminResourceManagement = ({
             {/* Vertical Field Breakdown */}
             <View style={styles.detailFieldGroup}>
               <Text style={styles.detailFieldLabel}>Row ID</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.ROWID || selectedRecord.id}</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.ROWID}</Text>
             </View>
 
             <View style={styles.detailFieldGroup}>
               <Text style={styles.detailFieldLabel}>Resource Title</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.Title || selectedRecord.title}</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.Title}</Text>
             </View>
 
             <View style={styles.detailFieldGroup}>
               <Text style={styles.detailFieldLabel}>Resource Type</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.Resource_Type || selectedRecord.type}</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.Resource_Type}</Text>
             </View>
 
             <View style={styles.detailFieldGroup}>
               <Text style={styles.detailFieldLabel}>Description</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.Description || selectedRecord.description || "N/A"}</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.Description || "N/A"}</Text>
             </View>
 
-            {selectedRecord.Resource_URL && (
+            {!!selectedRecord.Resource_URL && (
               <View style={styles.detailFieldGroup}>
                 <Text style={styles.detailFieldLabel}>Resource URL</Text>
                 <Text style={[styles.detailFieldValue, { color: "#29B6F6" }]}>
@@ -307,7 +284,7 @@ export const AdminResourceManagement = ({
               </View>
             )}
 
-            {selectedRecord.Thumbnail_URL && (
+            {!!selectedRecord.Thumbnail_URL && (
               <View style={styles.detailFieldGroup}>
                 <Text style={styles.detailFieldLabel}>Thumbnail URL</Text>
                 <Text style={[styles.detailFieldValue, { color: "#B085F5" }]}>
@@ -323,7 +300,7 @@ export const AdminResourceManagement = ({
               </Text>
             </View>
 
-            {selectedRecord.Published_Date && (
+            {!!selectedRecord.Published_Date && (
               <View style={styles.detailFieldGroup}>
                 <Text style={styles.detailFieldLabel}>Published Date</Text>
                 <Text style={styles.detailFieldValue}>{selectedRecord.Published_Date}</Text>
@@ -349,46 +326,55 @@ export const AdminResourceManagement = ({
             </View>
 
             {/* Table Rows */}
-            {dataList.map((row, idx) => (
-              <TouchableOpacity
-                key={row.id}
-                activeOpacity={0.7}
-                style={[styles.tableRow, idx % 2 === 1 && styles.tableRowEven]}
-                onPress={() => handleSelectRecord(row)}
-              >
-                <Text style={[styles.cellText, styles.colId]} numberOfLines={1}>
-                  {String(row.ROWID || row.id).slice(-4)}
-                </Text>
-                <Text style={[styles.cellText, styles.colTitle]} numberOfLines={1}>
-                  {row.Title || row.title}
-                </Text>
-                <Text style={[styles.cellText, styles.colType]} numberOfLines={1}>
-                  {row.Resource_Type || row.type}
-                </Text>
+            {dataList.map((item, index) => {
+              const shortId = `#${String(item.ROWID).slice(-4)}`;
+              const isEven = index % 2 === 1;
 
-                <View style={styles.colActions}>
-                  <TouchableOpacity
-                    style={styles.actionEditBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      setEditItem(row);
-                    }}
-                  >
-                    <Edit2 size={14} color="#29B6F6" />
-                  </TouchableOpacity>
+              return (
+                <TouchableOpacity
+                  key={item.ROWID || index}
+                  activeOpacity={0.7}
+                  style={[styles.tableRow, isEven && styles.tableRowEven]}
+                  onPress={() => handleSelectRecord(item)}
+                >
+                  <Text style={[styles.cellText, styles.colId]} numberOfLines={1}>
+                    {shortId}
+                  </Text>
 
-                  <TouchableOpacity
-                    style={styles.actionDeleteBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      setDeleteItem(row);
-                    }}
-                  >
-                    <Trash2 size={14} color="#FF5252" />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))}
+                  <Text style={[styles.cellText, styles.colTitle, { fontWeight: "700" }]} numberOfLines={1}>
+                    {item.Title}
+                  </Text>
+
+                  <Text style={[styles.cellText, styles.colType, { color: "#81D4FA" }]} numberOfLines={1}>
+                    {item.Resource_Type}
+                  </Text>
+
+                  <View style={styles.colActions}>
+                    <TouchableOpacity
+                      style={styles.actionEditBtn}
+                      activeOpacity={0.8}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setEditItem(item);
+                      }}
+                    >
+                      <Edit2 size={13} color="#29B6F6" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.actionDeleteBtn}
+                      activeOpacity={0.8}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setDeleteItem(item);
+                      }}
+                    >
+                      <Trash2 size={13} color="#FF5252" />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       </ScrollView>

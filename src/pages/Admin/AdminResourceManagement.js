@@ -325,14 +325,13 @@ export const AdminResourceManagement = ({
               </Text>
             </View>
 
-            {/* Table Rows */}
             {dataList.map((item, index) => {
               const shortId = `#${String(item.ROWID).slice(-4)}`;
               const isEven = index % 2 === 1;
 
               return (
                 <TouchableOpacity
-                  key={item.ROWID || index}
+                  key={item.ROWID || item.id || `res_${index}`}
                   activeOpacity={0.7}
                   style={[styles.tableRow, isEven && styles.tableRowEven]}
                   onPress={() => handleSelectRecord(item)}

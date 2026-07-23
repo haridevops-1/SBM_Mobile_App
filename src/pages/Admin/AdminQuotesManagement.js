@@ -295,10 +295,9 @@ export const AdminQuotesManagement = ({
               </Text>
             </View>
 
-            {/* Table Rows */}
             {dataList.map((row, idx) => (
               <TouchableOpacity
-                key={row.id}
+                key={row.ROWID || row.id || `quote_${idx}`}
                 activeOpacity={0.7}
                 style={[styles.tableRow, idx % 2 === 1 && styles.tableRowEven]}
                 onPress={() => handleSelectRecord(row)}

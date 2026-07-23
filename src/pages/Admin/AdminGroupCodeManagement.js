@@ -395,7 +395,7 @@ export const AdminGroupCodeManagement = ({
 
                 return (
                   <TouchableOpacity
-                    key={item.ROWID || index}
+                    key={item.ROWID || item.id || `grp_${index}`}
                     activeOpacity={0.7}
                     style={[styles.tableRow, isEven && styles.tableRowEven]}
                     onPress={() => {

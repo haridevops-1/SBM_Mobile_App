@@ -29,7 +29,7 @@ export default StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "rgba(255, 255, 255, 0.06)",
     alignItems: "center",
-    justify.content: "center",
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 14,

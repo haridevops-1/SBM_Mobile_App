@@ -4,12 +4,25 @@
     "slug": "sbm-mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/app_purple_logo.jpg",
     "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/app_purple_logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#060813"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/app_purple_logo.jpg"
     },
     "android": {
-      "package": "com.hariharan.sbmMobileApp"
+      "package": "com.hariharan.sbmMobileApp",
+      "googleServicesFile": "./google-services.json",
+      "icon": "./assets/app_purple_logo.jpg",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app_purple_logo.jpg",
+        "backgroundColor": "#060813"
+      }
     },
     "extra": {
       "eas": {

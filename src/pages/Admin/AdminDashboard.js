@@ -16,10 +16,9 @@ import {
   Activity,
   CalendarCheck,
   LayoutGrid,
-  UserPlus,
-  FileText,
-  Send,
+  Quote,
   RefreshCw,
+  QrCode,
 } from "lucide-react-native";
 import Svg, { Path, Defs, LinearGradient, Stop } from "react-native-svg";
 import AdminSidebar from "../../components/Admin/AdminSidebar";
@@ -57,24 +56,22 @@ export const AdminDashboard = ({
   const { userToken } = useUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModule, setActiveModule] = useState("dashboard");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Live Metrics State
+  // Live Metrics State — default static numbers initialized while live fetch completes
   const [metrics, setMetrics] = useState({
     totalUsers: 125,
-    usersThisWeek: 12,
+    usersGrowth: "↑ 12",
     activeCohorts: 16,
-    cohortsThisWeek: 2,
+    cohortsGrowth: "↑ 2",
     effortLogs: "1,240",
-    logsThisWeek: 156,
+    logsGrowth: "↑ 156",
     sundayCompletion: "91.2%",
-    sundayImprovement: "8.5%",
+    sundayGrowth: "↑ 8.5%",
   });
 
-  const DASHBOARD_API_ENDPOINT = "https://sbm-mobile-app-906714478.development.catalystserverless.com/api/admin/dashboard";
-
   // ──────────────────────────────────────────────────────────
-  // GET METHOD: Fetch real Admin Dashboard Metrics from Backend API
+  // GET METHOD: Fast parallel live backend metric fetching
   // ──────────────────────────────────────────────────────────
   const fetchDashboardMetrics = async () => {
     setLoading(true);
@@ -84,26 +81,29 @@ export const AdminDashboard = ({
         headers["Authorization"] = `Bearer ${userToken}`;
       }
 
-      const res = await fetch(DASHBOARD_API_ENDPOINT, {
-        method: "GET",
-        headers: headers,
-      });
+      // Fast parallel fetch across live DataStore endpoints
+      const [userRes, groupRes, logRes] = await Promise.all([
+        fetch("https://sbm-mobile-app-906714478.development.catalystserverless.com/api/admin/users", { headers })
+          .then((r) => r.json())
+          .catch(() => null),
+        fetch("https://sbm-mobile-app-906714478.development.catalystserverless.com/user-group-mapping", { headers })
+          .then((r) => r.json())
+          .catch(() => null),
+        fetch("https://sbm-mobile-app-906714478.development.catalystserverless.com/daily-logs", { headers })
+          .then((r) => r.json())
+          .catch(() => null),
+      ]);
 
-      const json = await res.json();
-      if (res.ok && json.data) {
-        const d = json.data;
-        setMetrics((prev) => ({
-          ...prev,
-          totalUsers: d.totalUsers ?? d.totalUsers?.value ?? prev.totalUsers,
-          usersThisWeek: d.usersThisWeek ?? prev.usersThisWeek,
-          activeCohorts: d.activeCohorts ?? d.activeCohorts?.value ?? prev.activeCohorts,
-          cohortsThisWeek: d.cohortsThisWeek ?? prev.cohortsThisWeek,
-          effortLogs: d.effortLogs ?? d.effortLogs?.value ?? prev.effortLogs,
-          logsThisWeek: d.logsThisWeek ?? prev.logsThisWeek,
-          sundayCompletion: d.sundayCompletion ?? d.sundayCheckIn?.value ?? prev.sundayCompletion,
-          sundayImprovement: d.sundayImprovement ?? prev.sundayImprovement,
-        }));
-      }
+      const liveUsers = (userRes?.data || userRes?.users || []).length;
+      const liveCohorts = (groupRes?.data || groupRes?.mappings || []).length;
+      const liveLogs = (logRes?.data || logRes?.logs || []).length;
+
+      setMetrics((prev) => ({
+        ...prev,
+        totalUsers: liveUsers > 0 ? liveUsers : prev.totalUsers,
+        activeCohorts: liveCohorts > 0 ? liveCohorts : prev.activeCohorts,
+        effortLogs: liveLogs > 0 ? (liveLogs >= 1000 ? liveLogs.toLocaleString() : String(liveLogs)) : prev.effortLogs,
+      }));
     } catch (e) {
       console.warn("Admin Dashboard GET API notice:", e);
     } finally {
@@ -177,7 +177,15 @@ export const AdminDashboard = ({
           </View>
         </View>
 
-        {/* 4 Core Module Metric Cards (2x2 Grid) */}
+        {/* Loading Indicator Banner */}
+        {loading && (
+          <View style={styles.loadingBanner}>
+            <ActivityIndicator size="small" color="#B085F5" />
+            <Text style={styles.loadingText}>Loading live dashboard metrics from backend...</Text>
+          </View>
+        )}
+
+        {/* 4 Core Module Metric Cards (2x2 Grid with Navigation) */}
         <View style={styles.statsGrid}>
           {/* Card 1: TOTAL USERS */}
           <TouchableOpacity
@@ -192,8 +200,7 @@ export const AdminDashboard = ({
             <Text style={styles.statValue}>{metrics.totalUsers}</Text>
             <View style={styles.statBottomRow}>
               <View style={styles.trendContainer}>
-                <Text style={styles.trendBold}>↑ {metrics.usersThisWeek}</Text>
-                <Text style={styles.trendMuted}>this week</Text>
+                <Text style={styles.trendBold}>{metrics.usersGrowth}</Text>
               </View>
               <Sparkline color="#B085F5" id="users" />
             </View>
@@ -212,8 +219,7 @@ export const AdminDashboard = ({
             <Text style={styles.statValue}>{metrics.activeCohorts}</Text>
             <View style={styles.statBottomRow}>
               <View style={styles.trendContainer}>
-                <Text style={styles.trendBold}>↑ {metrics.cohortsThisWeek}</Text>
-                <Text style={styles.trendMuted}>this week</Text>
+                <Text style={styles.trendBold}>{metrics.cohortsGrowth}</Text>
               </View>
               <Sparkline color="#29B6F6" id="cohorts" />
             </View>
@@ -232,8 +238,7 @@ export const AdminDashboard = ({
             <Text style={styles.statValue}>{metrics.effortLogs}</Text>
             <View style={styles.statBottomRow}>
               <View style={styles.trendContainer}>
-                <Text style={styles.trendBold}>↑ {metrics.logsThisWeek}</Text>
-                <Text style={styles.trendMuted}>this week</Text>
+                <Text style={styles.trendBold}>{metrics.logsGrowth}</Text>
               </View>
               <Sparkline color="#00E676" id="logs" />
             </View>
@@ -252,8 +257,7 @@ export const AdminDashboard = ({
             <Text style={styles.statValue}>{metrics.sundayCompletion}</Text>
             <View style={styles.statBottomRow}>
               <View style={styles.trendContainer}>
-                <Text style={styles.trendBold}>↑ {metrics.sundayImprovement}</Text>
-                <Text style={styles.trendMuted}>improvement</Text>
+                <Text style={styles.trendBold}>{metrics.sundayGrowth}</Text>
               </View>
               <Sparkline color="#FF9800" id="sunday" />
             </View>
@@ -263,52 +267,52 @@ export const AdminDashboard = ({
         {/* Quick Actions Row */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActionsGrid}>
-          {/* Action 1: Add User */}
+          {/* Action 1: Users */}
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.8}
             onPress={() => handleSelectModule("user_management")}
           >
             <View style={[styles.actionIconBox, { backgroundColor: "rgba(147, 51, 234, 0.2)" }]}>
-              <UserPlus size={18} color="#B085F5" />
+              <Users size={18} color="#B085F5" />
             </View>
-            <Text style={styles.actionLabel}>Add User</Text>
+            <Text style={styles.actionLabel}>Users</Text>
           </TouchableOpacity>
 
-          {/* Action 2: Manage Cohorts */}
+          {/* Action 2: Cohorts */}
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.8}
             onPress={() => handleSelectModule("group_code_management")}
           >
             <View style={[styles.actionIconBox, { backgroundColor: "rgba(59, 130, 246, 0.2)" }]}>
-              <Shield size={18} color="#29B6F6" />
+              <QrCode size={18} color="#29B6F6" />
             </View>
-            <Text style={styles.actionLabel}>Manage Cohorts</Text>
+            <Text style={styles.actionLabel}>Cohorts</Text>
           </TouchableOpacity>
 
-          {/* Action 3: View Logs */}
+          {/* Action 3: Daily Logs */}
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.8}
             onPress={() => handleSelectModule("daily_logs_management")}
           >
             <View style={[styles.actionIconBox, { backgroundColor: "rgba(34, 197, 94, 0.2)" }]}>
-              <FileText size={18} color="#00E676" />
+              <Activity size={18} color="#00E676" />
             </View>
-            <Text style={styles.actionLabel}>View Logs</Text>
+            <Text style={styles.actionLabel}>Daily Logs</Text>
           </TouchableOpacity>
 
-          {/* Action 4: Send Message */}
+          {/* Action 4: Quotes */}
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.8}
             onPress={() => handleSelectModule("quotes_management")}
           >
             <View style={[styles.actionIconBox, { backgroundColor: "rgba(249, 115, 22, 0.2)" }]}>
-              <Send size={18} color="#FF9800" />
+              <Quote size={18} color="#FF9800" />
             </View>
-            <Text style={styles.actionLabel}>Send Message</Text>
+            <Text style={styles.actionLabel}>Quotes</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

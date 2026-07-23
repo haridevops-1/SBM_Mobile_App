@@ -92,6 +92,28 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+  // Loading indicator banner
+  loadingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(176, 133, 245, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(176, 133, 245, 0.25)",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 10,
+  },
+  loadingText: {
+    color: "#B085F5",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -140,14 +162,9 @@ export default StyleSheet.create({
     gap: 4,
   },
   trendBold: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     color: "#00E676",
-  },
-  trendMuted: {
-    fontSize: 10,
-    color: "rgba(255, 255, 255, 0.4)",
-    fontWeight: "500",
   },
   sectionTitle: {
     fontSize: 16,

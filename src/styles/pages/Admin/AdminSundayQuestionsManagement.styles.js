@@ -29,7 +29,7 @@ export default StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "rgba(255, 255, 255, 0.06)",
     alignItems: "center",
-    justifyContent: "center",
+    justify.content: "center",
   },
   headerTitle: {
     fontSize: 14,
@@ -70,7 +70,7 @@ export default StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#16192E",
     paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.08)",
   },
@@ -85,7 +85,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.04)",
   },
@@ -98,21 +98,21 @@ export default StyleSheet.create({
     fontWeight: "500",
   },
   colId: {
-    flex: 0.9,
+    flex: 1.2,
   },
   colCategory: {
-    flex: 1.3,
+    flex: 2.2,
   },
-  colQuestionText: {
-    flex: 2.4,
-    paddingRight: 8,
+  colActionsHeader: {
+    flex: 1.2,
+    textAlign: "right",
   },
   colActions: {
+    flex: 1.2,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 8,
-    width: 65,
   },
   actionEditBtn: {
     paddingHorizontal: 8,

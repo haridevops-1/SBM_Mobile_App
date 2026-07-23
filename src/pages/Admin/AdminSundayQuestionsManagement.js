@@ -150,7 +150,6 @@ export const AdminSundayQuestionsManagement = ({
     safeAnimate();
     const targetId = itemToDelete.ROWID || itemToDelete.id;
 
-    // Check if deleting an option or a question
     if (itemToDelete.isOption) {
       try {
         await fetch(`${SUNDAY_API_ENDPOINT}/options?rowid=${targetId}`, {
@@ -508,7 +507,7 @@ export const AdminSundayQuestionsManagement = ({
             </View>
           </View>
         ) : (
-          /* MAIN TABLE VIEW */
+          /* MAIN TABLE VIEW (ID, CATEGORY, ACTIONS) */
           <View>
             <TouchableOpacity
               style={styles.addBtnTop}
@@ -523,8 +522,7 @@ export const AdminSundayQuestionsManagement = ({
               <View style={styles.tableHeaderRow}>
                 <Text style={[styles.tableHeaderCell, styles.colId]}>ID</Text>
                 <Text style={[styles.tableHeaderCell, styles.colCategory]}>CATEGORY</Text>
-                <Text style={[styles.tableHeaderCell, styles.colQuestionText]}>QUESTION TEXT</Text>
-                <Text style={[styles.tableHeaderCell, { textAlign: "right", width: 65 }]}>ACTIONS</Text>
+                <Text style={[styles.tableHeaderCell, styles.colActionsHeader]}>ACTIONS</Text>
               </View>
 
               {questionList.map((item, idx) => {
@@ -546,11 +544,7 @@ export const AdminSundayQuestionsManagement = ({
                     </Text>
 
                     <Text style={[styles.cellText, styles.colCategory, { color: "#81D4FA", fontWeight: "700" }]} numberOfLines={1}>
-                      {item.Category || item.category || "Weekly"}
-                    </Text>
-
-                    <Text style={[styles.cellText, styles.colQuestionText]} numberOfLines={2} ellipsizeMode="tail">
-                      {item.Question_Text || item.text}
+                      {item.Category || item.category || "Weekly Review"}
                     </Text>
 
                     <View style={styles.colActions}>

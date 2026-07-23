@@ -1,0 +1,138 @@
+import { StyleSheet, Dimensions, Platform, StatusBar } from "react-native";
+import theme from "../../../theme/theme";
+
+const { width, height } = Dimensions.get("window");
+const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight || 24 : 44;
+
+export default StyleSheet.create({
+  overlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.82)",
+    zIndex: 9999,
+  },
+  container: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: Math.min(300, width * 0.82),
+    height: "100%",
+    backgroundColor: "#0F1221",
+    borderRightWidth: 1,
+    borderColor: "rgba(176, 133, 245, 0.25)",
+    paddingTop: statusBarHeight + 12,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    shadowColor: "#7B1FA2",
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 24,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
+  },
+  avatarRing: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#7B1FA2",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: "#B085F5",
+  },
+  avatarText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  adminInfo: {
+    flex: 1,
+  },
+  adminName: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+  adminRole: {
+    fontSize: 10,
+    color: "#B085F5",
+    fontWeight: "700",
+    marginTop: 2,
+    letterSpacing: 0.5,
+  },
+  closeBtn: {
+    padding: 6,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  moduleList: {
+    flex: 1,
+  },
+  sectionHeader: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "rgba(255, 255, 255, 0.4)",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  moduleItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 4,
+    gap: 12,
+  },
+  moduleItemActive: {
+    backgroundColor: "rgba(123, 31, 162, 0.4)",
+    borderWidth: 1,
+    borderColor: "rgba(176, 133, 245, 0.35)",
+  },
+  moduleLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  moduleLabelActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+    paddingTop: 12,
+    marginTop: 8,
+  },
+  signOutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: "rgba(244, 67, 54, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(244, 67, 54, 0.25)",
+    gap: 10,
+  },
+  signOutText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FF5252",
+  },
+});

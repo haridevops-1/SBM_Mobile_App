@@ -5,15 +5,18 @@
   import { UserProvider, useUser } from './src/context/UserContext';
   import AuthScreen from './src/pages/Auth/Auth';
   import AppRouter from './src/router/AppRouter';
+  import AdminFlow from './src/pages/Admin/AdminFlow';
 
   // Ignore noisy deprecated package warning logs in development and simulator runs
   LogBox.ignoreLogs([
     '[expo-av]',
     'SafeAreaView has been deprecated',
+    'setLayoutAnimationEnabledExperimental is currently a no-op',
+    'setLayoutAnimationEnabledExperimental',
   ]);
 
   function MainApp() {
-    const { isLoggedIn, isSessionLoading } = useUser();
+    const { isLoggedIn, isSessionLoading, userRole } = useUser();
     const { width } = useWindowDimensions();
     
     const isWebDesktop = Platform.OS === 'web' && width > 768;
@@ -33,6 +36,11 @@
       if (!isLoggedIn) {
         return <AuthScreen />;
       }
+
+      if (userRole === 'admin') {
+        return <AdminFlow />;
+      }
+
       return (
         <NavigationContainer>
           <AppRouter />

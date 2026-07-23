@@ -23,6 +23,7 @@ export const UserProvider = ({ children }) => {
 
   // Shared user states (All start at 0 / false to display default tracker states)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState("user"); // 'user' | 'admin'
   const [username, setUsername] = useState("Guest");
   const [todayEffortLogged, setTodayEffortLogged] = useState(false);
   const [todayEffortScore, setTodayEffortScore] = useState(0);
@@ -121,52 +122,30 @@ export const UserProvider = ({ children }) => {
         if (cachedQuote) {
           setActiveQuote(cachedQuote);
         }
-
         const session = await AsyncStorage.getItem("sbm_user_session");
         if (session) {
-          const { name, currentWeightVal, details } = JSON.parse(session);
+          const { name, currentWeightVal, details, userRole: savedRole } = JSON.parse(session);
+          const activeRole = savedRole || details?.role || "user";
+          setUserRole(activeRole);
 
-          // Load pre-sbm score using user-specific key
-          if (details && details.userId) {
-            try {
-              const storedPreSbm = await AsyncStorage.getItem(
-                `sbm_pre_sbm_score_${details.userId}`,
-              );
-              if (storedPreSbm !== null) {
-                setPreSbmScore(parseInt(storedPreSbm, 10) || 0);
-              } else {
-                setPreSbmScore(0);
-              }
-            } catch (_) {}
-          }
-
-          // Validate session by checking if userId exists and backend responds
-          if (details && details.userId) {
+          if (activeRole === "admin") {
+            loginUser(name || "System Admin", currentWeightVal || 70, { ...details, role: "admin" });
+          } else if (details && details.userId) {
             try {
               const response = await fetch(
                 `https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${details.userId}`,
               );
               const result = await response.json();
               if (response.ok && result.status === "success") {
-                // Session is valid — restore user state (consistency loaded inside loginUser)
                 loginUser(name, currentWeightVal, details);
               } else {
-                // Backend rejected the userId — session is stale
-                console.warn(
-                  "Session validation failed, clearing stored session.",
-                );
                 await AsyncStorage.removeItem("sbm_user_session");
                 await AsyncStorage.removeItem("sbm_active_quote");
               }
             } catch (networkErr) {
-              // Network error — still restore session for offline use
-              console.warn(
-                "Network error during validation, restoring offline session.",
-              );
               loginUser(name, currentWeightVal, details);
             }
           } else {
-            // No userId in stored session — invalid, clear it
             await AsyncStorage.removeItem("sbm_user_session");
           }
         }
@@ -449,49 +428,61 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const loginUser = (name, currentWeightVal, details = {}) => {
-    if (name && name.trim() !== "") {
-      setUsername(name);
+  const loginUser = (nameOrObj, currentWeightVal, details = {}) => {
+    let name = "Customer";
+    let weightVal = 70;
+    let extraDetails = {};
+
+    if (typeof nameOrObj === "object" && nameOrObj !== null) {
+      extraDetails = nameOrObj;
+      name = nameOrObj.name || nameOrObj.username || nameOrObj.full_name || "User";
+      weightVal = nameOrObj.weight || nameOrObj.start_weight || 70;
+      if (nameOrObj.role) setUserRole(nameOrObj.role);
     } else {
-      setUsername("Customer");
+      name = typeof nameOrObj === "string" && nameOrObj.trim() !== "" ? nameOrObj : "Customer";
+      weightVal = currentWeightVal;
+      extraDetails = details || {};
     }
 
-    if (details.email) setUserEmail(details.email);
-    if (details.userId) setUserId(details.userId);
-    if (details.token) setUserToken(details.token);
+    setUsername(name);
+    if (extraDetails.email) setUserEmail(extraDetails.email);
+    if (extraDetails.userId || extraDetails.id) setUserId(extraDetails.userId || extraDetails.id);
+    if (extraDetails.token) setUserToken(extraDetails.token);
+    if (extraDetails.role) setUserRole(extraDetails.role);
 
-    const numericWeight = parseFloat(currentWeightVal);
+    const numericWeight = parseFloat(weightVal);
     if (!isNaN(numericWeight)) {
       setLoggedWeight(numericWeight);
       setStartWeight(numericWeight);
     }
 
     const goalVal =
-      details.Weight_Goal ||
-      details.weight_goal ||
-      details.weightGoal ||
-      details.userGoal ||
-      details.user_goal ||
-      details.goal;
+      extraDetails.Weight_Goal ||
+      extraDetails.weight_goal ||
+      extraDetails.weightGoal ||
+      extraDetails.userGoal ||
+      extraDetails.user_goal ||
+      extraDetails.goal;
 
-    if (details.gender) setGender(details.gender);
-    if (details.age) setAge(parseInt(details.age, 10));
-    if (details.height) setHeight(parseFloat(details.height));
-    if (details.mealPreference) setMealPreference(details.mealPreference);
-    if (details.timezone) setTimezone(details.timezone);
+    if (extraDetails.gender) setGender(extraDetails.gender);
+    if (extraDetails.age) setAge(parseInt(extraDetails.age, 10));
+    if (extraDetails.height) setHeight(parseFloat(extraDetails.height));
+    if (extraDetails.mealPreference) setMealPreference(extraDetails.mealPreference);
+    if (extraDetails.timezone) setTimezone(extraDetails.timezone);
     if (goalVal) setUserGoal(goalVal);
 
     setIsLoggedIn(true);
 
-    // Save session to AsyncStorage for persistence (properly awaited)
+    // Save session to AsyncStorage for persistence
     const saveSession = async () => {
       try {
         await AsyncStorage.setItem(
           "sbm_user_session",
           JSON.stringify({
             name,
-            currentWeightVal,
-            details,
+            currentWeightVal: weightVal,
+            details: extraDetails,
+            userRole: extraDetails.role || "user",
           }),
         );
       } catch (e) {
@@ -528,7 +519,9 @@ export const UserProvider = ({ children }) => {
 
   const logoutUser = () => {
     setIsLoggedIn(false);
+    setUserRole("user");
     setIsProfileOpen(false);
+    AsyncStorage.removeItem("sbm_user_session");
     // Reset states
     setTodayEffortLogged(false);
     setTodayEffortScore(0);
@@ -652,6 +645,10 @@ export const UserProvider = ({ children }) => {
         fetchDashboardData,
         fetchQuote,
         logWeight,
+        isLoggedIn,
+        userRole,
+        setUserRole,
+        username,
         loginUser,
         logoutUser,
         updateUserProfile,

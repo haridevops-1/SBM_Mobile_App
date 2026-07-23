@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
@@ -10,6 +11,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Modal,
 } from "react-native";
 import {
   Menu,
@@ -21,12 +23,14 @@ import {
   ChevronDown,
   ChevronRight,
   Layers,
-  HelpCircle,
+  X,
+  Check,
 } from "lucide-react-native";
 import AdminSidebar from "../../components/Admin/AdminSidebar";
 import AdminEditModal from "../../components/Admin/AdminEditModal";
 import AdminDeleteModal from "../../components/Admin/AdminDeleteModal";
 import styles from "../../styles/pages/Admin/AdminPhaseManagement.styles";
+import modalStyles from "../../styles/pages/Admin/AdminModals.styles";
 
 export const AdminPhaseManagement = ({
   activeModule = "phase_management",
@@ -45,6 +49,18 @@ export const AdminPhaseManagement = ({
   // Modal States
   const [editItem, setEditItem] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
+
+  // Add Modals
+  const [showAddPhaseModal, setShowAddPhaseModal] = useState(false);
+  const [newPhaseName, setNewPhaseName] = useState("");
+  const [newPhaseWeeks, setNewPhaseWeeks] = useState("3");
+
+  const [addQuestionContext, setAddQuestionContext] = useState(null); // { phaseId, aspectName }
+  const [newQuestionText, setNewQuestionText] = useState("");
+
+  const [addOptionQuestionId, setAddOptionQuestionId] = useState(null);
+  const [newOptionText, setNewOptionText] = useState("");
+  const [newOptionScore, setNewOptionScore] = useState("1");
 
   const PHASE_API_ENDPOINT = "https://sbm-mobile-app-906714478.development.catalystserverless.com/api/phase-questions";
 
@@ -107,12 +123,23 @@ export const AdminPhaseManagement = ({
   };
 
   // ──────────────────────────────────────────────────────────
-  // 2. EDIT METHOD: Update Phase Name & Weeks in UI & DataStore
+  // 2. PATCH / PUT METHOD: Edit Phase Name & Weeks in UI & DataStore
   // ──────────────────────────────────────────────────────────
   const handleSaveEdit = async (updatedItem) => {
     safeAnimate();
     const targetId = updatedItem.ROWID || updatedItem.id;
     try {
+      const res = await fetch(`${PHASE_API_ENDPOINT}?id=${targetId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ROWID: targetId,
+          id: targetId,
+          Phase_Name: updatedItem.Phase_Name || updatedItem.name,
+          Total_Weeks: updatedItem.Total_Weeks || updatedItem.weeks,
+        }),
+      });
+
       setPhaseList((prev) =>
         prev.map((p) =>
           p.id === targetId || p.ROWID === targetId
@@ -121,7 +148,7 @@ export const AdminPhaseManagement = ({
         )
       );
     } catch (err) {
-      console.warn("Edit Phase error:", err);
+      console.warn("PATCH Phase error:", err);
     } finally {
       setEditItem(null);
     }
@@ -157,6 +184,171 @@ export const AdminPhaseManagement = ({
     }
   };
 
+  // ──────────────────────────────────────────────────────────
+  // 4. POST METHOD: Add New Phase
+  // ──────────────────────────────────────────────────────────
+  const handleCreatePhase = async () => {
+    if (!newPhaseName.trim()) return;
+    safeAnimate();
+    const tempId = `560220000000100${Date.now().toString().slice(-4)}`;
+    const newPhaseObj = {
+      id: tempId,
+      ROWID: tempId,
+      name: newPhaseName.trim(),
+      Phase_Name: newPhaseName.trim(),
+      weeks: parseInt(newPhaseWeeks, 10) || 3,
+      Total_Weeks: parseInt(newPhaseWeeks, 10) || 3,
+      aspects: [
+        {
+          name: "Nutrition",
+          questions: [
+            {
+              id: `q_${Date.now()}`,
+              text: "Did you follow your recommended protein intake today?",
+              aspect: "Nutrition",
+              options: [
+                { id: `opt_${Date.now()}_1`, text: "Yes!", score: 2 },
+                { id: `opt_${Date.now()}_2`, text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    setPhaseList((prev) => [...prev, newPhaseObj]);
+    setExpandedPhases((prev) => ({ ...prev, [tempId]: true }));
+    setShowAddPhaseModal(false);
+    setNewPhaseName("");
+
+    try {
+      await fetch(PHASE_API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "phase",
+          Phase_Name: newPhaseName.trim(),
+          Total_Weeks: parseInt(newPhaseWeeks, 10) || 3,
+        }),
+      });
+    } catch (e) {
+      console.warn("Create Phase API notice:", e);
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 5. POST METHOD: Add Question to Aspect
+  // ──────────────────────────────────────────────────────────
+  const handleCreateQuestion = async () => {
+    if (!addQuestionContext || !newQuestionText.trim()) return;
+    safeAnimate();
+    const { phaseId, aspectName } = addQuestionContext;
+    const tempQId = `q_${Date.now()}`;
+
+    const newQuestionObj = {
+      id: tempQId,
+      ROWID: tempQId,
+      text: newQuestionText.trim(),
+      Question_Text: newQuestionText.trim(),
+      aspect: aspectName,
+      options: [
+        { id: `opt_${Date.now()}_1`, text: "Yes!", score: 2 },
+        { id: `opt_${Date.now()}_2`, text: "No", score: 0 },
+      ],
+    };
+
+    setPhaseList((prev) =>
+      prev.map((phase) => {
+        if (phase.id === phaseId || phase.ROWID === phaseId) {
+          const updatedAspects = (phase.aspects || []).map((asp) => {
+            if (asp.name === aspectName) {
+              return { ...asp, questions: [...(asp.questions || []), newQuestionObj] };
+            }
+            return asp;
+          });
+
+          const hasAspect = (phase.aspects || []).some((asp) => asp.name === aspectName);
+          if (!hasAspect) {
+            updatedAspects.push({ name: aspectName, questions: [newQuestionObj] });
+          }
+
+          return { ...phase, aspects: updatedAspects };
+        }
+        return phase;
+      })
+    );
+
+    setExpandedQuestions((prev) => ({ ...prev, [tempQId]: true }));
+    setAddQuestionContext(null);
+    setNewQuestionText("");
+
+    try {
+      await fetch(PHASE_API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "question",
+          Phase_ID: phaseId,
+          Aspect: aspectName,
+          Question_Text: newQuestionText.trim(),
+        }),
+      });
+    } catch (e) {
+      console.warn("Create Question API notice:", e);
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 6. POST METHOD: Add Option to Question
+  // ──────────────────────────────────────────────────────────
+  const handleCreateOption = async () => {
+    if (!addOptionQuestionId || !newOptionText.trim()) return;
+    safeAnimate();
+    const tempOptId = `opt_${Date.now()}`;
+    const newOptObj = {
+      id: tempOptId,
+      ROWID: tempOptId,
+      text: newOptionText.trim(),
+      Option_Text: newOptionText.trim(),
+      score: parseInt(newOptionScore, 10) || 0,
+      Score: parseInt(newOptionScore, 10) || 0,
+    };
+
+    setPhaseList((prev) =>
+      prev.map((phase) => ({
+        ...phase,
+        aspects: (phase.aspects || []).map((asp) => ({
+          ...asp,
+          questions: (asp.questions || []).map((q) => {
+            if (q.id === addOptionQuestionId || q.ROWID === addOptionQuestionId) {
+              return { ...q, options: [...(q.options || []), newOptObj] };
+            }
+            return q;
+          }),
+        })),
+      }))
+    );
+
+    setAddOptionQuestionId(null);
+    setNewOptionText("");
+    setNewOptionScore("1");
+
+    try {
+      await fetch(PHASE_API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "option",
+          Question_ID: addOptionQuestionId,
+          Option_Text: newOptionText.trim(),
+          Score: parseInt(newOptionScore, 10) || 0,
+        }),
+      });
+    } catch (e) {
+      console.warn("Create Option API notice:", e);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#060813" />
@@ -171,7 +363,7 @@ export const AdminPhaseManagement = ({
         adminName={adminName}
       />
 
-      {/* Modals */}
+      {/* Existing Modals */}
       <AdminEditModal
         visible={!!editItem}
         item={editItem}
@@ -184,6 +376,131 @@ export const AdminPhaseManagement = ({
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteItem(null)}
       />
+
+      {/* Add New Phase Modal */}
+      <Modal visible={showAddPhaseModal} transparent animationType="fade" onRequestClose={() => setShowAddPhaseModal(false)}>
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.modalCard}>
+            <View style={modalStyles.header}>
+              <Text style={modalStyles.headerTitle}>Add New Program Phase</Text>
+              <TouchableOpacity onPress={() => setShowAddPhaseModal(false)} style={modalStyles.closeBtn}>
+                <X size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <View style={modalStyles.formScroll}>
+              <View style={modalStyles.fieldGroup}>
+                <Text style={modalStyles.fieldLabel}>Phase Name</Text>
+                <TextInput
+                  style={modalStyles.input}
+                  value={newPhaseName}
+                  onChangeText={setNewPhaseName}
+                  placeholder="e.g. ADVANCED STRENGTH PHASE"
+                  placeholderTextColor="#546E7A"
+                />
+              </View>
+              <View style={modalStyles.fieldGroup}>
+                <Text style={modalStyles.fieldLabel}>Total Duration (Weeks)</Text>
+                <TextInput
+                  style={modalStyles.input}
+                  value={newPhaseWeeks}
+                  onChangeText={setNewPhaseWeeks}
+                  keyboardType="numeric"
+                  placeholder="e.g. 3"
+                  placeholderTextColor="#546E7A"
+                />
+              </View>
+            </View>
+            <View style={modalStyles.btnRow}>
+              <TouchableOpacity style={modalStyles.cancelBtn} onPress={() => setShowAddPhaseModal(false)}>
+                <Text style={modalStyles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={modalStyles.saveBtn} onPress={handleCreatePhase}>
+                <Text style={modalStyles.saveBtnText}>Save Phase</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Question Modal */}
+      <Modal visible={!!addQuestionContext} transparent animationType="fade" onRequestClose={() => setAddQuestionContext(null)}>
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.modalCard}>
+            <View style={modalStyles.header}>
+              <Text style={modalStyles.headerTitle}>Add Question to {addQuestionContext?.aspectName}</Text>
+              <TouchableOpacity onPress={() => setAddQuestionContext(null)} style={modalStyles.closeBtn}>
+                <X size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <View style={modalStyles.formScroll}>
+              <View style={modalStyles.fieldGroup}>
+                <Text style={modalStyles.fieldLabel}>Question Text</Text>
+                <TextInput
+                  style={modalStyles.input}
+                  value={newQuestionText}
+                  onChangeText={setNewQuestionText}
+                  placeholder="e.g. Did you complete your mobility routine?"
+                  placeholderTextColor="#546E7A"
+                  multiline
+                />
+              </View>
+            </View>
+            <View style={modalStyles.btnRow}>
+              <TouchableOpacity style={modalStyles.cancelBtn} onPress={() => setAddQuestionContext(null)}>
+                <Text style={modalStyles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={modalStyles.saveBtn} onPress={handleCreateQuestion}>
+                <Text style={modalStyles.saveBtnText}>Add Question</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Option Modal */}
+      <Modal visible={!!addOptionQuestionId} transparent animationType="fade" onRequestClose={() => setAddOptionQuestionId(null)}>
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.modalCard}>
+            <View style={modalStyles.header}>
+              <Text style={modalStyles.headerTitle}>Add Question Option</Text>
+              <TouchableOpacity onPress={() => setAddOptionQuestionId(null)} style={modalStyles.closeBtn}>
+                <X size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <View style={modalStyles.formScroll}>
+              <View style={modalStyles.fieldGroup}>
+                <Text style={modalStyles.fieldLabel}>Option Choice Label</Text>
+                <TextInput
+                  style={modalStyles.input}
+                  value={newOptionText}
+                  onChangeText={setNewOptionText}
+                  placeholder="e.g. Exceeded Target"
+                  placeholderTextColor="#546E7A"
+                />
+              </View>
+              <View style={modalStyles.fieldGroup}>
+                <Text style={modalStyles.fieldLabel}>Score Points Value</Text>
+                <TextInput
+                  style={modalStyles.input}
+                  value={newOptionScore}
+                  onChangeText={setNewOptionScore}
+                  keyboardType="numeric"
+                  placeholder="e.g. 2"
+                  placeholderTextColor="#546E7A"
+                />
+              </View>
+            </View>
+            <View style={modalStyles.btnRow}>
+              <TouchableOpacity style={modalStyles.cancelBtn} onPress={() => setAddOptionQuestionId(null)}>
+                <Text style={modalStyles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={modalStyles.saveBtn} onPress={handleCreateOption}>
+                <Text style={modalStyles.saveBtnText}>Save Option</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Top Header */}
       <View style={styles.header}>
@@ -220,16 +537,19 @@ export const AdminPhaseManagement = ({
         ) : (
           <View style={styles.treeCard}>
             {/* Add New Phase Button */}
-            <TouchableOpacity style={styles.addPhaseBtn} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.addPhaseBtn}
+              activeOpacity={0.8}
+              onPress={() => setShowAddPhaseModal(true)}
+            >
               <Plus size={16} color="#FFFFFF" />
-              <Text style={styles.addPhaseBtnText}>+ Add New Phase</Text>
+              <Text style={styles.addPhaseBtnText}>Add New Phase</Text>
             </TouchableOpacity>
 
             {/* Main Phase Table / Hierarchy Cards */}
             {phaseList.map((phase) => {
               const phaseId = phase.id || phase.ROWID;
               const isPhaseExpanded = !!expandedPhases[phaseId];
-              const shortId = String(phaseId).slice(-5);
 
               return (
                 <View key={phaseId} style={styles.phaseCard}>
@@ -245,12 +565,14 @@ export const AdminPhaseManagement = ({
                       ) : (
                         <ChevronRight size={18} color="rgba(255, 255, 255, 0.4)" />
                       )}
-                      <Text style={styles.phaseTitle}>
-                        {phase.name || phase.Phase_Name}
-                      </Text>
-                      <Text style={styles.phaseBadge}>
-                        Weeks: {phase.weeks || phase.Total_Weeks || 3}
-                      </Text>
+                      <View style={styles.phaseTitleWrapper}>
+                        <Text style={styles.phaseTitle} numberOfLines={1} ellipsizeMode="tail">
+                          {phase.name || phase.Phase_Name}
+                        </Text>
+                        <Text style={styles.phaseBadge}>
+                          Weeks: {phase.weeks || phase.Total_Weeks || 3}
+                        </Text>
+                      </View>
                     </View>
 
                     {/* Action Buttons Top Right: EDIT & DELETE */}
@@ -291,7 +613,7 @@ export const AdminPhaseManagement = ({
                           <View style={styles.aspectHeader}>
                             <Layers size={14} color="#81D4FA" />
                             <Text style={styles.aspectName}>
-                              Aspect: {aspectGroup.name}
+                              ASPECT: {aspectGroup.name}
                             </Text>
                           </View>
 
@@ -323,7 +645,7 @@ export const AdminPhaseManagement = ({
                                     {(question.options || []).map((opt, optIdx) => (
                                       <View key={opt.id || optIdx} style={styles.optionRow}>
                                         <Text style={styles.optionText}>
-                                          ├── {opt.text || opt.Option_Text}
+                                          • {opt.text || opt.Option_Text}
                                         </Text>
                                         <Text style={styles.optionScore}>
                                           (Score: {opt.score !== undefined ? opt.score : opt.Score})
@@ -331,9 +653,13 @@ export const AdminPhaseManagement = ({
                                       </View>
                                     ))}
 
-                                    <TouchableOpacity style={styles.addSmallBtn}>
+                                    {/* Add Option Button */}
+                                    <TouchableOpacity
+                                      style={styles.addSmallBtn}
+                                      onPress={() => setAddOptionQuestionId(qId)}
+                                    >
                                       <Plus size={12} color="#B085F5" />
-                                      <Text style={styles.addSmallBtnText}>+ Add Option</Text>
+                                      <Text style={styles.addSmallBtnText}>Add Option</Text>
                                     </TouchableOpacity>
                                   </View>
                                 )}
@@ -342,10 +668,13 @@ export const AdminPhaseManagement = ({
                           })}
 
                           {/* Add Question Button */}
-                          <TouchableOpacity style={styles.addSmallBtn}>
+                          <TouchableOpacity
+                            style={styles.addSmallBtn}
+                            onPress={() => setAddQuestionContext({ phaseId, aspectName: aspectGroup.name })}
+                          >
                             <Plus size={12} color="#29B6F6" />
                             <Text style={[styles.addSmallBtnText, { color: "#29B6F6" }]}>
-                              + Add Question to {aspectGroup.name}
+                              Add Question to {aspectGroup.name}
                             </Text>
                           </TouchableOpacity>
                         </View>

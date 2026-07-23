@@ -11,16 +11,40 @@ import {
   Menu,
   Bell,
   Users,
+  Shield,
   Activity,
-  CheckCircle2,
-  ChevronRight,
-  LayoutDashboard,
-  ShieldCheck,
   CalendarCheck,
-  TrendingUp,
+  LayoutGrid,
+  UserPlus,
+  FileText,
+  Send,
 } from "lucide-react-native";
-import AdminSidebar, { ADMIN_MODULES } from "../../components/Admin/AdminSidebar";
+import Svg, { Path, Defs, LinearGradient, Stop } from "react-native-svg";
+import AdminSidebar from "../../components/Admin/AdminSidebar";
 import styles from "../../styles/pages/Admin/AdminDashboard.styles";
+
+// Mini Sparkline Graph Helper Component
+const Sparkline = ({ color, id }) => (
+  <Svg width={65} height={26} viewBox="0 0 65 26">
+    <Defs>
+      <LinearGradient id={`grad-${id}`} x1="0" y1="0" x2="0" y2="1">
+        <Stop offset="0%" stopColor={color} stopOpacity={0.4} />
+        <Stop offset="100%" stopColor={color} stopOpacity={0.0} />
+      </LinearGradient>
+    </Defs>
+    <Path
+      d="M 2 22 Q 15 18, 25 12 T 45 10 T 63 3 V 26 H 2 Z"
+      fill={`url(#grad-${id})`}
+    />
+    <Path
+      d="M 2 22 Q 15 18, 25 12 T 45 10 T 63 3"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+    />
+  </Svg>
+);
 
 export const AdminDashboard = ({
   onNavigateModule,
@@ -72,124 +96,150 @@ export const AdminDashboard = ({
           </TouchableOpacity>
         </View>
 
-        {/* Overview Banner */}
+        {/* Hero Banner: Slow Burn Method */}
         <View style={styles.overviewBanner}>
           <View style={{ flex: 1 }}>
             <Text style={styles.bannerTitle}>Slow Burn Method</Text>
             <Text style={styles.bannerSubtitle}>Real-Time Business & System Management</Text>
           </View>
-          <View style={styles.bannerIcon}>
-            <LayoutDashboard size={24} color="#B085F5" />
+          <View style={styles.bannerIconBox}>
+            <LayoutGrid size={22} color="#B085F5" />
           </View>
         </View>
 
-        {/* Real Business Stats Grid */}
+        {/* 4 Core Module Metric Cards (2x2 Grid) */}
         <View style={styles.statsGrid}>
-          {/* Total Registered Users */}
-          <View style={styles.statCard}>
-            <View style={styles.statCardHeader}>
-              <Text style={styles.statLabel}>Total Users</Text>
-              <View style={styles.statIconBox}>
-                <Users size={16} color="#B085F5" />
-              </View>
+          {/* Card 1: TOTAL USERS */}
+          <TouchableOpacity
+            style={styles.statCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("user_management")}
+          >
+            <View style={[styles.circleIconBox, { backgroundColor: "rgba(147, 51, 234, 0.2)" }]}>
+              <Users size={18} color="#B085F5" />
             </View>
+            <Text style={styles.statLabel}>TOTAL USERS</Text>
             <Text style={styles.statValue}>{userCount}</Text>
-          </View>
-
-          {/* Active Cohorts */}
-          <View style={styles.statCard}>
-            <View style={styles.statCardHeader}>
-              <Text style={styles.statLabel}>Active Cohorts</Text>
-              <View style={styles.statIconBox}>
-                <ShieldCheck size={16} color="#29B6F6" />
+            <View style={styles.statBottomRow}>
+              <View style={styles.trendContainer}>
+                <Text style={styles.trendBold}>↑ 12</Text>
+                <Text style={styles.trendMuted}>this week</Text>
               </View>
+              <Sparkline color="#B085F5" id="users" />
             </View>
+          </TouchableOpacity>
+
+          {/* Card 2: ACTIVE COHORTS */}
+          <TouchableOpacity
+            style={styles.statCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("group_code_management")}
+          >
+            <View style={[styles.circleIconBox, { backgroundColor: "rgba(59, 130, 246, 0.2)" }]}>
+              <Shield size={18} color="#29B6F6" />
+            </View>
+            <Text style={styles.statLabel}>ACTIVE COHORTS</Text>
             <Text style={styles.statValue}>16</Text>
-          </View>
-
-          {/* Daily Effort Logs */}
-          <View style={styles.statCard}>
-            <View style={styles.statCardHeader}>
-              <Text style={styles.statLabel}>Effort Logs</Text>
-              <View style={styles.statIconBox}>
-                <Activity size={16} color="#00E676" />
+            <View style={styles.statBottomRow}>
+              <View style={styles.trendContainer}>
+                <Text style={styles.trendBold}>↑ 2</Text>
+                <Text style={styles.trendMuted}>this week</Text>
               </View>
+              <Sparkline color="#29B6F6" id="cohorts" />
             </View>
+          </TouchableOpacity>
+
+          {/* Card 3: EFFORT LOGS */}
+          <TouchableOpacity
+            style={styles.statCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("daily_logs_management")}
+          >
+            <View style={[styles.circleIconBox, { backgroundColor: "rgba(34, 197, 94, 0.2)" }]}>
+              <Activity size={18} color="#00E676" />
+            </View>
+            <Text style={styles.statLabel}>EFFORT LOGS</Text>
             <Text style={styles.statValue}>1,240</Text>
-          </View>
-
-          {/* Application Status */}
-          <View style={[styles.statCard, styles.statusOnlineCard]}>
-            <View style={styles.statCardHeader}>
-              <Text style={styles.statLabel}>Catalyst Engine</Text>
-              <CheckCircle2 size={18} color="#00E676" />
-            </View>
-            <Text style={styles.statusOnlineText}>Online & Healthy</Text>
-          </View>
-        </View>
-
-        {/* Business Key Performance Indicators */}
-        <Text style={styles.sectionTitle}>Business Metrics</Text>
-        <View style={{ gap: 10, marginBottom: 20 }}>
-          <View style={styles.activityCard}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <TrendingUp size={18} color="#B085F5" />
-                <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 13 }}>Average Program Compliance</Text>
+            <View style={styles.statBottomRow}>
+              <View style={styles.trendContainer}>
+                <Text style={styles.trendBold}>↑ 156</Text>
+                <Text style={styles.trendMuted}>this week</Text>
               </View>
-              <Text style={{ color: "#00E676", fontWeight: "800", fontSize: 14 }}>84.5%</Text>
+              <Sparkline color="#00E676" id="logs" />
             </View>
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.activityCard}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <CalendarCheck size={18} color="#29B6F6" />
-                <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 13 }}>Sunday Check-in Completion</Text>
+          {/* Card 4: SUNDAY CHECK-IN */}
+          <TouchableOpacity
+            style={styles.statCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("sunday_questions_management")}
+          >
+            <View style={[styles.circleIconBox, { backgroundColor: "rgba(249, 115, 22, 0.2)" }]}>
+              <CalendarCheck size={18} color="#FF9800" />
+            </View>
+            <Text style={styles.statLabel} numberOfLines={1}>SUNDAY CHECK-IN</Text>
+            <Text style={styles.statValue}>91.2%</Text>
+            <View style={styles.statBottomRow}>
+              <View style={styles.trendContainer}>
+                <Text style={styles.trendBold}>↑ 8.5%</Text>
+                <Text style={styles.trendMuted}>improvement</Text>
               </View>
-              <Text style={{ color: "#29B6F6", fontWeight: "800", fontSize: 14 }}>91.2%</Text>
+              <Sparkline color="#FF9800" id="sunday" />
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Management Modules Quick Access */}
-        <Text style={styles.sectionTitle}>System Management Modules</Text>
-        <View style={styles.modulesGrid}>
-          {ADMIN_MODULES.filter((m) => m.id !== "dashboard").map((mod) => {
-            const IconComp = mod.icon;
-            return (
-              <TouchableOpacity
-                key={mod.id}
-                activeOpacity={0.8}
-                style={styles.moduleChip}
-                onPress={() => handleSelectModule(mod.id)}
-              >
-                <IconComp size={14} color="#B085F5" />
-                <Text style={styles.moduleChipText}>{mod.label}</Text>
-                <ChevronRight size={12} color="rgba(255, 255, 255, 0.4)" />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {/* Quick Actions Row */}
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsGrid}>
+          {/* Action 1: Add User */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("user_management")}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: "rgba(147, 51, 234, 0.2)" }]}>
+              <UserPlus size={18} color="#B085F5" />
+            </View>
+            <Text style={styles.actionLabel}>Add User</Text>
+          </TouchableOpacity>
 
-        {/* Recent Activity Logs */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Recent Activity Logs</Text>
-        <View style={styles.activityCard}>
-          <View style={styles.activityItem}>
-            <View style={styles.activityDot} />
-            <Text style={styles.activityText}>Resources table updated with latest fitness guides</Text>
-            <Text style={styles.activityTime}>Just now</Text>
-          </View>
-          <View style={styles.activityItem}>
-            <View style={styles.activityDot} />
-            <Text style={styles.activityText}>User Management table queried by Super Admin</Text>
-            <Text style={styles.activityTime}>2m ago</Text>
-          </View>
-          <View style={styles.activityItem}>
-            <View style={styles.activityDot} />
-            <Text style={styles.activityText}>daily_logs table synced for 125 active users</Text>
-            <Text style={styles.activityTime}>5m ago</Text>
-          </View>
+          {/* Action 2: Manage Cohorts */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("group_code_management")}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: "rgba(59, 130, 246, 0.2)" }]}>
+              <Shield size={18} color="#29B6F6" />
+            </View>
+            <Text style={styles.actionLabel}>Manage Cohorts</Text>
+          </TouchableOpacity>
+
+          {/* Action 3: View Logs */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("daily_logs_management")}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: "rgba(34, 197, 94, 0.2)" }]}>
+              <FileText size={18} color="#00E676" />
+            </View>
+            <Text style={styles.actionLabel}>View Logs</Text>
+          </TouchableOpacity>
+
+          {/* Action 4: Send Message */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            activeOpacity={0.8}
+            onPress={() => handleSelectModule("quotes_management")}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: "rgba(249, 115, 22, 0.2)" }]}>
+              <Send size={18} color="#FF9800" />
+            </View>
+            <Text style={styles.actionLabel}>Send Message</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

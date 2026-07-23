@@ -1,5 +1,4 @@
 import { StyleSheet, Platform, StatusBar } from "react-native";
-import theme from "../../../theme/theme";
 
 const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight || 24 : 44;
 
@@ -33,10 +32,10 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "800",
     color: "#FFFFFF",
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
   },
   tableCard: {
     margin: 16,
@@ -56,7 +55,7 @@ export default StyleSheet.create({
     borderBottomColor: "rgba(255, 255, 255, 0.08)",
   },
   tableHeaderCell: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "800",
     color: "#B085F5",
     letterSpacing: 1,
@@ -79,10 +78,10 @@ export default StyleSheet.create({
     fontWeight: "500",
   },
   colUserId: {
-    flex: 1.1,
+    flex: 2.2,
   },
-  colEmail: {
-    flex: 2.8,
+  colLogDate: {
+    flex: 2.2,
   },
   colActions: {
     flex: 1.1,
@@ -177,5 +176,20 @@ export default StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  // Read-only modal styles
+  readOnlyNotice: {
+    backgroundColor: "rgba(41, 182, 246, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(41, 182, 246, 0.3)",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 14,
+  },
+  readOnlyNoticeText: {
+    fontSize: 11,
+    color: "#81D4FA",
+    lineHeight: 16,
+    fontWeight: "600",
   },
 });

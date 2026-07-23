@@ -19,12 +19,12 @@ import {
   RefreshCw,
 } from "lucide-react-native";
 import AdminSidebar from "../../components/Admin/AdminSidebar";
-import AdminEditModal from "../../components/Admin/AdminEditModal";
+import AdminReadOnlyModal from "../../components/Admin/AdminReadOnlyModal";
 import AdminDeleteModal from "../../components/Admin/AdminDeleteModal";
-import styles from "../../styles/pages/Admin/AdminUserManagement.styles";
+import styles from "../../styles/pages/Admin/AdminDailyLogsManagement.styles";
 
-export const AdminUserManagement = ({
-  activeModule = "user_management",
+export const AdminDailyLogsManagement = ({
+  activeModule = "daily_logs_management",
   onNavigateBack,
   onNavigateModule,
   onSignOut,
@@ -36,10 +36,10 @@ export const AdminUserManagement = ({
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   // Modal States
-  const [editItem, setEditItem] = useState(null);
+  const [readOnlyItem, setReadOnlyItem] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
 
-  const USER_API_ENDPOINT = "https://sbm-mobile-app-906714478.development.catalystserverless.com/api/v1/users";
+  const DAILY_LOGS_API_ENDPOINT = "https://sbm-mobile-app-906714478.development.catalystserverless.com/daily-logs";
 
   const safeAnimate = () => {
     try {
@@ -51,36 +51,37 @@ export const AdminUserManagement = ({
   };
 
   // ──────────────────────────────────────────────────────────
-  // 1. GET METHOD: Fetch live user table records from Catalyst DataStore
+  // 1. GET METHOD: Fetch all Daily Logs from Catalyst DataStore API
   // ──────────────────────────────────────────────────────────
   const fetchData = async () => {
     setLoading(true);
     setSelectedRecord(null);
     try {
-      const res = await fetch(USER_API_ENDPOINT, { method: "GET" });
+      const res = await fetch(DAILY_LOGS_API_ENDPOINT, { method: "GET" });
       const json = await res.json();
 
-      if (res.ok && json.data) {
-        let items = Array.isArray(json.data) ? json.data : json.data.users || [];
+      if (res.ok && (json.data || json.logs)) {
+        let items = json.data || json.logs || [];
         if (items.length > 0) {
-          const formatted = items.map((item, index) => ({
-            id: item.id || item.ROWID || `${9835725 + index}`,
-            user_id: item.user_id || (item.id ? String(item.id).slice(-4) : `${93 + index}`),
-            email: item.email || `user_${index + 1}@gmail.com`,
-            name: item.name || `User ${index + 1}`,
-            joinDate: item.created_at || item.CREATEDTIME ? String(item.created_at || item.CREATEDTIME).split(" ")[0] : "2023-11-15",
-            status: item.status || "ACTIVE",
-            role: "User",
-            subscription: "Pro Plan",
-            start_weight: item.start_weight || 70,
-            gender: item.gender || "Male",
-            age: item.age || 28,
-            height: item.height || 170,
-            meal_preference: item.meal_preference || "Veg + Egg",
-            timezone: item.timezone || "India (IST - UTC+5:30)",
-            device_platform: item.device_platform || "web",
-            raw: item,
-          }));
+          const formatted = items.map((item, index) => {
+            const rowId = item.ROWID || item.id || `LOG_${index + 1}`;
+            const userId = item.User_ID || item.user_id || "56022000000030005";
+            return {
+              id: rowId,
+              ROWID: rowId,
+              User_ID: userId,
+              user_id: userId,
+              log_date: item.log_date || "2026-07-23",
+              effort_score: item.effort_score !== null && item.effort_score !== undefined ? String(item.effort_score) : "N/A",
+              nutrition_score: item.nutrition_score !== null && item.nutrition_score !== undefined ? String(item.nutrition_score) : "N/A",
+              movement_score: item.movement_score !== null && item.movement_score !== undefined ? String(item.movement_score) : "N/A",
+              recovery_score: item.recovery_score !== null && item.recovery_score !== undefined ? String(item.recovery_score) : "N/A",
+              streak_count: item.streak_count !== null && item.streak_count !== undefined ? String(item.streak_count) : "0",
+              CREATEDTIME: item.CREATEDTIME || "2026-07-23 12:00:00",
+              MODIFIEDTIME: item.MODIFIEDTIME || "2026-07-23 12:00:00",
+              raw: item,
+            };
+          });
           safeAnimate();
           setDataList(formatted);
           setLoading(false);
@@ -88,7 +89,7 @@ export const AdminUserManagement = ({
         }
       }
     } catch (e) {
-      console.warn("User Management GET API notice:", e);
+      console.warn("Daily Logs GET API notice:", e);
     }
 
     // Default fallback if network offline
@@ -101,73 +102,29 @@ export const AdminUserManagement = ({
   }, [activeModule]);
 
   // ──────────────────────────────────────────────────────────
-  // 2. PATCH METHOD: Edit row in Catalyst DataStore & UI
-  // ──────────────────────────────────────────────────────────
-  const handleSaveEdit = async (updatedItem) => {
-    safeAnimate();
-    try {
-      const res = await fetch(`${USER_API_ENDPOINT}?id=${updatedItem.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: updatedItem.id,
-          name: updatedItem.name,
-          email: updatedItem.email,
-          status: updatedItem.status || "ACTIVE",
-          gender: updatedItem.gender,
-          age: updatedItem.age,
-          height: updatedItem.height,
-          start_weight: updatedItem.start_weight,
-          meal_preference: updatedItem.meal_preference,
-        }),
-      });
-
-      const json = await res.json();
-      if (res.ok && json.success) {
-        setDataList((prev) =>
-          prev.map((row) => (row.id === updatedItem.id ? updatedItem : row))
-        );
-        if (selectedRecord && selectedRecord.id === updatedItem.id) {
-          setSelectedRecord(updatedItem);
-        }
-      } else {
-        setDataList((prev) =>
-          prev.map((row) => (row.id === updatedItem.id ? updatedItem : row))
-        );
-      }
-    } catch (err) {
-      console.warn("PATCH API error:", err);
-      setDataList((prev) =>
-        prev.map((row) => (row.id === updatedItem.id ? updatedItem : row))
-      );
-    } finally {
-      setEditItem(null);
-    }
-  };
-
-  // ──────────────────────────────────────────────────────────
-  // 3. DELETE METHOD: Delete row from Catalyst DataStore & UI
+  // 2. DELETE METHOD: Delete Daily Log row from Catalyst DataStore & UI
   // ──────────────────────────────────────────────────────────
   const handleConfirmDelete = async (itemToDelete) => {
     safeAnimate();
+    const targetId = itemToDelete.ROWID || itemToDelete.id;
     try {
-      const res = await fetch(`${USER_API_ENDPOINT}?id=${itemToDelete.id}`, {
+      const res = await fetch(`${DAILY_LOGS_API_ENDPOINT}?id=${targetId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: itemToDelete.id }),
+        body: JSON.stringify({ ROWID: targetId, id: targetId }),
       });
 
       const json = await res.json();
-      if (res.ok && json.success) {
-        setDataList((prev) => prev.filter((row) => row.id !== itemToDelete.id));
+      if (res.ok && json.status === "success") {
+        setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
       } else {
-        setDataList((prev) => prev.filter((row) => row.id !== itemToDelete.id));
+        setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
       }
     } catch (err) {
-      console.warn("DELETE API error:", err);
-      setDataList((prev) => prev.filter((row) => row.id !== itemToDelete.id));
+      console.warn("DELETE Daily Log API error:", err);
+      setDataList((prev) => prev.filter((row) => row.id !== targetId && row.ROWID !== targetId));
     } finally {
-      if (selectedRecord && selectedRecord.id === itemToDelete.id) {
+      if (selectedRecord && (selectedRecord.id === targetId || selectedRecord.ROWID === targetId)) {
         setSelectedRecord(null);
       }
       setDeleteItem(null);
@@ -194,11 +151,11 @@ export const AdminUserManagement = ({
       />
 
       {/* Modals */}
-      <AdminEditModal
-        visible={!!editItem}
-        item={editItem}
-        onSave={handleSaveEdit}
-        onClose={() => setEditItem(null)}
+      <AdminReadOnlyModal
+        visible={!!readOnlyItem}
+        item={readOnlyItem}
+        onClose={() => setReadOnlyItem(null)}
+        title="View Log Details (Read Only)"
       />
       <AdminDeleteModal
         visible={!!deleteItem}
@@ -225,7 +182,7 @@ export const AdminUserManagement = ({
             )}
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {selectedRecord ? "RECORD DETAILS" : "USER MANAGEMENT"}
+            {selectedRecord ? "LOG DETAILS" : "DAILY LOGS MANAGEMENT"}
           </Text>
         </View>
 
@@ -244,18 +201,18 @@ export const AdminUserManagement = ({
           <View style={styles.detailCard}>
             <View style={styles.detailHeader}>
               <Text style={styles.detailTitle} numberOfLines={1} ellipsizeMode="tail">
-                USER ID: #{selectedRecord.user_id || String(selectedRecord.id).slice(-4)}
+                USER ID: #{String(selectedRecord.User_ID || selectedRecord.id).slice(-6)}
               </Text>
 
-              {/* Action Buttons Top Right: EDIT (blue) & DELETE (red) */}
+              {/* Action Buttons Top Right: EDIT (blue/read-only view) & DELETE (red) */}
               <View style={styles.detailActionRow}>
                 <TouchableOpacity
                   style={styles.detailEditBtn}
                   activeOpacity={0.8}
-                  onPress={() => setEditItem(selectedRecord)}
+                  onPress={() => setReadOnlyItem(selectedRecord)}
                 >
                   <Edit2 size={14} color="#FFFFFF" />
-                  <Text style={styles.detailEditBtnText}>EDIT</Text>
+                  <Text style={styles.detailEditBtnText}>VIEW</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -272,69 +229,69 @@ export const AdminUserManagement = ({
             {/* Vertical Field Breakdown */}
             <View style={styles.detailFieldGroup}>
               <Text style={styles.detailFieldLabel}>Row ID</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.id}</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.ROWID || selectedRecord.id}</Text>
             </View>
 
             <View style={styles.detailFieldGroup}>
               <Text style={styles.detailFieldLabel}>User ID</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.user_id}</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.User_ID}</Text>
             </View>
 
             <View style={styles.detailFieldGroup}>
-              <Text style={styles.detailFieldLabel}>Name</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.name}</Text>
+              <Text style={styles.detailFieldLabel}>Log Date</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.log_date}</Text>
             </View>
 
             <View style={styles.detailFieldGroup}>
-              <Text style={styles.detailFieldLabel}>Email</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.email}</Text>
-            </View>
-
-            <View style={styles.detailFieldGroup}>
-              <Text style={styles.detailFieldLabel}>Join Date</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.joinDate}</Text>
-            </View>
-
-            <View style={styles.detailFieldGroup}>
-              <Text style={styles.detailFieldLabel}>Status</Text>
+              <Text style={styles.detailFieldLabel}>Effort Score</Text>
               <Text style={[styles.detailFieldValue, { color: "#00E676" }]}>
-                {selectedRecord.status}
+                {selectedRecord.effort_score}
               </Text>
             </View>
 
             <View style={styles.detailFieldGroup}>
-              <Text style={styles.detailFieldLabel}>Role / Access</Text>
-              <Text style={styles.detailFieldValue}>{selectedRecord.role}</Text>
+              <Text style={styles.detailFieldLabel}>Nutrition Score</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.nutrition_score}</Text>
             </View>
 
-            {selectedRecord.start_weight !== undefined && (
+            <View style={styles.detailFieldGroup}>
+              <Text style={styles.detailFieldLabel}>Movement Score</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.movement_score}</Text>
+            </View>
+
+            <View style={styles.detailFieldGroup}>
+              <Text style={styles.detailFieldLabel}>Recovery Score</Text>
+              <Text style={styles.detailFieldValue}>{selectedRecord.recovery_score}</Text>
+            </View>
+
+            <View style={styles.detailFieldGroup}>
+              <Text style={styles.detailFieldLabel}>Streak Count</Text>
+              <Text style={[styles.detailFieldValue, { color: "#29B6F6" }]}>
+                {selectedRecord.streak_count} Days
+              </Text>
+            </View>
+
+            {selectedRecord.CREATEDTIME && (
               <View style={styles.detailFieldGroup}>
-                <Text style={styles.detailFieldLabel}>Start Weight</Text>
-                <Text style={styles.detailFieldValue}>{selectedRecord.start_weight} kg</Text>
+                <Text style={styles.detailFieldLabel}>Created Time</Text>
+                <Text style={styles.detailFieldValue}>{selectedRecord.CREATEDTIME}</Text>
               </View>
             )}
 
-            {selectedRecord.meal_preference && (
+            {selectedRecord.MODIFIEDTIME && (
               <View style={styles.detailFieldGroup}>
-                <Text style={styles.detailFieldLabel}>Meal Preference</Text>
-                <Text style={styles.detailFieldValue}>{selectedRecord.meal_preference}</Text>
-              </View>
-            )}
-
-            {selectedRecord.timezone && (
-              <View style={styles.detailFieldGroup}>
-                <Text style={styles.detailFieldLabel}>Time Zone</Text>
-                <Text style={styles.detailFieldValue}>{selectedRecord.timezone}</Text>
+                <Text style={styles.detailFieldLabel}>Last Modified Time</Text>
+                <Text style={styles.detailFieldValue}>{selectedRecord.MODIFIEDTIME}</Text>
               </View>
             )}
           </View>
         ) : (
-          /* ─── DATA LISTING TABLE VIEW (3 COLUMNS: USER ID | EMAIL | ACTIONS) ─── */
+          /* ─── DATA LISTING TABLE VIEW (USER ID | LOG DATE | ACTIONS) ─── */
           <View style={styles.tableCard}>
             {/* Table Header Row */}
             <View style={styles.tableHeaderRow}>
               <Text style={[styles.tableHeaderCell, styles.colUserId]}>USER ID</Text>
-              <Text style={[styles.tableHeaderCell, styles.colEmail]}>EMAIL</Text>
+              <Text style={[styles.tableHeaderCell, styles.colLogDate]}>LOG DATE</Text>
               <Text style={[styles.tableHeaderCell, styles.colActions, { textAlign: "right" }]}>
                 ACTIONS
               </Text>
@@ -349,10 +306,10 @@ export const AdminUserManagement = ({
                 onPress={() => handleSelectRecord(row)}
               >
                 <Text style={[styles.cellText, styles.colUserId]} numberOfLines={1}>
-                  {row.user_id || row.id}
+                  {String(row.User_ID || row.id).slice(-6)}
                 </Text>
-                <Text style={[styles.cellText, styles.colEmail]} numberOfLines={1}>
-                  {row.email}
+                <Text style={[styles.cellText, styles.colLogDate]} numberOfLines={1}>
+                  {row.log_date}
                 </Text>
 
                 <View style={styles.colActions}>
@@ -360,7 +317,7 @@ export const AdminUserManagement = ({
                     style={styles.actionEditBtn}
                     onPress={(e) => {
                       e.stopPropagation();
-                      setEditItem(row);
+                      setReadOnlyItem(row);
                     }}
                   >
                     <Edit2 size={14} color="#29B6F6" />
@@ -385,4 +342,4 @@ export const AdminUserManagement = ({
   );
 };
 
-export default AdminUserManagement;
+export default AdminDailyLogsManagement;

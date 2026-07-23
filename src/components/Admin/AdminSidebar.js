@@ -11,6 +11,7 @@ import {
   Users,
   BookOpen,
   Quote,
+  Activity,
   LogOut,
   X,
 } from "lucide-react-native";
@@ -21,6 +22,7 @@ export const ADMIN_MODULES = [
   { id: "user_management", label: "User Management", icon: Users },
   { id: "resources", label: "Resource Management", icon: BookOpen },
   { id: "quotes_management", label: "Quotes Management", icon: Quote },
+  { id: "daily_logs_management", label: "Daily Logs Management", icon: Activity },
 ];
 
 export const AdminSidebar = ({
@@ -57,7 +59,12 @@ export const AdminSidebar = ({
             <Text style={styles.sectionHeader}>CORE MODULES</Text>
             {ADMIN_MODULES.map((item) => {
               const IconComp = item.icon;
-              const isActive = activeModule === item.id || (item.id === "user_management" && (activeModule === "users" || activeModule === "user_management")) || (item.id === "quotes_management" && (activeModule === "quotes" || activeModule === "quotes_management" || activeModule === "DailyMessages"));
+              const isActive =
+                activeModule === item.id ||
+                (item.id === "user_management" && (activeModule === "users" || activeModule === "user_management")) ||
+                (item.id === "quotes_management" && (activeModule === "quotes" || activeModule === "quotes_management" || activeModule === "DailyMessages")) ||
+                (item.id === "daily_logs_management" && (activeModule === "daily_logs" || activeModule === "daily_logs_management"));
+
               return (
                 <TouchableOpacity
                   key={item.id}

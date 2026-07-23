@@ -9,19 +9,8 @@ import {
 import {
   LayoutDashboard,
   Users,
-  UserCheck,
-  ShieldCheck,
-  Scale,
-  Activity,
-  FileCheck,
-  HelpCircle,
-  ListCheck,
-  Layers,
-  CalendarCheck,
-  MessageSquareQuote,
-  Quote,
-  Bell,
   BookOpen,
+  Quote,
   LogOut,
   X,
 } from "lucide-react-native";
@@ -30,22 +19,8 @@ import styles from "../../styles/pages/Admin/AdminSidebar.styles";
 export const ADMIN_MODULES = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "user_management", label: "User Management", icon: Users },
-  { id: "user_profiles", label: "user_profiles", icon: UserCheck },
-  { id: "user_group_mapping", label: "user_group_mapping", icon: ShieldCheck },
-  { id: "coaches", label: "coaches", icon: Users },
-  { id: "weight_history", label: "weight_history", icon: Scale },
-  { id: "daily_logs", label: "daily_logs", icon: Activity },
-  { id: "user_daily_answers", label: "user_daily_answers", icon: FileCheck },
-  { id: "Questions", label: "Questions", icon: HelpCircle },
-  { id: "question_options", label: "question_options", icon: ListCheck },
-  { id: "Phases", label: "Phases", icon: Layers },
-  { id: "Sunday_Question", label: "Sunday_Question", icon: HelpCircle },
-  { id: "Sunday_Question_Options", label: "Sunday_Question_Options", icon: ListCheck },
-  { id: "Sunday_Answers", label: "Sunday_Answers", icon: CalendarCheck },
-  { id: "DailyMessages", label: "DailyMessages", icon: Quote },
-  { id: "user_message_tracking", label: "user_message_tracking", icon: MessageSquareQuote },
-  { id: "support_notifications", label: "support_notifications", icon: Bell },
-  { id: "Resources", label: "Resources", icon: BookOpen },
+  { id: "resources", label: "Resource Management", icon: BookOpen },
+  { id: "quotes_management", label: "Quotes Management", icon: Quote },
 ];
 
 export const AdminSidebar = ({
@@ -82,7 +57,7 @@ export const AdminSidebar = ({
             <Text style={styles.sectionHeader}>CORE MODULES</Text>
             {ADMIN_MODULES.map((item) => {
               const IconComp = item.icon;
-              const isActive = activeModule === item.id || (item.id === "user_management" && (activeModule === "users" || activeModule === "user_management"));
+              const isActive = activeModule === item.id || (item.id === "user_management" && (activeModule === "users" || activeModule === "user_management")) || (item.id === "quotes_management" && (activeModule === "quotes" || activeModule === "quotes_management" || activeModule === "DailyMessages"));
               return (
                 <TouchableOpacity
                   key={item.id}

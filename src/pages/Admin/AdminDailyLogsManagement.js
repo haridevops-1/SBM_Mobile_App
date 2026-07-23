@@ -207,7 +207,7 @@ export const AdminDailyLogsManagement = ({
                   onPress={() => setReadOnlyItem(selectedRecord)}
                 >
                   <Edit2 size={14} color="#FFFFFF" />
-                  <Text style={styles.detailEditBtnText}>VIEW</Text>
+                  <Text style={styles.detailEditBtnText}>EDIT</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

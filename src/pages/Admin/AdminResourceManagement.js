@@ -340,11 +340,11 @@ export const AdminResourceManagement = ({
                     {shortId}
                   </Text>
 
-                  <Text style={[styles.cellText, styles.colTitle, { fontWeight: "700" }]} numberOfLines={1}>
+                  <Text style={[styles.cellText, styles.colTitle, { fontWeight: "700" }]} numberOfLines={2}>
                     {item.Title}
                   </Text>
 
-                  <Text style={[styles.cellText, styles.colType, { color: "#81D4FA" }]} numberOfLines={1}>
+                  <Text style={[styles.cellText, styles.colType, { color: "#81D4FA" }]} numberOfLines={2}>
                     {item.Resource_Type}
                   </Text>
 

@@ -13,6 +13,7 @@ import {
   Quote,
   Activity,
   Layers,
+  HelpCircle,
   LogOut,
   X,
 } from "lucide-react-native";
@@ -25,6 +26,7 @@ export const ADMIN_MODULES = [
   { id: "quotes_management", label: "Quotes Management", icon: Quote },
   { id: "daily_logs_management", label: "Daily Logs Management", icon: Activity },
   { id: "phase_management", label: "Phase Management", icon: Layers },
+  { id: "sunday_questions_management", label: "Sunday Question Management", icon: HelpCircle },
 ];
 
 export const AdminSidebar = ({
@@ -66,7 +68,8 @@ export const AdminSidebar = ({
                 (item.id === "user_management" && (activeModule === "users" || activeModule === "user_management")) ||
                 (item.id === "quotes_management" && (activeModule === "quotes" || activeModule === "quotes_management" || activeModule === "DailyMessages")) ||
                 (item.id === "daily_logs_management" && (activeModule === "daily_logs" || activeModule === "daily_logs_management")) ||
-                (item.id === "phase_management" && (activeModule === "phases" || activeModule === "phase_management" || activeModule === "Phases"));
+                (item.id === "phase_management" && (activeModule === "phases" || activeModule === "phase_management" || activeModule === "Phases")) ||
+                (item.id === "sunday_questions_management" && (activeModule === "sunday_questions" || activeModule === "sunday_questions_management" || activeModule === "Sunday_Question"));
 
               return (
                 <TouchableOpacity

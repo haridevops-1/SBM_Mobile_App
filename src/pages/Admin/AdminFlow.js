@@ -5,6 +5,7 @@ import AdminResourceManagement from "./AdminResourceManagement";
 import AdminQuotesManagement from "./AdminQuotesManagement";
 import AdminDailyLogsManagement from "./AdminDailyLogsManagement";
 import AdminPhaseManagement from "./AdminPhaseManagement";
+import AdminSundayQuestionsManagement from "./AdminSundayQuestionsManagement";
 import { useUser } from "../../context/UserContext";
 
 export const AdminFlow = () => {
@@ -68,6 +69,22 @@ export const AdminFlow = () => {
   if (currentScreen === "phase_management" || currentScreen === "phases" || currentScreen === "Phases") {
     return (
       <AdminPhaseManagement
+        activeModule={currentScreen}
+        onNavigateBack={handleNavigateBack}
+        onNavigateModule={handleNavigateModule}
+        onSignOut={logoutUser}
+        adminName={username || "Super Admin"}
+      />
+    );
+  }
+
+  if (
+    currentScreen === "sunday_questions_management" ||
+    currentScreen === "sunday_questions" ||
+    currentScreen === "Sunday_Question"
+  ) {
+    return (
+      <AdminSundayQuestionsManagement
         activeModule={currentScreen}
         onNavigateBack={handleNavigateBack}
         onNavigateModule={handleNavigateModule}

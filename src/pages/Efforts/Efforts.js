@@ -23,7 +23,7 @@ import {
 } from "react-native";
 import { Utensils, Dumbbell, Moon } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useUser } from "../../context/UserContext";
+import { useUser, getSbmEffectiveDate } from "../../context/UserContext";
 import ProfileDrawer from "../../components/ProfileDrawer/ProfileDrawer";
 import theme from "../../theme/theme";
 import styles from "../../styles/pages/Efforts.styles";
@@ -38,8 +38,8 @@ export const Efforts = () => {
   const overallScrollRef = useRef(null);
   const detailScrollRef = useRef(null);
 
-  // Always anchored dynamically to Today's ISO date
-  const selectedDate = new Date().toISOString().split("T")[0];
+  // Always anchored dynamically to SBM Effective Date (6 PM - 6 PM cycle)
+  const selectedDate = getSbmEffectiveDate(new Date());
 
   // Overall progress fetched state
   const [effortData, setEffortData] = useState(null);

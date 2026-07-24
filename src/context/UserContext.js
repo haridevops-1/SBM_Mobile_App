@@ -15,6 +15,17 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// ─── Utility: Get SBM Effective Date (6:00 PM to 6:00 PM 24-hour cycle) ────────
+export function getSbmEffectiveDate(dateObj = new Date()) {
+  const d = new Date(dateObj);
+  d.setHours(d.getHours() - 18);
+  const pad = (num) => String(num).padStart(2, "0");
+  const year  = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day   = pad(d.getDate());
+  return `${year}-${month}-${day}`;
+}
+
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
@@ -335,7 +346,7 @@ export const UserProvider = ({ children }) => {
         );
         await AsyncStorage.setItem(
           lastLogKey,
-          new Date().toISOString().split("T")[0],
+          getSbmEffectiveDate(new Date()),
         );
       } catch (_) {}
     }

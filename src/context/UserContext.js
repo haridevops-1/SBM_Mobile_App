@@ -15,14 +15,18 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// ─── Utility: Get SBM Effective Date (6:00 PM to 6:00 PM 24-hour cycle) ────────
+let globalSignupDate = null;
 export function getSbmEffectiveDate(dateObj = new Date()) {
-  const d = new Date(dateObj);
-  d.setHours(d.getHours() - 18);
+  // If a signupDate is stored for the user, use it as the effective date.
+  if (globalSignupDate) {
+    return globalSignupDate;
+  }
+  const d = new Date();
+  d.setHours(19, 0, 0, 0);
   const pad = (num) => String(num).padStart(2, "0");
-  const year  = d.getFullYear();
+  const year = d.getFullYear();
   const month = pad(d.getMonth() + 1);
-  const day   = pad(d.getDate());
+  const day = pad(d.getDate());
   return `${year}-${month}-${day}`;
 }
 
@@ -84,6 +88,10 @@ export const UserProvider = ({ children }) => {
   const [height, setHeight] = useState("");
   const [mealPreference, setMealPreference] = useState("Select Diet");
   const [timezone, setTimezone] = useState("Select Time Zone");
+  // New: Store the date the user originally signed up.
+  const [signupDate, setSignupDate] = useState(null);
+  // Control visibility of the top‑of‑screen notice.
+  const [hideNotice, setHideNotice] = useState(false);
 
   // Token
   const [userToken, setUserToken] = useState("");
@@ -128,11 +136,9 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        // Load cached quote first for instant display
         const cachedQuote = await AsyncStorage.getItem("sbm_active_quote");
-        if (cachedQuote) {
-          setActiveQuote(cachedQuote);
-        }
+        if (cachedQuote) setActiveQuote(cachedQuote);
+
         const session = await AsyncStorage.getItem("sbm_user_session");
         if (session) {
           const { name, currentWeightVal, details, userRole: savedRole } = JSON.parse(session);
@@ -143,9 +149,7 @@ export const UserProvider = ({ children }) => {
             loginUser(name || "System Admin", currentWeightVal || 70, { ...details, role: "admin" });
           } else if (details && details.userId) {
             try {
-              const response = await fetch(
-                `https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${details.userId}`,
-              );
+              const response = await fetch(`https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/dashboard?userId=${details.userId}`);
               const result = await response.json();
               if (response.ok && result.status === "success") {
                 loginUser(name, currentWeightVal, details);
@@ -160,6 +164,12 @@ export const UserProvider = ({ children }) => {
             await AsyncStorage.removeItem("sbm_user_session");
           }
         }
+
+        // Load persisted signupDate and notice hide flag.
+        const storedSignup = await AsyncStorage.getItem("sbm_signup_date");
+        if (storedSignup) setSignupDate(storedSignup);
+        const storedHide = await AsyncStorage.getItem("sbm_hide_notice");
+        if (storedHide === "true") setHideNotice(true);
       } catch (e) {
         console.error("Failed to restore session:", e);
       } finally {
@@ -168,6 +178,7 @@ export const UserProvider = ({ children }) => {
     };
     restoreSession();
   }, []);
+
   // Action to fetch live Dashboard Stats from Zoho Catalyst sbm_tracker_function
   const fetchDashboardData = async (uid) => {
     const targetUserId = uid || userId;
@@ -193,7 +204,6 @@ export const UserProvider = ({ children }) => {
           recovery_score,
           history_logs,
           average_effort_score,
-          // Consistency fields — returned by backend if table is configured
           consistency_logged,
           consistency_total,
           days_logged,
@@ -223,8 +233,6 @@ export const UserProvider = ({ children }) => {
         setWeeklyEfforts(updatedEfforts);
 
         // ── Consistency: prefer backend values if present, fallback to AsyncStorage ──
-        // Backend may return these as: consistency_logged/consistency_total
-        // OR days_logged/days_elapsed OR total_days_logged/total_days_elapsed
         const backendLogged =
           consistency_logged ?? days_logged ?? total_days_logged;
         const backendTotal =
@@ -236,19 +244,16 @@ export const UserProvider = ({ children }) => {
           backendTotal !== undefined &&
           backendTotal !== null
         ) {
-          // Backend has real data — use it as source of truth
           const bl = parseInt(backendLogged, 10) || 0;
           const bt = parseInt(backendTotal, 10) || 0;
           setConsistencyLogged(bl);
           setConsistencyTotal(bt);
-          // Also cache locally with user-specific key
           const consistencyKey = `sbm_consistency_${targetUserId}`;
           await AsyncStorage.setItem(
             consistencyKey,
             JSON.stringify({ logged: bl, total: bt }),
           );
         } else {
-          // Backend not returning consistency — fall back to AsyncStorage
           const consistencyKey = `sbm_consistency_${targetUserId}`;
           const stored = await AsyncStorage.getItem(consistencyKey);
           if (stored) {
@@ -260,7 +265,6 @@ export const UserProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("Dashboard Fetch Error:", err);
-      // On network error — still load consistency from AsyncStorage cache
       const consistencyKey = uid
         ? `sbm_consistency_${uid}`
         : userId
@@ -309,8 +313,6 @@ export const UserProvider = ({ children }) => {
     const uid = currentUserId || userId;
     const num = parseInt(score, 10);
     if (!isNaN(num) && num >= 0) {
-      // Backend sends finalPercentageScore (0-100 percentage already)
-      // Store as-is for todayEffortScore display
       setTodayEffortScore(num);
       setTodayEffortLogged(true);
       setStreakDays((prev) => prev + 1);
@@ -319,16 +321,13 @@ export const UserProvider = ({ children }) => {
       updatedEfforts[4] = num;
       setWeeklyEfforts(updatedEfforts);
 
-      // Score is already a percentage (0-100) from backend — store directly
       const pct = Math.min(100, Math.max(0, num));
 
-      // Bump consistency: logged one more day out of total days elapsed
       const newLogged = consistencyLogged + 1;
       const newTotal = consistencyTotal + 1;
       setConsistencyLogged(newLogged);
       setConsistencyTotal(newTotal);
 
-      // Persist to AsyncStorage using USER-SPECIFIC KEY so data survives re-login
       try {
         const consistencyKey = uid
           ? `sbm_consistency_${uid}`
@@ -352,8 +351,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Called each time the app is opened on a NEW calendar day where the user did NOT log:
-  // increments consistencyTotal without incrementing consistencyLogged
   const markMissedDay = async () => {
     const newTotal = consistencyTotal + 1;
     setConsistencyTotal(newTotal);
@@ -388,7 +385,6 @@ export const UserProvider = ({ children }) => {
     if (updatedFields.timezone !== undefined)
       setTimezone(updatedFields.timezone);
 
-    // Persist to AsyncStorage session
     try {
       const session = await AsyncStorage.getItem("sbm_user_session");
       if (session) {
@@ -484,7 +480,6 @@ export const UserProvider = ({ children }) => {
 
     setIsLoggedIn(true);
 
-    // Save session to AsyncStorage for persistence
     const saveSession = async () => {
       try {
         await AsyncStorage.setItem(
@@ -502,9 +497,7 @@ export const UserProvider = ({ children }) => {
     };
     saveSession();
 
-    // Load user-specific consistency data from AsyncStorage (ensures data survives re-login)
     if (details.userId) {
-      // Clear legacy state before loading new user data
       setConsistencyLogged(0);
       setConsistencyTotal(0);
       const loadConsistency = async () => {
@@ -521,7 +514,6 @@ export const UserProvider = ({ children }) => {
       loadConsistency();
     }
 
-    // Dynamic initial loading of user metrics and quote from Catalyst database
     if (details.userId) {
       fetchDashboardData(details.userId);
       fetchQuote(details.userId);
@@ -533,7 +525,6 @@ export const UserProvider = ({ children }) => {
     setUserRole("user");
     setIsProfileOpen(false);
     AsyncStorage.removeItem("sbm_user_session");
-    // Reset states
     setTodayEffortLogged(false);
     setTodayEffortScore(0);
     setTodayWeightLogged(false);
@@ -562,12 +553,10 @@ export const UserProvider = ({ children }) => {
     setWeeklyEfforts([0, 0, 0, 0, 0]);
     setHistoryLogs([]);
 
-    // Reset quote to default
     setActiveQuote(
       "Every small effort today brings you closer to a stronger tomorrow.",
     );
 
-    // Clear session and cached quote from AsyncStorage (properly awaited)
     const clearSession = async () => {
       try {
         await AsyncStorage.removeItem("sbm_user_session");
@@ -581,8 +570,6 @@ export const UserProvider = ({ children }) => {
     clearSession();
   };
 
-  // ── Missed day detection: run on app open ───────────────────────────────────
-  // Checks last-log-date in AsyncStorage vs today using user-specific key
   const checkAndMarkMissedDays = async () => {
     try {
       const lastLogKey = userId
@@ -594,13 +581,11 @@ export const UserProvider = ({ children }) => {
       const stored = await AsyncStorage.getItem(lastLogKey);
       const today = new Date().toISOString().split("T")[0];
       if (stored && stored !== today) {
-        // Count calendar days between last log and today (exclusive of today)
         const last = new Date(stored);
         const todayD = new Date(today);
         const diffMs = todayD - last;
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         if (diffDays > 1) {
-          // Missed (diffDays - 1) days between last log and today
           const missed = diffDays - 1;
           const newTotal = consistencyTotal + missed;
           setConsistencyTotal(newTotal);
@@ -618,6 +603,9 @@ export const UserProvider = ({ children }) => {
       value={{
         isSessionLoading,
         isLoggedIn,
+        setIsLoggedIn,
+        userRole,
+        setUserRole,
         username,
         todayEffortLogged,
         todayWeightLogged,

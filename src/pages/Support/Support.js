@@ -1,14 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  SafeAreaView,
-  Linking,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Linking,  } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Bell,
   MessageSquare,

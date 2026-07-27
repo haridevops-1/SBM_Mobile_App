@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  Modal,
-  SafeAreaView,
-  Platform,
-  Linking,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Modal, Platform, Linking, ActivityIndicator, Alert,  } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Bell, Search, Play, X, Calendar } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useUser } from "../../context/UserContext";

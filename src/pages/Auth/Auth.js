@@ -142,7 +142,7 @@ const CustomPicker = ({
 };
 
 export const Auth = () => {
-  const { loginUser, setUserRole } = useUser();
+  const { loginUser, setUserRole, setSignupDate } = useUser();
   const [selectedRole, setSelectedRole] = useState("user"); // 'user' | 'admin'
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);

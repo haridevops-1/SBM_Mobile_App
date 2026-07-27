@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
-  ActivityIndicator,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-  Modal,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StatusBar, ActivityIndicator, LayoutAnimation, Platform, UIManager, Modal,  } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Menu,
   ArrowLeft,

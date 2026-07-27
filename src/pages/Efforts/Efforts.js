@@ -13,14 +13,8 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  Dimensions,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Dimensions,  } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Utensils, Dumbbell, Moon } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useUser, getSbmEffectiveDate } from "../../context/UserContext";

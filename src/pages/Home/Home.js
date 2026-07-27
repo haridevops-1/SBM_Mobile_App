@@ -12,7 +12,8 @@
  */
 
 import React, { useEffect } from "react";
-import { ScrollView, View, Text, SafeAreaView } from "react-native";
+import { ScrollView, View, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "lucide-react-native";
 import Header from "../../components/Header/Header";
 import QuoteBanner from "../../components/QuoteBanner/QuoteBanner";

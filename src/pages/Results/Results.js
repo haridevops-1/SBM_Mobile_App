@@ -13,15 +13,8 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  Dimensions,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator,  } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Bell,
   ChevronDown,

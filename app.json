@@ -16,7 +16,7 @@
       "icon": "./assets/app_purple_logo.png"
     },
     "android": {
-      "package": "com.hariharan.sbmMobileApp",
+      "package": "com.hariharan.sbmmobileapp",
       "googleServicesFile": "./google-services.json",
       "icon": "./assets/app_purple_logo.png",
       "adaptiveIcon": {
@@ -37,7 +37,6 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "minSdkVersion": 24,
-            "buildToolsVersion": "35.0.0",
             "packagingOptions": {
               "pickFirst": [
                 "**/libc++_shared.so",

@@ -15,15 +15,9 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-let globalSignupDate = null;
 export function getSbmEffectiveDate(dateObj = new Date()) {
-  // If a signupDate is stored for the user, use it as the effective date.
-  if (globalSignupDate) {
-    return globalSignupDate;
-  }
-  const d = new Date();
+  const d = new Date(dateObj);
   d.setHours(d.getHours() - 18);
-  // d.setHours(19, 0, 0, 0);
   const pad = (num) => String(num).padStart(2, "0");
   const year = d.getFullYear();
   const month = pad(d.getMonth() + 1);

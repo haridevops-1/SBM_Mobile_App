@@ -13,7 +13,7 @@
 
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, TextInput, Modal } from "react-native";
-import { Check, Scale, X, ChevronsUpDown } from "lucide-react-native";
+import { Check, Scale, X, ChevronsUpDown, Clock, Sparkles } from "lucide-react-native";
 import Svg, { Circle } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { useUser } from "../../context/UserContext";
@@ -49,6 +49,7 @@ export const DailyActions = () => {
   );
   const [modalVisible, setModalVisible] = useState(false);
   const [showEffortSuccessModal, setShowEffortSuccessModal] = useState(false);
+  const [showPre6PmModal, setShowPre6PmModal] = useState(false);
 
   // SVG parameters
   const radius = 45;
@@ -75,7 +76,7 @@ export const DailyActions = () => {
 
   const handleLogEffortClick = () => {
     if (!isLogPeriodActive(signupDate)) {
-      alert("Logging opens at 6:00 PM today. Please try after 6:00 PM.");
+      setShowPre6PmModal(true);
       return;
     }
     if (!todayEffortLogged) {
@@ -404,6 +405,62 @@ export const DailyActions = () => {
                 onPress={() => setShowEffortSuccessModal(false)}
               >
                 <Text style={styles.successCloseBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      {/* Polite Guidance Modal for Pre-6 PM Window */}
+      <Modal
+        transparent={true}
+        visible={showPre6PmModal}
+        onRequestClose={() => setShowPre6PmModal(false)}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.centeredWeightCard}>
+            <View style={{ alignItems: "center", width: "100%", paddingHorizontal: 4 }}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: "rgba(123, 31, 162, 0.25)",
+                  borderWidth: 1.5,
+                  borderColor: "#B085F5",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 14,
+                }}
+              >
+                <Clock size={28} color="#B085F5" strokeWidth={2.2} />
+              </View>
+
+              <Text style={[styles.successTitleText, { fontSize: 18, textAlign: "center" }]}>
+                Logging Opens at 6:00 PM
+              </Text>
+
+              <Text
+                style={{
+                  color: "rgba(255, 255, 255, 0.85)",
+                  fontSize: 13,
+                  lineHeight: 20,
+                  textAlign: "center",
+                  marginTop: 8,
+                  marginBottom: 16,
+                }}
+              >
+                Thank you for checking in early! Your daily effort log unlocks every evening at{" "}
+                <Text style={{ color: "#B085F5", fontWeight: "700" }}>6:00 PM</Text>.
+                {"\n\n"}
+                Until then, explore your progress metrics and stay focused on your health goals today. We look forward to receiving your log at 6:00 PM! 🌟
+              </Text>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[styles.successCloseBtn, { width: "100%", backgroundColor: "#7B1FA2" }]}
+                onPress={() => setShowPre6PmModal(false)}
+              >
+                <Text style={styles.successCloseBtnText}>Understood & Continue</Text>
               </TouchableOpacity>
             </View>
           </View>

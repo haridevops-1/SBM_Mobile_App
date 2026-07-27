@@ -22,8 +22,8 @@ export function getSbmEffectiveDate(dateObj = new Date()) {
     return globalSignupDate;
   }
   const d = new Date();
-  // d.setHours(d.getHours() - 18);
-  d.setHours(19, 0, 0, 0);
+  d.setHours(d.getHours() - 18);
+  // d.setHours(19, 0, 0, 0);
   const pad = (num) => String(num).padStart(2, "0");
   const year = d.getFullYear();
   const month = pad(d.getMonth() + 1);
@@ -43,7 +43,7 @@ export const isLogPeriodActive = (signupDateStr) => {
   const periodStart = new Date(signup.getTime() + periods * 24 * 60 * 60 * 1000);
   return now >= periodStart;
 };
-  if (!signupDateStr) return true; // allow logging if no signup date
+
   const now = new Date();
   const signup = new Date(signupDateStr);
   // Align to 6 PM cutoff
@@ -52,7 +52,7 @@ export const isLogPeriodActive = (signupDateStr) => {
   const periods = Math.floor(diffMs / (24 * 60 * 60 * 1000));
   const periodStart = new Date(signup.getTime() + periods * 24 * 60 * 60 * 1000);
   return now >= periodStart;
-};
+;
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {

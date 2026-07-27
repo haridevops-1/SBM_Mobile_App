@@ -514,12 +514,36 @@ export const UserProvider = ({ children }) => {
     };
     saveSession();
 
-    if (details.userId) {
+    const activeUid = extraDetails.userId || extraDetails.id || extraDetails.ROWID || details.userId;
+    if (activeUid) {
+      const loadUserSignupDate = async () => {
+        try {
+          const userSignupKey = `sbm_signup_date_${activeUid}`;
+          let storedSignup = await AsyncStorage.getItem(userSignupKey);
+          if (!storedSignup) {
+            storedSignup = await AsyncStorage.getItem("sbm_signup_date");
+          }
+          if (!storedSignup) {
+            storedSignup = new Date().toISOString();
+            await AsyncStorage.setItem(userSignupKey, storedSignup);
+            await AsyncStorage.setItem("sbm_signup_date", storedSignup);
+          }
+          setSignupDate(storedSignup);
+
+          const storedHide = await AsyncStorage.getItem(`sbm_hide_notice_${activeUid}`);
+          setHideNotice(storedHide === "true");
+        } catch (_) {}
+      };
+      loadUserSignupDate();
+    }
+
+    if (details.userId || activeUid) {
+      const targetId = details.userId || activeUid;
       setConsistencyLogged(0);
       setConsistencyTotal(0);
       const loadConsistency = async () => {
         try {
-          const consistencyKey = `sbm_consistency_${details.userId}`;
+          const consistencyKey = `sbm_consistency_${targetId}`;
           const stored = await AsyncStorage.getItem(consistencyKey);
           if (stored) {
             const { logged, total } = JSON.parse(stored);
@@ -529,11 +553,8 @@ export const UserProvider = ({ children }) => {
         } catch (_) {}
       };
       loadConsistency();
-    }
-
-    if (details.userId) {
-      fetchDashboardData(details.userId);
-      fetchQuote(details.userId);
+      fetchDashboardData(targetId);
+      fetchQuote(targetId);
     }
   };
 
@@ -569,6 +590,8 @@ export const UserProvider = ({ children }) => {
     setHydrationScore(0);
     setWeeklyEfforts([0, 0, 0, 0, 0]);
     setHistoryLogs([]);
+    setSignupDate(null);
+    setHideNotice(false);
 
     setActiveQuote(
       "Every small effort today brings you closer to a stronger tomorrow.",

@@ -451,6 +451,10 @@ export const Auth = () => {
           // Store signup timestamp for log gating logic
           const nowIso = new Date().toISOString();
           await AsyncStorage.setItem('sbm_signup_date', nowIso);
+          const userIdVal = data.user && data.user.id ? data.user.id : null;
+          if (userIdVal) {
+            await AsyncStorage.setItem(`sbm_signup_date_${userIdVal}`, nowIso);
+          }
           // Update context state
           setSignupDate(nowIso);
           setShowSignupSuccessModal(true);

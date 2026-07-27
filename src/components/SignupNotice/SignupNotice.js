@@ -6,7 +6,7 @@ import { useUser } from "../../context/UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const SignupNotice = () => {
-  const { signupDate, hideNotice, setHideNotice, todayEffortLogged, isLogPeriodActive } = useUser();
+  const { signupDate, hideNotice, setHideNotice, todayEffortLogged, isLogPeriodActive, userId } = useUser();
 
   if (hideNotice) return null;
 
@@ -32,7 +32,11 @@ export const SignupNotice = () => {
 
   const dismiss = async () => {
     setHideNotice(true);
-    await AsyncStorage.setItem("sbm_hide_notice", "true");
+    if (userId) {
+      await AsyncStorage.setItem(`sbm_hide_notice_${userId}`, "true");
+    } else {
+      await AsyncStorage.setItem("sbm_hide_notice", "true");
+    }
   };
 
   return (

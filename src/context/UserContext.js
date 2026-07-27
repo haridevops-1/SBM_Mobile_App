@@ -44,15 +44,6 @@ export const isLogPeriodActive = (signupDateStr) => {
   return now >= periodStart;
 };
 
-
-  const signup = new Date(signupDateStr);
-  // Align to 6 PM cutoff
-  signup.setHours(18, 0, 0, 0);
-  const diffMs = now - signup;
-  const periods = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  const periodStart = new Date(signup.getTime() + periods * 24 * 60 * 60 * 1000);
-  return now >= periodStart;
-;
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {

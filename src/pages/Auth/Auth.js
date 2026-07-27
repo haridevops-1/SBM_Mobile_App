@@ -445,7 +445,7 @@ export const Auth = () => {
           }),
         });
         const data = await res.json();
-        if (res.ok || data.status === "success") {
+        if (res.ok && data.status === "success") {
           setUserRole("user");
           // Store signup timestamp for log gating logic
           const nowIso = new Date().toISOString();
@@ -454,16 +454,11 @@ export const Auth = () => {
           setSignupDate(nowIso);
           setShowSignupSuccessModal(true);
         } else {
-          setErrors({ email: data.message || "Failed to create user account." });
+          setErrors({ email: data.message || "An account with this email already exists." });
         }
       } catch (err) {
         console.warn("User signup API error:", err);
-        setUserRole("user");
-        // Still store a fallback signup date to keep gating consistent
-        const nowIso = new Date().toISOString();
-        await AsyncStorage.setItem('sbm_signup_date', nowIso);
-        setSignupDate(nowIso);
-        setShowSignupSuccessModal(true);
+        setErrors({ email: "Network error. Please check your connection and try again." });
       } finally {
         setLoading(false);
       }
@@ -667,11 +662,32 @@ export const Auth = () => {
                       keyboardType="email-address"
                       autoCapitalize="none"
                       value={email}
-                      onChangeText={setEmail}
+                      onChangeText={(val) => {
+                        setEmail(val);
+                        if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+                      }}
                       editable={!loading}
                     />
                   </View>
-                  {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                  {errors.email && (
+                    <View style={{ marginTop: 4 }}>
+                      <Text style={styles.errorText}>{errors.email}</Text>
+                      {!isLogin && typeof errors.email === "string" && errors.email.toLowerCase().includes("already") && (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={() => {
+                            setIsLogin(true);
+                            setErrors({});
+                          }}
+                          style={{ marginTop: 4, paddingVertical: 2 }}
+                        >
+                          <Text style={{ color: "#B085F5", fontSize: 12, fontWeight: "600", textDecorationLine: "underline" }}>
+                            Already have an account? Tap here to Log In →
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
                 </View>
 
                 {/* Password */}

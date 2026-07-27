@@ -409,6 +409,8 @@ export const DailyActions = () => {
             </View>
           </View>
         </View>
+      </Modal>
+
       {/* Polite Guidance Modal for Pre-6 PM Window */}
       <Modal
         transparent={true}

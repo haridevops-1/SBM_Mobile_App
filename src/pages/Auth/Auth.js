@@ -447,6 +447,11 @@ export const Auth = () => {
         const data = await res.json();
         if (res.ok || data.status === "success") {
           setUserRole("user");
+          // Store signup timestamp for log gating logic
+          const nowIso = new Date().toISOString();
+          await AsyncStorage.setItem('sbm_signup_date', nowIso);
+          // Update context state
+          setSignupDate(nowIso);
           setShowSignupSuccessModal(true);
         } else {
           setErrors({ email: data.message || "Failed to create user account." });
@@ -454,6 +459,10 @@ export const Auth = () => {
       } catch (err) {
         console.warn("User signup API error:", err);
         setUserRole("user");
+        // Still store a fallback signup date to keep gating consistent
+        const nowIso = new Date().toISOString();
+        await AsyncStorage.setItem('sbm_signup_date', nowIso);
+        setSignupDate(nowIso);
         setShowSignupSuccessModal(true);
       } finally {
         setLoading(false);

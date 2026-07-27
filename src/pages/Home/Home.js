@@ -19,6 +19,7 @@ import QuoteBanner from "../../components/QuoteBanner/QuoteBanner";
 import SbmCards from "../../components/SbmCards/SbmCards";
 import DailyActions from "../../components/DailyActions/DailyActions";
 import ProfileDrawer from "../../components/ProfileDrawer/ProfileDrawer";
+import { SignupNotice } from '../../components/SignupNotice/SignupNotice';
 import { useUser } from "../../context/UserContext";
 import theme from "../../theme/theme";
 import styles from "../../styles/pages/Home.styles";
@@ -76,6 +77,7 @@ export const Home = () => {
       >
         {/* Top welcome greeting header */}
         <Header />
+        <SignupNotice />
 
         {/* Date Row positioned above the daily quote message */}
         <View style={styles.dateRow}>

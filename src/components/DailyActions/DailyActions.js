@@ -34,6 +34,8 @@ export const DailyActions = () => {
     historyLogs,
     preSbmScore,
     checkAndMarkMissedDays,
+    signupDate,
+    isLogPeriodActive,
   } = useUser();
 
   // On mount: detect any missed days since last log and update consistencyTotal
@@ -72,6 +74,10 @@ export const DailyActions = () => {
     circumference - (todayEffortPercent / 100) * circumference;
 
   const handleLogEffortClick = () => {
+    if (!isLogPeriodActive(signupDate)) {
+      alert('Logging opens at 6 PM. Please try later.');
+      return;
+    }
     if (!todayEffortLogged) {
       setModalVisible(true);
     } else {

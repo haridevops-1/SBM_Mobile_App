@@ -271,10 +271,12 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
           },
           body: JSON.stringify({
             userId: userId,
-            answers: questionsList.map((q) => ({
-              questionId: q.id,
-              optionId: answers[q.id],
-            })),
+            answers: JSON.stringify(
+              questionsList.reduce((acc, q) => {
+                acc[q.id] = answers[q.id];
+                return acc;
+              }, {})
+            ),
           }),
         },
       );
@@ -318,6 +320,15 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
       date: new Date().toISOString(),
       week_number: currentWeek || 1,
       week: weekKey,
+      // Store all Sunday answers as a JSON string for single-row storage
+      answers: JSON.stringify({
+        learning: sundayAnswers.learning ?? 0,
+        food: sundayAnswers.food ?? 0,
+        selfKindness: sundayAnswers.selfKindness ?? 0,
+        control: sundayAnswers.control ?? 0,
+        confidence: sundayAnswers.confidence ?? 0,
+      }),
+      // Keep individual fields for backward compatibility
       learning: sundayAnswers.learning ?? 0,
       food: sundayAnswers.food ?? 0,
       self_kindness: sundayAnswers.selfKindness ?? 0,

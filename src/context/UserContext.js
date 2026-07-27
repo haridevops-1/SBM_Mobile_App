@@ -22,6 +22,7 @@ export function getSbmEffectiveDate(dateObj = new Date()) {
     return globalSignupDate;
   }
   const d = new Date();
+  // d.setHours(d.getHours() - 18);
   d.setHours(19, 0, 0, 0);
   const pad = (num) => String(num).padStart(2, "0");
   const year = d.getFullYear();
@@ -29,7 +30,29 @@ export function getSbmEffectiveDate(dateObj = new Date()) {
   const day = pad(d.getDate());
   return `${year}-${month}-${day}`;
 }
-
+export const isLogPeriodActive = (signupDateStr) => {
+  if (!signupDateStr) return true; // No signup date – unrestricted
+  const now = new Date();
+  const signup = new Date(signupDateStr);
+  // Align to 6 PM cutoff on the signup day
+  signup.setHours(18, 0, 0, 0);
+  // If current time is before the cutoff, logging is not yet active
+  if (now < signup) return false;
+  // Determine how many full 24‑hour periods have elapsed since the cutoff
+  const periods = Math.floor((now - signup) / (24 * 60 * 60 * 1000));
+  const periodStart = new Date(signup.getTime() + periods * 24 * 60 * 60 * 1000);
+  return now >= periodStart;
+};
+  if (!signupDateStr) return true; // allow logging if no signup date
+  const now = new Date();
+  const signup = new Date(signupDateStr);
+  // Align to 6 PM cutoff
+  signup.setHours(18, 0, 0, 0);
+  const diffMs = now - signup;
+  const periods = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  const periodStart = new Date(signup.getTime() + periods * 24 * 60 * 60 * 1000);
+  return now >= periodStart;
+};
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
@@ -644,10 +667,13 @@ export const UserProvider = ({ children }) => {
         fetchDashboardData,
         fetchQuote,
         logWeight,
-        isLoggedIn,
-        userRole,
-        setUserRole,
-        username,
+        // expose signup timing helpers and state
+        signupDate,
+        setSignupDate,
+        hideNotice,
+        setHideNotice,
+        isLogPeriodActive,
+        // existing functions
         loginUser,
         logoutUser,
         updateUserProfile,

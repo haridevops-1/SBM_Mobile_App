@@ -31,17 +31,20 @@ export function getSbmEffectiveDate(dateObj = new Date()) {
   return `${year}-${month}-${day}`;
 }
 export const isLogPeriodActive = (signupDateStr) => {
-  if (!signupDateStr) return true; // No signup date – unrestricted
+  if (!signupDateStr) return true; // If no signup date recorded, default to unrestricted
   const now = new Date();
   const signup = new Date(signupDateStr);
-  // Align to 6 PM cutoff on the signup day
-  signup.setHours(18, 0, 0, 0);
-  // If current time is before the cutoff, logging is not yet active
-  if (now < signup) return false;
-  // Determine how many full 24‑hour periods have elapsed since the cutoff
-  const periods = Math.floor((now - signup) / (24 * 60 * 60 * 1000));
-  const periodStart = new Date(signup.getTime() + periods * 24 * 60 * 60 * 1000);
-  return now >= periodStart;
+
+  // First 6 PM cutoff on the day of signup (e.g. 6:00 PM today)
+  const signupCutoff = new Date(signup);
+  signupCutoff.setHours(18, 0, 0, 0);
+
+  // If user signed up before 6 PM on their signup day, and current time is still before 6 PM on that day:
+  if (signup < signupCutoff && now < signupCutoff) {
+    return false; // Logging is BLOCKED until 6:00 PM today
+  }
+
+  return true; // Logging is OPEN
 };
 
 const UserContext = createContext();

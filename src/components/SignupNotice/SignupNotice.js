@@ -4,18 +4,23 @@ import { useUser } from '../../context/UserContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const SignupNotice = () => {
-  const { signupDate, hideNotice, setHideNotice } = useUser();
-  if (!signupDate || hideNotice) return null;
+  const { signupDate, hideNotice, setHideNotice, todayEffortLogged, isLogPeriodActive } = useUser();
 
-  const now = new Date();
-  const signup = new Date(signupDate);
-  // Align to 6 PM cutoff for the day of signup
-  signup.setHours(18, 0, 0, 0);
-  const diffMs = now - signup;
-  const periods = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  const nextOpen = new Date(signup.getTime() + (periods + 1) * 24 * 60 * 60 * 1000);
-  const openDateStr = nextOpen.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
-  const openTimeStr = nextOpen.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (hideNotice) return null;
+
+  const isActive = isLogPeriodActive(signupDate);
+  let noticeMessage = "";
+
+  if (!isActive) {
+    // User signed up before 6 PM and it's not 6 PM yet
+    noticeMessage = "Notice: Daily logging opens at 6:00 PM today. Until then, you can explore your dashboard.";
+  } else if (todayEffortLogged) {
+    // User already logged for the current 6 PM - 6 PM period
+    noticeMessage = "Notice: Effort logged for today! Next log window opens at 6:00 PM.";
+  } else {
+    // Logging is active and user hasn't logged yet -> No notice banner required
+    return null;
+  }
 
   const dismiss = async () => {
     setHideNotice(true);
@@ -24,9 +29,7 @@ export const SignupNotice = () => {
 
   return (
     <View style={styles.banner}>
-      <Text style={styles.text}>
-        Logging will be available on {openDateStr} at {openTimeStr}. Until then you can view your dashboard.
-      </Text>
+      <Text style={styles.text}>{noticeMessage}</Text>
       <TouchableOpacity onPress={dismiss} style={styles.closeBtn}>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>

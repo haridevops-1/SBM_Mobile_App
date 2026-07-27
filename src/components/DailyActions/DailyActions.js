@@ -75,7 +75,7 @@ export const DailyActions = () => {
 
   const handleLogEffortClick = () => {
     if (!isLogPeriodActive(signupDate)) {
-      alert('Logging opens at 6 PM. Please try later.');
+      alert("Logging opens at 6:00 PM today. Please try after 6:00 PM.");
       return;
     }
     if (!todayEffortLogged) {
@@ -395,7 +395,7 @@ export const DailyActions = () => {
               </Text>
 
               <Text style={styles.successSubPromptText}>
-                Come back tomorrow to log the{"\n"}next entry 💪
+                You have already logged for this period!{"\n"}Next logging window opens at 6:00 PM 💪
               </Text>
 
               <TouchableOpacity

@@ -262,6 +262,11 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
     }
 
     try {
+      const answersArray = questionsList.map((q) => ({
+        questionId: q.id,
+        optionId: answers[q.id],
+      }));
+
       const response = await fetch(
         "https://sbm-mobile-app-906714478.development.catalystserverless.com/tracker/submit",
         {
@@ -271,12 +276,7 @@ export const DailyQuestionsModal = ({ visible, onClose }) => {
           },
           body: JSON.stringify({
             userId: userId,
-            answers: JSON.stringify(
-              questionsList.reduce((acc, q) => {
-                acc[q.id] = answers[q.id];
-                return acc;
-              }, {})
-            ),
+            answers: answersArray,
           }),
         },
       );

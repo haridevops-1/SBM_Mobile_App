@@ -32,6 +32,7 @@ import {
   ShieldCheck,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from "../../context/UserContext";
 import styles from "../../styles/pages/Auth.styles";
 import theme from "../../theme/theme";

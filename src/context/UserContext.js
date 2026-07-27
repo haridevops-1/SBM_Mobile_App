@@ -44,7 +44,7 @@ export const isLogPeriodActive = (signupDateStr) => {
   return now >= periodStart;
 };
 
-  const now = new Date();
+
   const signup = new Date(signupDateStr);
   // Align to 6 PM cutoff
   signup.setHours(18, 0, 0, 0);
